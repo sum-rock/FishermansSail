@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <AssemblyName>FishermansSail</AssemblyName>
+    <RootNamespace>FishermansSail</RootNamespace>
+    <Version>0.1.0</Version>
+    <SailwindDir Condition="'$(SailwindDir)' == ''">$(HOME)/.local/share/Steam/steamapps/common/Sailwind</SailwindDir>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Reference Include="BepInEx">
+      <HintPath>$(SailwindDir)/BepInEx/core/BepInEx.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine">
+      <HintPath>$(SailwindDir)/Sailwind_Data/Managed/UnityEngine.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.CoreModule">
+      <HintPath>$(SailwindDir)/Sailwind_Data/Managed/UnityEngine.CoreModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+
+  <Target Name="ValidateGameReferences" BeforeTargets="ResolveAssemblyReferences">
+    <Error Condition="'%(Reference.HintPath)' != '' and !Exists('%(Reference.HintPath)')"
+           Text="Required assembly not found: %(Reference.HintPath). Set the game directory with -p:SailwindDir=/path/to/Sailwind and ensure BepInEx 5 is installed." />
+  </Target>
+</Project>
