@@ -8,6 +8,7 @@ namespace FishermansSail
     internal static class PrototypeSail
     {
         internal const int SourceIndex = 110;
+
         // Stable across launches: Sailwind stores this index in boat saves.
         internal const int PrototypeIndex = 400;
         internal const string DisplayName = "Fisherman's Sail Prototype";
@@ -19,32 +20,59 @@ namespace FishermansSail
             Mesh mesh = null;
             try
             {
-                if (prefab && directory.sails.Length > PrototypeIndex && directory.sails[PrototypeIndex] == prefab)
+                if (
+                    prefab
+                    && directory.sails.Length > PrototypeIndex
+                    && directory.sails[PrototypeIndex] == prefab
+                )
                     return;
                 prefab = null;
                 if (directory.sails.Length > PrototypeIndex && directory.sails[PrototypeIndex])
-                    throw new InvalidOperationException($"Sail index {PrototypeIndex} is already occupied; no sail was replaced.");
+                    throw new InvalidOperationException(
+                        $"Sail index {PrototypeIndex} is already occupied; no sail was replaced."
+                    );
 
-                var source = directory.sails.Length > SourceIndex ? directory.sails[SourceIndex] : null;
+                var source =
+                    directory.sails.Length > SourceIndex ? directory.sails[SourceIndex] : null;
                 var sourceSail = source ? source.GetComponent<Sail>() : null;
-                if (!sourceSail || sourceSail.prefabIndex != SourceIndex || sourceSail.category != SailCategory.staysail || sourceSail.sailName != "brig jib")
-                    throw new InvalidOperationException($"Expected the brig jib staysail at index {SourceIndex}.");
-                var sourceRenderer = sourceSail.cloth ? sourceSail.cloth.GetComponent<SkinnedMeshRenderer>() : null;
-                if (!sourceRenderer || !sourceRenderer.sharedMesh || !sourceRenderer.sharedMesh.isReadable)
-                    throw new InvalidOperationException("The brig jib has no readable skinned cloth mesh.");
+                if (
+                    !sourceSail
+                    || sourceSail.prefabIndex != SourceIndex
+                    || sourceSail.category != SailCategory.staysail
+                    || sourceSail.sailName != "brig jib"
+                )
+                    throw new InvalidOperationException(
+                        $"Expected the brig jib staysail at index {SourceIndex}."
+                    );
+                var sourceRenderer = sourceSail.cloth
+                    ? sourceSail.cloth.GetComponent<SkinnedMeshRenderer>()
+                    : null;
+                if (
+                    !sourceRenderer
+                    || !sourceRenderer.sharedMesh
+                    || !sourceRenderer.sharedMesh.isReadable
+                )
+                    throw new InvalidOperationException(
+                        "The brig jib has no readable skinned cloth mesh."
+                    );
 
                 var sourceMesh = sourceRenderer.sharedMesh;
                 var originalVertices = sourceMesh.vertices;
                 var constraints = sourceSail.cloth.coefficients;
                 var deformed = PrototypeGeometry.Deform(originalVertices, constraints);
-                int changed = 0, pinned = 0;
+                int changed = 0,
+                    pinned = 0;
                 for (int i = 0; i < originalVertices.Length; i++)
                 {
-                    if (deformed[i].x != originalVertices[i].x) changed++;
-                    if (constraints[i].maxDistance <= 0f) pinned++;
+                    if (deformed[i].x != originalVertices[i].x)
+                        changed++;
+                    if (constraints[i].maxDistance <= 0f)
+                        pinned++;
                 }
                 if (changed == 0)
-                    throw new InvalidOperationException("The prototype deformation did not move any cloth vertices.");
+                    throw new InvalidOperationException(
+                        "The prototype deformation did not move any cloth vertices."
+                    );
 
                 // An inactive parent prevents Awake/Start from running on our
                 // template. Installed copies retain activeSelf=true and initialize normally.
@@ -80,11 +108,14 @@ namespace FishermansSail
 
                 // Verify that the source still points at its original mesh.
                 if (sourceRenderer.sharedMesh != sourceMesh || renderer.sharedMesh == sourceMesh)
-                    throw new InvalidOperationException("The prototype must own a separate cloth mesh.");
+                    throw new InvalidOperationException(
+                        "The prototype must own a separate cloth mesh."
+                    );
 
-                string registrationMessage = $"Registered {DisplayName}: source={SourceIndex}, index={PrototypeIndex}, " +
-                    $"vertices={mesh.vertexCount}, changed={changed}, pinned={pinned}, " +
-                    $"area={sourceSail.GetSailArea():F2}->{sail.sailArea:F2}. Original brig jib preserved.";
+                string registrationMessage =
+                    $"Registered {DisplayName}: source={SourceIndex}, index={PrototypeIndex}, "
+                    + $"vertices={mesh.vertexCount}, changed={changed}, pinned={pinned}, "
+                    + $"area={sourceSail.GetSailArea():F2}->{sail.sailArea:F2}. Original brig jib preserved.";
 
                 if (directory.sails.Length <= PrototypeIndex)
                     Array.Resize(ref directory.sails, PrototypeIndex + 1);
@@ -94,8 +125,10 @@ namespace FishermansSail
             }
             catch (Exception exception)
             {
-                if (container) Object.Destroy(container);
-                if (mesh) Object.Destroy(mesh);
+                if (container)
+                    Object.Destroy(container);
+                if (mesh)
+                    Object.Destroy(mesh);
                 Plugin.Log.LogError($"Could not register {DisplayName}: {exception}");
             }
         }
@@ -106,7 +139,8 @@ namespace FishermansSail
                 return;
             // All Sails in All Shipyards may already have included our prefab.
             foreach (var existing in shipyard.sailPrefabs)
-                if (existing == prefab) return;
+                if (existing == prefab)
+                    return;
 
             int index = shipyard.sailPrefabs.Length;
             Array.Resize(ref shipyard.sailPrefabs, index + 1);
@@ -123,7 +157,8 @@ namespace FishermansSail
         [HarmonyPostfix]
         [HarmonyAfter("com.nandbrew.shipyardexpansion")]
         [HarmonyBefore("NatoriusG.AllSailsAllShipyards")]
-        private static void Postfix(PrefabsDirectory __instance) => PrototypeSail.Register(__instance);
+        private static void Postfix(PrefabsDirectory __instance) =>
+            PrototypeSail.Register(__instance);
     }
 
     [HarmonyPatch(typeof(Shipyard), "Awake")]

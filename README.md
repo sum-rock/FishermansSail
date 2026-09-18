@@ -36,6 +36,38 @@ The first run downloads the pinned Nix dependencies and restores the .NET Standa
 reference package from NuGet, so it needs internet access. `flake.lock` pins the
 Nixpkgs revision; keep it in version control alongside `flake.nix`.
 
+## Formatting and pre-commit hooks
+
+[CSharpier](https://csharpier.com/docs/Installation) is pinned in
+`.config/dotnet-tools.json`. The Nix shell also includes `pre-commit`.
+After cloning the repository, set up the local tool and Git hook once:
+
+```sh
+nix develop
+dotnet tool restore
+pre-commit install
+```
+
+The pre-commit hook restores the pinned tool and formats staged C# and XML project
+files. If it changes anything, the commit stops: review the formatting, stage the
+updated files, and commit again. Hook commands invoke `nix develop` themselves,
+so Git commits also work from a terminal or editor outside the development shell.
+The first tool restore needs network access; later runs reuse the cached package.
+
+Run formatting or checks manually from the development shell:
+
+```sh
+dotnet csharpier format .
+dotnet csharpier check .
+pre-commit run --all-files
+```
+
+Generated `bin/` and `obj/` directories are excluded. The hook follows
+[CSharpier's pre-commit integration](https://csharpier.com/docs/Pre-commit) using
+the version in this repository's tool manifest.
+
+## Game references
+
 The project defaults to `~/.local/share/Steam/steamapps/common/Sailwind`.
 For another installation, pass the game directory explicitly:
 

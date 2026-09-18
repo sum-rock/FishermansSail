@@ -4,7 +4,8 @@
     <AssemblyName>FishermansSail</AssemblyName>
     <RootNamespace>FishermansSail</RootNamespace>
     <Version>0.2.0</Version>
-    <SailwindDir Condition="'$(SailwindDir)' == ''">$(HOME)/.local/share/Steam/steamapps/common/Sailwind</SailwindDir>
+    <SailwindDir Condition="'$(SailwindDir)' == ''"
+      >$(HOME)/.local/share/Steam/steamapps/common/Sailwind</SailwindDir>
   </PropertyGroup>
 
   <ItemGroup>
@@ -36,7 +37,9 @@
   </ItemGroup>
 
   <Target Name="ValidateGameReferences" BeforeTargets="ResolveAssemblyReferences">
-    <Error Condition="'%(Reference.HintPath)' != '' and !Exists('%(Reference.HintPath)')"
-           Text="Required assembly not found: %(Reference.HintPath). Set the game directory with -p:SailwindDir=/path/to/Sailwind and ensure BepInEx 5 is installed." />
+    <Error
+      Condition="'%(Reference.HintPath)' != '' and !Exists('%(Reference.HintPath)')"
+      Text="Required assembly not found: %(Reference.HintPath). Set the game directory with -p:SailwindDir=/path/to/Sailwind and ensure BepInEx 5 is installed."
+    />
   </Target>
 </Project>

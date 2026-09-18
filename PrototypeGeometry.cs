@@ -9,11 +9,18 @@ namespace FishermansSail
         // retaining the luff, corner positions, and the original bounding box.
         internal static Vector3[] Deform(Vector3[] source, ClothSkinningCoefficient[] constraints)
         {
-            if (source == null || constraints == null || source.Length < 3 || source.Length != constraints.Length)
+            if (
+                source == null
+                || constraints == null
+                || source.Length < 3
+                || source.Length != constraints.Length
+            )
                 throw new ArgumentException("The cloth must have one constraint per mesh vertex.");
 
-            float minX = source[0].x, maxX = minX;
-            float minZ = source[0].z, maxZ = minZ;
+            float minX = source[0].x,
+                maxX = minX;
+            float minZ = source[0].z,
+                maxZ = minZ;
             foreach (var vertex in source)
             {
                 if (!IsFinite(vertex.x) || !IsFinite(vertex.y) || !IsFinite(vertex.z))
@@ -27,7 +34,9 @@ namespace FishermansSail
             float width = maxX - minX;
             float height = maxZ - minZ;
             if (width < 0.001f || height < 0.001f)
-                throw new ArgumentException("Expected a brig jib mesh spanning the local X/Z plane.");
+                throw new ArgumentException(
+                    "Expected a brig jib mesh spanning the local X/Z plane."
+                );
 
             var result = (Vector3[])source.Clone();
             for (int i = 0; i < result.Length; i++)
@@ -46,6 +55,7 @@ namespace FishermansSail
             return result;
         }
 
-        private static bool IsFinite(float value) => !float.IsNaN(value) && !float.IsInfinity(value);
+        private static bool IsFinite(float value) =>
+            !float.IsNaN(value) && !float.IsInfinity(value);
     }
 }
