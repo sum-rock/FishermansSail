@@ -3,11 +3,12 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <AssemblyName>FishermansSail</AssemblyName>
     <RootNamespace>FishermansSail</RootNamespace>
-    <Version>0.1.0</Version>
+    <Version>0.2.0</Version>
     <SailwindDir Condition="'$(SailwindDir)' == ''">$(HOME)/.local/share/Steam/steamapps/common/Sailwind</SailwindDir>
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="tests/**/*.cs" />
     <Reference Include="BepInEx">
       <HintPath>$(SailwindDir)/BepInEx/core/BepInEx.dll</HintPath>
       <Private>false</Private>
@@ -18,6 +19,18 @@
     </Reference>
     <Reference Include="UnityEngine.CoreModule">
       <HintPath>$(SailwindDir)/Sailwind_Data/Managed/UnityEngine.CoreModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="0Harmony">
+      <HintPath>$(SailwindDir)/BepInEx/core/0Harmony.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Assembly-CSharp">
+      <HintPath>$(SailwindDir)/Sailwind_Data/Managed/Assembly-CSharp.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.ClothModule">
+      <HintPath>$(SailwindDir)/Sailwind_Data/Managed/UnityEngine.ClothModule.dll</HintPath>
       <Private>false</Private>
     </Reference>
   </ItemGroup>

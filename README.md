@@ -1,15 +1,22 @@
 # Fisherman's Sail
 
-A Sailwind mod, starting with a single startup log message. The first milestone
-proves that our compiled plugin loads through BepInEx. A new sail type will come
-later.
+A Sailwind mod with an experimental **Fisherman's Sail Prototype**, cloned from
+the game's **brig jib** (prefab 110, category `staysail`). The prototype widens
+the free cloth edges while keeping the original corners, pinned cloth vertices,
+rigging, and controls. This is a deformation experiment, not yet a four-sided
+fisherman's staysail.
+
+The prototype is a separate sail at stable prefab index **400**. The ordinary
+brig jib is unchanged. If another mod occupies index 400, registration stops
+with an error instead of replacing that sail.
 
 ## Development environment
 
 This repository provides a Nix flake for **x86_64 Linux**. It supplies the .NET 8
 SDK, which compiles the plugin for the game's older `netstandard2.0` API target.
 You need Nix with `nix-command` and `flakes` enabled, a local Sailwind installation,
-and working **BepInEx 5**. No separate Unity editor is needed for this milestone.
+and working **BepInEx 5** and **Shipyard Expansion** (developed against 0.11.1).
+No separate Unity editor or asset bundle is needed for this prototype.
 
 From this directory, enter the shell:
 
@@ -36,8 +43,8 @@ For another installation, pass the game directory explicitly:
 dotnet build -c Release -p:SailwindDir="/path/to/Sailwind"
 ```
 
-The build references `BepInEx/core/BepInEx.dll` and the game's
-`Sailwind_Data/Managed/UnityEngine.dll` and `UnityEngine.CoreModule.dll`.
+The build references BepInEx, its bundled Harmony library, the game's
+`Assembly-CSharp.dll`, and Unity's core and cloth assemblies.
 These existing assemblies are not copied into the plugin output or committed here.
 
 ## Install and verify
@@ -53,16 +60,39 @@ These existing assemblies are not copied into the plugin output or committed her
 
    Change `sailwind_dir` if your game is elsewhere. Only the plugin DLL is needed.
 
-3. Launch Sailwind normally through Steam and reach the main menu.
-4. Open `BepInEx/LogOutput.log` in the game directory. Look for both:
+3. Launch Sailwind normally through Steam. Open `BepInEx/LogOutput.log` in the
+   game directory and look for the startup message:
 
    ```text
-   [Info   :   BepInEx] Loading [Fisherman's Sail 0.1.0]
-   [Info   :Fisherman's Sail] Fisherman's Sail 0.1.0 loaded!
+   [Info   :Fisherman's Sail] Fisherman's Sail 0.2.0 loaded!
    ```
 
-   Spacing may vary. The second message should appear once per game launch, with
-   no loading errors for Fisherman's Sail. You do not need to load a save.
+4. Load a test save with access to the brig and a shipyard. When the game's prefab
+   directory initializes, the log should also contain:
+
+   ```text
+   Registered Fisherman's Sail Prototype: source=110, index=400, vertices=289, ...
+   ```
+
+   That line reports changed and pinned vertex counts and the old/new sail areas.
+   It confirms registration, not that cloth simulation has been verified.
+
+5. At a shipyard, select a stay that accepts the brig jib, open **Staysails**, and
+   choose **Fisherman's Sail Prototype**. It is available in each shipyard and
+   also integrates with All Sails in All Shipyards if installed. Check subsequent
+   menu pages if needed. The original **brig jib** remains available wherever it
+   was previously sold.
+6. Compare the unfurled outline with the original. The free edges should bow
+   outward; the luff and clew should stay attached. Test furling, unfurling,
+   sheeting on both sides, and shipyard resizing. Reenter the shipyard and check
+   that the prototype appears only once. On the test save, save/reload with this
+   mod installed and confirm the sail returns correctly.
+
+Use a test save or a backup for this experimental sail. Sailwind saves its prefab
+index, so a save with the prototype fitted needs this mod to recreate it. Remove
+the prototype at a shipyard and save before uninstalling. The copied furled model,
+wind center, and collision setup still use the brig jib's layout; this milestone
+does not establish accurate fisherman-sail performance or perfect cloth animation.
 
 To find the message from a terminal:
 
@@ -75,16 +105,26 @@ launch setup. If other plugins load but ours does not, check the DLL location an
 look for dependency or plugin-loading errors. Disk logging must be enabled with
 `Info` included in `BepInEx/config/BepInEx.cfg` under `[Logging.Disk]`.
 
-Rebuild and copy the DLL again after each change, then restart the game. To
-uninstall, close the game and remove only
+Rebuild and copy the DLL again after each change, then restart the game. Keep one
+installed copy of `FishermansSail.dll` to avoid duplicate-plugin warnings. After
+removing any fitted prototypes and saving, close the game and uninstall by removing
 `BepInEx/plugins/FishermansSail/FishermansSail.dll`.
 
 ## How it works
 
-`Plugin.cs` declares the plugin's identifier, name, and version with
-`BepInPlugin`. BepInEx discovers this class and creates it; Unity invokes `Awake`,
-which writes our message through BepInEx's logger. The plugin does not yet modify
-gameplay or save data.
+`Plugin.cs` declares the plugin metadata and Shipyard Expansion dependency, then
+installs Harmony patches at startup. `PrototypeSail.cs` clones the brig jib under
+an inactive template container after Shipyard Expansion configures its source
+components. Registration runs before All Sails in All Shipyards caches its sail
+list. Shipyard hooks append the prototype once, without replacing inventory entries.
+
+The cloth mesh is cloned separately from the GameObject so it is not shared with
+the original brig jib. `PrototypeGeometry.cs` changes local X coordinates with a
+smooth outward bulge of up to 20% of the original width, tapering to zero at the
+mesh bounds and leaving pinned vertices untouched. Vertex order, triangles, UVs,
+bone weights, bind poses, and cloth constraints are retained. Normals, mesh bounds,
+and sail area are recalculated. The existing game code still supplies sail physics
+and controls; the increased mesh area affects its calculated area and price.
 
 See the [BepInEx plugin tutorial](https://docs.bepinex.dev/articles/dev_guide/plugin_tutorial/2_plugin_start.html)
 and [logging guide](https://docs.bepinex.dev/articles/dev_guide/plugin_tutorial/3_logging.html).
@@ -94,7 +134,15 @@ To check the development environment:
 ```sh
 nix flake check
 nix develop -c dotnet --list-sdks
+nix develop -c dotnet run --project tests/GeometryChecks -c Release
 ```
 
-A successful build checks compilation. The fresh in-game log is the proof that
-the plugin actually loads.
+The geometry checks verify that the input is unchanged, pinned vertices and
+corners remain fixed, the outline changes within its original bounds, and invalid
+inputs are rejected. They run managed geometry code, not Unity's cloth simulation.
+The same checks were also run locally against the actual brig mesh (289 vertices,
+34 pinned, 512 triangles), with no inverted triangles. Game geometry is not
+included in this repository.
+
+Compilation and geometry checks pass locally. In-game appearance, rigging,
+furling, and save/reload still require the manual checks above.
