@@ -6,6 +6,19 @@ the free cloth edges while keeping the original corners, pinned cloth vertices,
 rigging, and controls. This is a deformation experiment, not yet a four-sided
 fisherman's staysail.
 
+Version **0.3.0** also adds an independent **Fisherman's Top Middle Stay**.
+It runs horizontally from an existing aft upper stay attachment to the foremast
+at the same boat-relative height. It has its own sail mount and winches, so it can
+coexist with the original angled stay. The rope is visible in this version.
+
+The mod discovers upper stays through their mast dependencies, without a vessel
+whitelist. Each eligible shipyard stay group gains a separate fisherman entry
+with **None** and variants for its mast configurations. Upper mizzen stays are
+eligible too. Both physical masts must reach the aft attachment height; variants
+with a shorter foremast cannot be installed. A source stay must provide two
+physical mast dependencies, spar capsule colliders, static stay geometry, and
+usable sail controls. Unsupported layouts are logged instead of guessed.
+
 The prototype is a separate sail at stable prefab index **400**. The ordinary
 brig jib is unchanged. If another mod occupies index 400, registration stops
 with an error instead of replacing that sail.
@@ -96,7 +109,7 @@ These existing assemblies are not copied into the plugin output or committed her
    game directory and look for the startup message:
 
    ```text
-   [Info   :Fisherman's Sail] Fisherman's Sail 0.2.0 loaded!
+   [Info   :Fisherman's Sail] Fisherman's Sail 0.3.0 loaded!
    ```
 
 4. Load a test save with access to the brig and a shipyard. When the game's prefab
@@ -142,6 +155,34 @@ installed copy of `FishermansSail.dll` to avoid duplicate-plugin warnings. After
 removing any fitted prototypes and saving, close the game and uninstall by removing
 `BepInEx/plugins/FishermansSail/FishermansSail.dll`.
 
+### Fit and verify the horizontal stay
+
+1. In shipyard rigging customization, find the separate **(no fisherman's top
+   middle stay)** entry. Select the fisherman variant matching the installed
+   masts; its name includes the original stay variant for identification.
+   Existing saves start with this new part set to None. Prices and installation
+   costs match the source stay.
+2. Select the new horizontal mount in the sail menu and fit a staysail, including
+   **Fisherman's Sail Prototype**. Each fisherman stay accepts one sail. Resize
+   the sail to fit the available span using the normal shipyard controls.
+3. Install an angled stay and sail at the same time. Check both independently:
+   furl/unfurl and sheet to port/starboard. The new controls are beside the source
+   winches, offset 0.35 m toward the forward mast. Verify they are accessible and
+   clear of surrounding fittings on the vessel being tested.
+4. Check that both stay endpoints are at the same height relative to the boat,
+   and remain so while the boat heels. Inspect cloth, rope hardware, and collision
+   clearance with both sails deployed.
+5. Reopen the shipyard, cancel an order, and save/reload with both stays fitted.
+   Confirm the selection, sail size, and installation position return and that
+   no duplicate entries or winches appear. Remove the sail before removing its
+   stay or required mast. Repeat on a second vessel layout.
+
+The log reports `Registered Fisherman's Top Middle Stay` with the source index,
+new mount index, span, and geometric availability. This proves registration,
+not successful cloth simulation. Fitted fisherman stays and their sails require
+this mod when loading the save. Remove the sails, set the fisherman entries to
+None, and save before uninstalling.
+
 ## How it works
 
 `Plugin.cs` declares the plugin metadata and Shipyard Expansion dependency, then
@@ -175,6 +216,35 @@ inputs are rejected. They run managed geometry code, not Unity's cloth simulatio
 The same checks were also run locally against the actual brig mesh (289 vertices,
 34 pinned, 512 triangles), with no inverted triangles. Game geometry is not
 included in this repository.
+
+`FishermanStay.cs` creates the separate rigging groups after Shipyard Expansion's
+boat initialization. Static meshes/materials are shared without modification;
+mounts, controls, rope targets, and walking-collision geometry are independent.
+The mount retains the source stay's roll as its axis becomes horizontal,
+preserving the sail's existing orientation. Geometry is refreshed during ordinary
+and preview part changes.
+
+Mount indices use `128 + source mount index` (128–255), independently of sail
+prefab indices. Occupied indices stop that group's registration. The mod extends
+the native mount buttons and save-array capacity, appends customization parts,
+and registers mounts before saved sails load. Existing entries are not reordered.
+
+Run the stay geometry checks together with the existing cloth checks, and check
+the Harmony targets and save-array capacity against the installed assemblies:
+
+```sh
+nix develop -c dotnet run --project tests/GeometryChecks -c Release
+nix develop -c dotnet run --project tests/AssemblyChecks -c Release
+```
+
+For another game installation, use `-p:SailwindDir=/path/to/Sailwind` on both
+projects and pass that directory after `--` to AssemblyChecks as well. An optional
+local stay fixture can be supplied to GeometryChecks with
+`-- --stay-fixture /path/to/stays.json`. It is a JSON array containing `aft`,
+`foreBottom`, `foreTop`, `aftBottom`, and `aftTop` three-coordinate arrays in a
+common upright boat frame. Proprietary geometry is not committed. The local
+stock-asset fixture covered 15 upper-stay samples across boat instances: 13 supported the shared height,
+and two were correctly unavailable because the forward mast was too short.
 
 Compilation and geometry checks pass locally. In-game appearance, rigging,
 furling, and save/reload still require the manual checks above.

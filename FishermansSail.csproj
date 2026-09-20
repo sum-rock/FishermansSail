@@ -3,7 +3,7 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <AssemblyName>FishermansSail</AssemblyName>
     <RootNamespace>FishermansSail</RootNamespace>
-    <Version>0.2.0</Version>
+    <Version>0.3.0</Version>
     <SailwindDir Condition="'$(SailwindDir)' == ''"
       >$(HOME)/.local/share/Steam/steamapps/common/Sailwind</SailwindDir>
   </PropertyGroup>
@@ -32,6 +32,10 @@
     </Reference>
     <Reference Include="UnityEngine.ClothModule">
       <HintPath>$(SailwindDir)/Sailwind_Data/Managed/UnityEngine.ClothModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.PhysicsModule">
+      <HintPath>$(SailwindDir)/Sailwind_Data/Managed/UnityEngine.PhysicsModule.dll</HintPath>
       <Private>false</Private>
     </Reference>
   </ItemGroup>

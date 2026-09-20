@@ -9,6 +9,13 @@ internal static class Program
 {
     private static void Main(string[] args)
     {
+        if (args.Length == 2 && args[0] == "--stay-fixture")
+        {
+            StayChecks.Run(args[1]);
+            args = Array.Empty<string>();
+        }
+        else
+            StayChecks.Run();
         // A triangular sail in X/Z, with a pinned luff and a free clew.
         var vertices = new[]
         {
