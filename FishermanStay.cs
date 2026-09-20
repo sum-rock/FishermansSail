@@ -284,15 +284,24 @@ namespace FishermansSail
                     aftTop;
                 PhysicalSegment(foreMast, out foreBottom, out foreTop);
                 PhysicalSegment(aftMast, out aftBottom, out aftTop);
-                var aft = boat.transform.InverseTransformPoint(source.transform.position);
-                var fore = StayGeometry.AtHeight(foreBottom, foreTop, aft.y);
+                Vector3 fore,
+                    aft;
+                StayGeometry.ForemastAttachments(
+                    boat.transform.InverseTransformPoint(foreMast.transform.position),
+                    foreBottom,
+                    foreTop,
+                    aftBottom,
+                    aftTop,
+                    out fore,
+                    out aft
+                );
                 float span = StayGeometry.Span(aft, fore);
                 Fits =
                     StayGeometry.SupportsHeight(foreBottom, foreTop, aft.y)
                     && StayGeometry.SupportsHeight(aftBottom, aftTop, aft.y);
                 UnavailableReason = Fits
                     ? null
-                    : "Both masts must reach the aft upper stay attachment.";
+                    : "Both masts must reach the foremast upper sail-mount height.";
                 var forward = boat.transform.TransformDirection((aft - fore).normalized);
                 // Preserve the donor mount's roll. Cloth mesh axes are not the
                 // mount axes: forcing mount +X downward flips the stock rig.

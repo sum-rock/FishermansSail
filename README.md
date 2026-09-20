@@ -6,16 +6,16 @@ the free cloth edges while keeping the original corners, pinned cloth vertices,
 rigging, and controls. This is a deformation experiment, not yet a four-sided
 fisherman's staysail.
 
-Version **0.3.0** also adds an independent **Fisherman's Top Middle Stay**.
-It runs horizontally from an existing aft upper stay attachment to the foremast
-at the same boat-relative height. It has its own sail mount and winches, so it can
+Version **0.3.1** also adds an independent **Fisherman's Top Middle Stay**.
+It runs horizontally at the foremast’s upper sail-mount height, meeting both
+mast axes at the same boat-relative height. It has its own sail mount and winches, so it can
 coexist with the original angled stay. The rope is visible in this version.
 
 The mod discovers upper stays through their mast dependencies, without a vessel
 whitelist. Each eligible shipyard stay group gains a separate fisherman entry
 with **None** and variants for its mast configurations. Upper mizzen stays are
-eligible too. Both physical masts must reach the aft attachment height; variants
-with a shorter foremast cannot be installed. A source stay must provide two
+eligible too. The forward mast sets the height even when the aft mast is taller.
+Both physical masts must reach that height for the variant to be installed. A source stay must provide two
 physical mast dependencies, spar capsule colliders, static stay geometry, and
 usable sail controls. Unsupported layouts are logged instead of guessed.
 
@@ -109,7 +109,7 @@ These existing assemblies are not copied into the plugin output or committed her
    game directory and look for the startup message:
 
    ```text
-   [Info   :Fisherman's Sail] Fisherman's Sail 0.3.0 loaded!
+   [Info   :Fisherman's Sail] Fisherman's Sail 0.3.1 loaded!
    ```
 
 4. Load a test save with access to the brig and a shipyard. When the game's prefab
@@ -240,11 +240,10 @@ nix develop -c dotnet run --project tests/AssemblyChecks -c Release
 For another game installation, use `-p:SailwindDir=/path/to/Sailwind` on both
 projects and pass that directory after `--` to AssemblyChecks as well. An optional
 local stay fixture can be supplied to GeometryChecks with
-`-- --stay-fixture /path/to/stays.json`. It is a JSON array containing `aft`,
+`-- --stay-fixture /path/to/stays.json`. It is a JSON array containing `foreMount`,
 `foreBottom`, `foreTop`, `aftBottom`, and `aftTop` three-coordinate arrays in a
 common upright boat frame. Proprietary geometry is not committed. The local
-stock-asset fixture covered 15 upper-stay samples across boat instances: 13 supported the shared height,
-and two were correctly unavailable because the forward mast was too short.
+stock-asset fixture covers 15 upper-stay samples across boat instances.
 
 Compilation and geometry checks pass locally. In-game appearance, rigging,
 furling, and save/reload still require the manual checks above.
