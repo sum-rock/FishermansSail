@@ -1,12 +1,14 @@
 # Fisherman's Sail
 
-A Sailwind mod with an experimental **Fisherman's Sail Prototype**, cloned from
-the game's **brig jib** (prefab 110, category `staysail`). The prototype widens
-the free cloth edges while keeping the original corners, pinned cloth vertices,
-rigging, and controls. This is a deformation experiment, not yet a four-sided
-fisherman's staysail.
+A Sailwind mod with an experimental **Fisherman's Sail Prototype**, based on
+an independent clone of the game's **brig jib** (prefab 110, category `staysail`).
+Version **0.4.0** replaces the triangular prototype with a four-corner trapezoid:
+a horizontal top, two 90° top corners, a 40° lower forward corner, and a 140°
+lower aft corner. The aft depth is half the top width; the forward depth is
+approximately 1.692 times the top width. These are the neutral, fully set angles;
+wind, sheeting, and mast rake can deform the working sail.
 
-Version **0.3.1** also adds an independent **Fisherman's Top Middle Stay**.
+The mod also includes an independent **Fisherman's Top Middle Stay**.
 It runs horizontally at the foremast’s upper sail-mount height, meeting both
 mast axes at the same boat-relative height. It has its own sail mount and winches, so it can
 coexist with the original angled stay. The rope is visible in this version.
@@ -109,35 +111,47 @@ These existing assemblies are not copied into the plugin output or committed her
    game directory and look for the startup message:
 
    ```text
-   [Info   :Fisherman's Sail] Fisherman's Sail 0.3.1 loaded!
+   [Info   :Fisherman's Sail] Fisherman's Sail 0.4.0 loaded!
    ```
 
 4. Load a test save with access to the brig and a shipyard. When the game's prefab
    directory initializes, the log should also contain:
 
    ```text
-   Registered Fisherman's Sail Prototype: source=110, index=400, vertices=289, ...
+   Registered Fisherman's Sail Prototype: source=110, index=400, vertices=825, ...
    ```
 
-   That line reports changed and pinned vertex counts and the old/new sail areas.
+   That line reports vertex and corner counts, the forward angle, and sail areas.
    It confirms registration, not that cloth simulation has been verified.
 
-5. At a shipyard, select a stay that accepts the brig jib, open **Staysails**, and
+5. At a shipyard, select the **Fisherman's Top Middle Stay**, open **Staysails**, and
    choose **Fisherman's Sail Prototype**. It is available in each shipyard and
    also integrates with All Sails in All Shipyards if installed. Check subsequent
    menu pages if needed. The original **brig jib** remains available wherever it
    was previously sold.
-6. Compare the unfurled outline with the original. The free edges should bow
-   outward; the luff and clew should stay attached. Test furling, unfurling,
-   sheeting on both sides, and shipyard resizing. Reenter the shipyard and check
-   that the prototype appears only once. On the test save, save/reload with this
-   mod installed and confirm the sail returns correctly.
+6. Unfurl the sail and check the trapezoid orientation: the long edge and lowest
+   corner must be forward. Scale it uniformly to fit the available stay and clear
+   the deck and lower sails. The base top width remains the donor's install height
+   (13.8 m in the inspected game assets); smaller rigs will need scaling down.
+   Keep the default flip setting and align the forward top corner with the foremast.
+7. Sheet on both sides: the lower aft corner follows the sheets, while the lower
+   forward corner remains on the physical foremast axis. Furl halfway, strike fully,
+   and unfurl again. The lower corners should rise toward the top, leaving a narrow
+   gathered strip when struck. Check for cloth explosions, detached ropes, or an
+   unexpected triangular remnant. This is a procedural furl, not a rolled-cloth model.
+8. Reenter the shipyard and confirm one prototype entry. Resize and recolor it;
+   save/reload and confirm its shape, scale, controls, and attachments return.
+   Confirm the original brig jib and angled stay still work independently.
 
-Use a test save or a backup for this experimental sail. Sailwind saves its prefab
-index, so a save with the prototype fitted needs this mod to recreate it. Remove
-the prototype at a shipyard and save before uninstalling. The copied furled model,
-wind center, and collision setup still use the brig jib's layout; this milestone
-does not establish accurate fisherman-sail performance or perfect cloth animation.
+The prefab index remains **400**, so existing prototype sails load the new shape
+with their saved scale. Their larger outline may need refitting. Foremast anchoring
+is provided on fisherman stays; ordinary stays still accept the sail but cannot
+supply that dedicated mast attachment. Exact proportions assume uniform scaling.
+The native sail physics use the new area, with the force point moved to its centroid;
+aerodynamic tuning and Unity cloth behavior still need in-game validation.
+
+Sailwind saves the prefab index, so fitted prototypes require this mod on reload.
+Remove them at a shipyard and save before uninstalling.
 
 To find the message from a terminal:
 
@@ -191,13 +205,18 @@ an inactive template container after Shipyard Expansion configures its source
 components. Registration runs before All Sails in All Shipyards caches its sail
 list. Shipyard hooks append the prototype once, without replacing inventory entries.
 
-The cloth mesh is cloned separately from the GameObject so it is not shared with
-the original brig jib. `PrototypeGeometry.cs` changes local X coordinates with a
-smooth outward bulge of up to 20% of the original width, tapering to zero at the
-mesh bounds and leaving pinned vertices untouched. Vertex order, triangles, UVs,
-bone weights, bind poses, and cloth constraints are retained. Normals, mesh bounds,
-and sail area are recalculated. The existing game code still supplies sail physics
-and controls; the increased mesh area affects its calculated area and price.
+`PrototypeGeometry.cs` generates a separate 24-by-32 quad grid (825 vertices,
+1,536 triangles), UVs, four-corner bone weights, and cloth constraints. The top
+edge and both lower corners are pinned; other vertices can billow. The source
+brig mesh and prefab remain unchanged.
+
+`FishermanSailRig.cs` replaces the cloned triangle animation with four procedural
+bones driven by the native reef control. It attaches the sheets to the lower aft
+corner and constrains the lower forward corner to the foremast on fisherman stays,
+including during sheeting and furling. The disabled donor Animator remains as
+Shipyard Expansion's scaling reference. The shipyard collider uses narrow strips
+inside the trapezoid; the wind-shadow box covers its bounds. Normals, bounds,
+and sail area are recalculated from the new mesh.
 
 See the [BepInEx plugin tutorial](https://docs.bepinex.dev/articles/dev_guide/plugin_tutorial/2_plugin_start.html)
 and [logging guide](https://docs.bepinex.dev/articles/dev_guide/plugin_tutorial/3_logging.html).
@@ -210,12 +229,10 @@ nix develop -c dotnet --list-sdks
 nix develop -c dotnet run --project tests/GeometryChecks -c Release
 ```
 
-The geometry checks verify that the input is unchanged, pinned vertices and
-corners remain fixed, the outline changes within its original bounds, and invalid
-inputs are rejected. They run managed geometry code, not Unity's cloth simulation.
-The same checks were also run locally against the actual brig mesh (289 vertices,
-34 pinned, 512 triangles), with no inverted triangles. Game geometry is not
-included in this repository.
+The geometry checks verify all four angles, proportions, triangle winding, area,
+UVs, skin weights, attachment constraints, furl positions, independent arrays,
+and invalid inputs over multiple sizes. They run managed geometry code, not
+Unity's cloth simulation. Game geometry is not included in this repository.
 
 `FishermanStay.cs` creates the separate rigging groups after Shipyard Expansion's
 boat initialization. Static meshes/materials are shared without modification;

@@ -18,6 +18,7 @@ namespace FishermansSail
         {
             GameObject container = null;
             Mesh mesh = null;
+            Mesh shadowMesh = null;
             try
             {
                 if (
@@ -57,22 +58,7 @@ namespace FishermansSail
                     );
 
                 var sourceMesh = sourceRenderer.sharedMesh;
-                var originalVertices = sourceMesh.vertices;
-                var constraints = sourceSail.cloth.coefficients;
-                var deformed = PrototypeGeometry.Deform(originalVertices, constraints);
-                int changed = 0,
-                    pinned = 0;
-                for (int i = 0; i < originalVertices.Length; i++)
-                {
-                    if (deformed[i].x != originalVertices[i].x)
-                        changed++;
-                    if (constraints[i].maxDistance <= 0f)
-                        pinned++;
-                }
-                if (changed == 0)
-                    throw new InvalidOperationException(
-                        "The prototype deformation did not move any cloth vertices."
-                    );
+                var geometry = PrototypeGeometry.Create(sourceSail.installHeight);
 
                 // An inactive parent prevents Awake/Start from running on our
                 // template. Installed copies retain activeSelf=true and initialize normally.
@@ -86,23 +72,19 @@ namespace FishermansSail
                 sail.sailName = DisplayName;
                 sail.obsolete = false;
 
-                // Instantiate(GameObject) still shares asset meshes. Clone the
-                // mesh explicitly before changing any vertex data.
-                mesh = Object.Instantiate(sourceMesh);
-                mesh.name = "FishermansSail Prototype Cloth";
-                mesh.vertices = deformed;
+                mesh = new Mesh { name = "FishermansSail Trapezoid Cloth" };
+                mesh.vertices = geometry.Vertices;
+                mesh.triangles = geometry.Triangles;
+                mesh.uv = geometry.UV;
+                mesh.boneWeights = geometry.Weights;
                 mesh.RecalculateNormals();
                 mesh.RecalculateBounds();
+                shadowMesh = new Mesh { name = "FishermansSail Shadow Samples" };
+                shadowMesh.vertices = geometry.Corners;
+                shadowMesh.triangles = new[] { 0, 2, 1, 1, 2, 3 };
+                shadowMesh.RecalculateBounds();
+                FishermanSailRig.Configure(sail, geometry, mesh, shadowMesh);
                 var renderer = sail.cloth.GetComponent<SkinnedMeshRenderer>();
-                bool clothEnabled = sail.cloth.enabled;
-                sail.cloth.enabled = false;
-                renderer.sharedMesh = mesh;
-                // Preserve the source's animation bounds as well as the new mesh bounds.
-                var bounds = renderer.localBounds;
-                bounds.Encapsulate(mesh.bounds);
-                renderer.localBounds = bounds;
-                sail.cloth.coefficients = constraints;
-                sail.cloth.enabled = clothEnabled;
                 clone.SetActive(true);
                 sail.SetSailArea();
 
@@ -114,12 +96,13 @@ namespace FishermansSail
 
                 string registrationMessage =
                     $"Registered {DisplayName}: source={SourceIndex}, index={PrototypeIndex}, "
-                    + $"vertices={mesh.vertexCount}, changed={changed}, pinned={pinned}, "
+                    + $"vertices={mesh.vertexCount}, corners=4, forwardAngle=40, "
                     + $"area={sourceSail.GetSailArea():F2}->{sail.sailArea:F2}. Original brig jib preserved.";
 
                 if (directory.sails.Length <= PrototypeIndex)
                     Array.Resize(ref directory.sails, PrototypeIndex + 1);
                 directory.sails[PrototypeIndex] = clone;
+                container.AddComponent<FishermanSailAssets>().Meshes = new[] { mesh, shadowMesh };
                 prefab = clone;
                 Plugin.Log.LogInfo(registrationMessage);
             }
@@ -129,6 +112,8 @@ namespace FishermansSail
                     Object.Destroy(container);
                 if (mesh)
                     Object.Destroy(mesh);
+                if (shadowMesh)
+                    Object.Destroy(shadowMesh);
                 Plugin.Log.LogError($"Could not register {DisplayName}: {exception}");
             }
         }

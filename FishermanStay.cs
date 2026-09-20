@@ -274,6 +274,13 @@ namespace FishermansSail
                 .Where(o => o && !(o.GetComponent<Mast>() && o.GetComponent<Mast>().onlyStaysails))
                 .ToList();
 
+        internal Vector3 ForeAttachment(Vector3 requestedWorld)
+        {
+            PhysicalSegment(foreMast, out var bottom, out var top);
+            float height = boat.transform.InverseTransformPoint(requestedWorld).y;
+            return boat.transform.TransformPoint(StayGeometry.AtHeight(bottom, top, height));
+        }
+
         internal void Refresh()
         {
             try
