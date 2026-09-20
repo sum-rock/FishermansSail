@@ -119,6 +119,60 @@ namespace FishermansSail
             };
         }
 
+        // 0 = bundled, 1 = procedural reefing, 2 = fully deployed cloth.
+        internal static int RenderState(float unroll) =>
+            unroll <= 0.02f ? 0
+            : unroll < 0.98f ? 1
+            : 2;
+
+        internal static SailMeshData CreateBundle(float width)
+        {
+            if (float.IsNaN(width) || float.IsInfinity(width) || width < 0.25f || width > 100f)
+                throw new ArgumentException("Invalid bundle width.");
+            const int sides = 12;
+            float radius = width * 0.008f;
+            var data = new SailMeshData
+            {
+                Vertices = new Vector3[sides * 2 + 2],
+                UV = new Vector2[sides * 2 + 2],
+                Triangles = new int[sides * 12],
+            };
+            for (int i = 0; i < sides; i++)
+            {
+                float angle = i * 2 * (float)Math.PI / sides;
+                var point = new Vector3(
+                    -radius + radius * (float)Math.Cos(angle),
+                    radius * (float)Math.Sin(angle),
+                    0
+                );
+                data.Vertices[i] = point;
+                data.Vertices[i + sides] = point + new Vector3(0, 0, -width);
+                data.UV[i] = new Vector2((float)i / sides, 0);
+                data.UV[i + sides] = new Vector2((float)i / sides, 1);
+                int next = (i + 1) % sides,
+                    t = i * 12;
+                var face = new[]
+                {
+                    i,
+                    i + sides,
+                    next,
+                    next,
+                    i + sides,
+                    next + sides,
+                    sides * 2,
+                    i,
+                    next,
+                    sides * 2 + 1,
+                    next + sides,
+                    i + sides,
+                };
+                Array.Copy(face, 0, data.Triangles, t, 12);
+            }
+            data.Vertices[sides * 2] = new Vector3(-radius, 0, 0);
+            data.Vertices[sides * 2 + 1] = new Vector3(-radius, 0, -width);
+            return data;
+        }
+
         internal static Vector3 ReefCorner(Vector3 corner, float unroll)
         {
             float amount = Math.Max(0.015f, Math.Min(1f, unroll));

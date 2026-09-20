@@ -28,7 +28,10 @@ namespace FishermansSail
 
     internal sealed class FishermanStay
     {
-        internal const string DisplayName = "Fisherman's Top Middle Stay";
+        internal const string ForeDisplayName = "Formast Triatic Stay";
+        internal const string MizzenDisplayName = "Mizzenmast Triatic Stay";
+        internal string DisplayName => isMizzen ? MizzenDisplayName : ForeDisplayName;
+        private bool isMizzen;
         internal Mast Mount;
         internal BoatPartOption Option;
         internal GameObject WalkObject;
@@ -60,18 +63,18 @@ namespace FishermansSail
 
             // Keep source parts/options intact. Each new part mirrors the source
             // group's mutually exclusive mast configurations, not its on/off state.
-            foreach (var sourcePart in parts.availableParts.ToArray())
+            var sourceParts = parts.availableParts.ToArray();
+            var upperPairs = sourceParts
+                .SelectMany(p => p.partOptions)
+                .Where(o => o && StayGeometry.IsUpperStay(o.optionName + " " + o.name))
+                .Where(o => o.GetComponent<Mast>() && o.GetComponent<Mast>().onlyStaysails)
+                .Select(o => OrderedPhysicalMasts(o.GetComponent<Mast>(), boat))
+                .Where(pair => pair.Length == 2)
+                .ToArray();
+            foreach (var group in DonorGroups(sourceParts))
             {
-                var candidates = sourcePart
-                    .partOptions.Where(o =>
-                        o && StayGeometry.IsUpperStay(o.optionName + " " + o.name)
-                    )
-                    .Select(o => o.GetComponent<Mast>())
-                    .Where(m =>
-                        m && m.onlyStaysails && m.orderIndex < StayGeometry.SourceIndexLimit
-                    )
-                    .OrderBy(m => m.orderIndex)
-                    .ToArray();
+                var sourcePart = group.Item1;
+                var candidates = group.Item2;
                 var added = new List<FishermanStay>();
                 GameObject empty = null;
                 GameObject emptyWalk = null;
@@ -80,7 +83,7 @@ namespace FishermansSail
                     foreach (var source in candidates)
                     {
                         var option = source.GetComponent<BoatPartOption>();
-                        var dependencies = PhysicalMasts(option).Distinct().ToArray();
+                        var dependencies = OrderedPhysicalMasts(source, boat);
                         if (dependencies.Length != 2)
                             continue; // A forestay to a bowsprit is not an inter-mast stay.
                         if (!source.walkColMast || !boat.walkCol || source.mastHeight < 0.25f)
@@ -92,7 +95,19 @@ namespace FishermansSail
                             throw new InvalidOperationException(
                                 $"Mount index {index} is occupied; no mount was replaced."
                             );
-                        var stay = new FishermanStay { source = source, boat = boat };
+                        var stay = new FishermanStay
+                        {
+                            source = source,
+                            boat = boat,
+                            isMizzen = StayGeometry.IsMizzenPair(
+                                option.optionName
+                                    + " "
+                                    + string.Join(" ", dependencies.Select(m => m.name)),
+                                upperPairs.Any(pair =>
+                                    pair[0] == dependencies[1] && pair[1] != dependencies[0]
+                                )
+                            ),
+                        };
                         added.Add(stay); // Include partially constructed objects in rollback.
                         stay.Create(dependencies);
                     }
@@ -105,7 +120,7 @@ namespace FishermansSail
                         added[0].WalkObject.transform.parent
                     );
                     var none = empty.AddComponent<BoatPartOption>();
-                    none.optionName = "(no fisherman's top middle stay)";
+                    none.optionName = "(no " + added[0].DisplayName + ")";
                     none.requires = new List<BoatPartOption>();
                     none.requiresDisabled = new List<BoatPartOption>();
                     none.childOptions = new GameObject[0];
@@ -132,7 +147,7 @@ namespace FishermansSail
                             );
                         stay.Mount.gameObject.SetActive(false);
                         Plugin.Log.LogInfo(
-                            $"Registered {DisplayName}: boat={boat.name}, source={stay.source.orderIndex}, "
+                            $"Registered {stay.DisplayName}: boat={boat.name}, source={stay.source.orderIndex}, "
                                 + $"mount={stay.Mount.orderIndex}, span={stay.Mount.mastHeight:F2}, available={stay.Fits}."
                         );
                     }
@@ -173,6 +188,56 @@ namespace FishermansSail
             }
         }
 
+        private static IEnumerable<Tuple<BoatPart, Mast[]>> DonorGroups(BoatPart[] parts)
+        {
+            // Preserve every previously appended part position. Newly supported
+            // unqualified mizzen groups go after all existing upper-stay groups.
+            for (int pass = 0; pass < 2; pass++)
+                foreach (var part in parts)
+                {
+                    var mounts = part
+                        .partOptions.Where(o => o)
+                        .Select(o => o.GetComponent<Mast>())
+                        .Where(m =>
+                            m
+                            && m.onlyStaysails
+                            && m.orderIndex >= 0
+                            && m.orderIndex < StayGeometry.SourceIndexLimit
+                        )
+                        .OrderBy(m => m.orderIndex)
+                        .ToArray();
+                    var upper = mounts
+                        .Where(m =>
+                            StayGeometry.IsUpperStay(
+                                m.name + " " + m.GetComponent<BoatPartOption>().optionName
+                            )
+                        )
+                        .ToArray();
+                    if (pass == 0)
+                    {
+                        if (upper.Length > 0)
+                            yield return Tuple.Create(part, upper);
+                        continue;
+                    }
+                    if (upper.Length > 0)
+                        continue;
+                    var fallback = mounts
+                        .Where(m =>
+                        {
+                            var option = m.GetComponent<BoatPartOption>();
+                            var dependencies = PhysicalMasts(option).Distinct().ToArray();
+                            return dependencies.Length == 2
+                                && StayGeometry.IsFallbackMizzenStay(
+                                    m.name + " " + option.optionName,
+                                    string.Join(" ", dependencies.Select(d => d.name))
+                                );
+                        })
+                        .ToArray();
+                    if (fallback.Length > 0)
+                        yield return Tuple.Create(part, fallback);
+                }
+        }
+
         private static IEnumerable<Mast> PhysicalMasts(BoatPartOption option)
         {
             foreach (var required in option.requires ?? new List<BoatPartOption>())
@@ -196,10 +261,12 @@ namespace FishermansSail
             }
         }
 
-        private void Create(Mast[] dependencies)
+        // Ordered aft-to-forward by proximity to the donor's upper endpoint.
+        private static Mast[] OrderedPhysicalMasts(Mast source, BoatRefs boat)
         {
             var origin = boat.transform.InverseTransformPoint(source.transform.position);
-            var ordered = dependencies
+            return PhysicalMasts(source.GetComponent<BoatPartOption>())
+                .Distinct()
                 .OrderBy(m =>
                     StayGeometry.HorizontalDistanceSquared(
                         origin,
@@ -207,8 +274,12 @@ namespace FishermansSail
                     )
                 )
                 .ToArray();
-            aftMast = ordered[0];
-            foreMast = ordered[1];
+        }
+
+        private void Create(Mast[] dependencies)
+        {
+            aftMast = dependencies[0];
+            foreMast = dependencies[1];
             // Parent directly to the boat: an optional donor rigging container
             // must not disable this independent stay. This also makes the native
             // Mast's localPosition-based hinge anchor a boat-local coordinate.
@@ -227,7 +298,8 @@ namespace FishermansSail
             Mount.leftAngleWinch = CloneWinches(source.leftAngleWinch, "Port sheet");
             Mount.rightAngleWinch = CloneWinches(source.rightAngleWinch, "Starboard sheet");
             Mount.midAngleWinch = CloneWinches(source.midAngleWinch, "Sheet");
-            Mount.reefWinch = CloneWinches(source.reefWinch, "Furl");
+            var halyardMast = isMizzen ? aftMast : foreMast;
+            Mount.reefWinch = CloneWinches(halyardMast.reefWinch, "Furl");
             if (
                 Mount.reefWinch.Length == 0
                 || (
@@ -239,13 +311,8 @@ namespace FishermansSail
                     "The source stay does not provide a complete set of sail controls."
                 );
             Mount.midRopeAtt = CloneAnchors(source.midRopeAtt, "Sheet attachment");
-            Mount.mastReefAtt = CloneAnchors(source.mastReefAtt, "Furl attachment");
-            Mount.mastReefAttExtension = CloneAnchors(
-                source.mastReefAttExtension,
-                "Furl extension"
-            );
-            if (Mount.mastReefAtt.Length == 0)
-                throw new InvalidOperationException("The source stay has no furl attachment.");
+            Mount.mastReefAtt = new[] { NewHalyardAnchor("Halyard mast guide") };
+            Mount.mastReefAttExtension = new[] { NewHalyardAnchor("Halyard upper guide") };
 
             visual = CopyGeometry(source.transform, root.transform, true);
             if (visual.GetComponentsInChildren<MeshRenderer>(true).Length == 0)
@@ -274,6 +341,33 @@ namespace FishermansSail
                 .Where(o => o && !(o.GetComponent<Mast>() && o.GetComponent<Mast>().onlyStaysails))
                 .ToList();
 
+        private Transform NewHalyardAnchor(string name)
+        {
+            var anchor = new GameObject(name).transform;
+            anchor.SetParent(Mount.transform, false);
+            return anchor;
+        }
+
+        internal void UpdateHalyard(Sail sail, Transform[] attachments)
+        {
+            var connections = sail.GetComponent<SailConnections>();
+            var guide = connections.mastReefAttachment;
+            var upperGuide = connections.mastReefAttExtension;
+            if (!connections.reefController || !guide || !upperGuide)
+                return;
+            // Set an explicit winch -> mast guides -> upper sail corner route.
+            // Shipyard Expansion can swap the two donor guide references in Awake.
+            guide.SetParent(Mount.mastReefAtt[0], false);
+            guide.localPosition = Vector3.zero;
+            upperGuide.SetParent(Mount.mastReefAttExtension[0], false);
+            upperGuide.localPosition = Vector3.zero;
+            connections.reefController.GetComponent<RopeEffect>().attachment = guide;
+            guide.GetComponent<RopeEffect>().attachment = upperGuide;
+            upperGuide.GetComponent<RopeEffect>().attachment = attachments[isMizzen ? 1 : 0];
+            var winch = Mount.reefWinch[0].transform;
+            connections.reefController.transform.position = winch.position + winch.right * 0.06f;
+        }
+
         internal Vector3 ForeAttachment(Vector3 requestedWorld)
         {
             PhysicalSegment(foreMast, out var bottom, out var top);
@@ -294,7 +388,9 @@ namespace FishermansSail
                 Vector3 fore,
                     aft;
                 StayGeometry.ForemastAttachments(
-                    boat.transform.InverseTransformPoint(foreMast.transform.position),
+                    boat.transform.InverseTransformPoint(
+                        (isMizzen ? aftMast : foreMast).transform.position
+                    ),
                     foreBottom,
                     foreTop,
                     aftBottom,
@@ -308,7 +404,9 @@ namespace FishermansSail
                     && StayGeometry.SupportsHeight(aftBottom, aftTop, aft.y);
                 UnavailableReason = Fits
                     ? null
-                    : "Both masts must reach the foremast upper sail-mount height.";
+                    : "Both masts must reach the "
+                        + (isMizzen ? "mizzenmast" : "foremast")
+                        + " upper sail-mount height.";
                 var forward = boat.transform.TransformDirection((aft - fore).normalized);
                 // Preserve the donor mount's roll. Cloth mesh axes are not the
                 // mount axes: forcing mount +X downward flips the stock rig.
@@ -342,6 +440,13 @@ namespace FishermansSail
                 walkVisual.localScale = new Vector3(1f, 1f, span / source.mastHeight);
                 foreach (var pair in anchors)
                     pair.Item2.SetPositionAndRotation(pair.Item1.position, pair.Item1.rotation);
+                var halyardMast = isMizzen ? aftMast : foreMast;
+                var guidePoint = isMizzen ? aft : fore;
+                PhysicalSegment(halyardMast, out var guideBottom, out var guideTop);
+                Mount.mastReefAtt[0].position = boat.transform.TransformPoint(guidePoint);
+                Mount.mastReefAttExtension[0].position = boat.transform.TransformPoint(
+                    StayGeometry.AtHeight(guideBottom, guideTop, guidePoint.y + 0.15f)
+                );
                 var towardsFore = Vector3
                     .ProjectOnPlane(
                         foreMast.transform.position - aftMast.transform.position,

@@ -9,6 +9,52 @@ internal static class StayChecks
 {
     internal static void Run(string fixture = null)
     {
+        Check(
+            StayGeometry.IsMizzenPair("mizzen top stay 2 mast_mizzen_1", false),
+            "Named mizzen pair was missed."
+        );
+        Check(
+            StayGeometry.IsMizzenPair("mast_main_1 mast_main_2", true),
+            "Rear mast pair must work without mizzen names."
+        );
+        Check(
+            !StayGeometry.IsMizzenPair("mast_front mast_main", false),
+            "Forward pair was mislabeled."
+        );
+        Check(
+            StayGeometry.IsFallbackMizzenStay(
+                "midstay_1-0 middle stay 2",
+                "mast_mid_1 mast_mizzen_0"
+            ),
+            "The junk-medium main-to-mizzen stay must not require top/upper in its name."
+        );
+        Check(
+            !StayGeometry.IsFallbackMizzenStay("lower mizzen stay", "mast_mid_1 mast_mizzen_0"),
+            "Explicit lower stays must not be fallback donors."
+        );
+        Check(
+            !StayGeometry.IsFallbackMizzenStay("midstay_f-0", "mast_mid_0 mast_front_"),
+            "Fallback must not duplicate the forward stay group."
+        );
+        Check(
+            !StayGeometry.IsFallbackMizzenStay("mizzen top stay 2", "mast_Back_1 mast_mizzen_1"),
+            "Existing upper donors must not be registered a second time."
+        );
+        StayGeometry.ForemastAttachments(
+            new Vector3(0, 12, 0),
+            new Vector3(10, 0, 0),
+            new Vector3(10, 25, 0),
+            Vector3.zero,
+            new Vector3(0, 14, 0),
+            out var mainEnd,
+            out var mizzenEnd
+        );
+        Check(
+            mainEnd.y == 12
+                && mizzenEnd.y == 12
+                && StayGeometry.SupportsHeight(Vector3.zero, new Vector3(0, 14, 0), mizzenEnd.y),
+            "The mizzen stay must use the shorter aft mast's upper attachment height."
+        );
         var foreBottom = new Vector3(12, 2, 0);
         var foreTop = new Vector3(12, 18, 0);
         var aftBottom = new Vector3(0, 0, 0);

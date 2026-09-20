@@ -14,7 +14,38 @@ recalculates tangents. The geometry checks now enforce Unity's weight ordering
 as well as matching each weight to the correct corner. The visual artifact fix
 still needs an in-game check after restarting with the rebuilt DLL.
 
-The mod also includes an independent **Fisherman's Top Middle Stay**.
+Version **0.5.2** draws a separate gathered bundle when fully furled. Partly
+furled sails use a skinned renderer without cloth simulation; only fully deployed
+sails use the Cloth renderer. This avoids rendering stale solver triangles during
+furling. The three visuals are selected after WindCloth's visibility updates.
+
+The Formast stay's furl winch is copied from the foremast, and the Mizzenmast
+stay's from the mizzenmast. Halyard guides sit on those physical mast axes at the
+triatic height, with an explicit winch-to-guides-to-upper-sail-corner rope route.
+Rope endpoints are separate from skin bones because the game rotates endpoints
+while rendering ropes. Sheet controls remain alongside the angled donor stay's
+sheet winches. These visual and attachment corrections still need in-game checks.
+
+Version **0.5.1** routes shipyard `RefreshCloth()` requests to the procedural
+rig. This avoids the logged null-reference error when Shipyard Expansion tries
+to unfurl the sail through its disabled donor animator. Ordinary sails retain
+the native refresh behavior. The reported hard freeze still needs an in-game
+retest; fixing the logged error alone does not prove its cause.
+
+This version also discovers main-to-mizzen donors named simply "middle stay"
+when their group has no upper/top donor, including the junk-medium boat's three
+mast configurations. These new groups are appended after existing triatic groups
+to preserve saved part positions. Explicit lower/bottom donors are excluded.
+
+Version **0.5.0** names the forward entry **Formast Triatic Stay** and the rear
+entry **Mizzenmast Triatic Stay**. Both can be selected independently on supported
+three-masted rigs. The rear stay connects mainmast to mizzenmast at the mizzen's
+upper sail-mount height. Existing mount IDs and part ordering are preserved;
+previous rear entries receive the new name rather than creating duplicate stays.
+Named mizzen dependencies and the connected mast-pair layout identify rear stays,
+including layouts whose aft mast is named "main 2".
+
+The **Formast Triatic Stay** connects the forward mast pair.
 It runs horizontally at the foremast’s upper sail-mount height, meeting both
 mast axes at the same boat-relative height. It has its own sail mount and winches, so it can
 coexist with the original angled stay. The rope is visible in this version.
@@ -23,7 +54,8 @@ The mod discovers upper stays through their mast dependencies, without a vessel
 whitelist. Each eligible shipyard stay group gains a separate fisherman entry
 with **None** and variants for its mast configurations. Upper mizzen stays are
 eligible too. The forward mast sets the height even when the aft mast is taller.
-Both physical masts must reach that height for the variant to be installed. A source stay must provide two
+For mizzen pairs, the aft mast sets the height instead.
+Both physical masts must reach the selected height for the variant to be installed. A source stay must provide two
 physical mast dependencies, spar capsule colliders, static stay geometry, and
 usable sail controls. Unsupported layouts are logged instead of guessed.
 
@@ -117,7 +149,7 @@ These existing assemblies are not copied into the plugin output or committed her
    game directory and look for the startup message:
 
    ```text
-   [Info   :Fisherman's Sail] Fisherman's Sail 0.4.1 loaded!
+   [Info   :Fisherman's Sail] Fisherman's Sail 0.5.2 loaded!
    ```
 
 4. Load a test save with access to the brig and a shipyard. When the game's prefab
@@ -130,7 +162,7 @@ These existing assemblies are not copied into the plugin output or committed her
    That line reports vertex and corner counts, the forward angle, and sail areas.
    It confirms registration, not that cloth simulation has been verified.
 
-5. At a shipyard, select the **Fisherman's Top Middle Stay**, open **Staysails**, and
+5. At a shipyard, select the **Formast Triatic Stay**, open **Staysails**, and
    choose **Fisherman's Sail Prototype**. It is available in each shipyard and
    also integrates with All Sails in All Shipyards if installed. Check subsequent
    menu pages if needed. The original **brig jib** remains available wherever it
@@ -143,8 +175,9 @@ These existing assemblies are not copied into the plugin output or committed her
 7. Sheet on both sides: the lower aft corner follows the sheets, while the lower
    forward corner remains on the physical foremast axis. Furl halfway, strike fully,
    and unfurl again. The lower corners should rise toward the top, leaving a narrow
-   gathered strip when struck. Check for cloth explosions, detached ropes, or an
-   unexpected triangular remnant. This is a procedural furl, not a rolled-cloth model.
+   gathered bundle when struck. Check for cloth explosions, detached ropes, or an
+   unexpected triangular remnant. Verify that only one sail visual is displayed
+   at each stage, including after changing color and after save/reload.
 8. Reenter the shipyard and confirm one prototype entry. Resize and recolor it;
    save/reload and confirm its shape, scale, controls, and attachments return.
    Confirm the original brig jib and angled stay still work independently.
@@ -177,19 +210,25 @@ removing any fitted prototypes and saving, close the game and uninstall by remov
 
 ### Fit and verify the horizontal stay
 
-1. In shipyard rigging customization, find the separate **(no fisherman's top
-   middle stay)** entry. Select the fisherman variant matching the installed
-   masts; its name includes the original stay variant for identification.
-   Existing saves start with this new part set to None. Prices and installation
+1. In shipyard rigging customization, find **(no Formast Triatic Stay)** and,
+   on a supported rear mast pair, **(no Mizzenmast Triatic Stay)**. Select the
+   variants matching the installed masts; each includes the original stay variant
+   for identification. Both groups can be installed together.
+   Saves without these parts start at None; existing selections retain their IDs. Prices and installation
    costs match the source stay.
 2. Select the new horizontal mount in the sail menu and fit a staysail, including
    **Fisherman's Sail Prototype**. Each fisherman stay accepts one sail. Resize
    the sail to fit the available span using the normal shipyard controls.
 3. Install an angled stay and sail at the same time. Check both independently:
-   furl/unfurl and sheet to port/starboard. The new controls are beside the source
-   winches, offset 0.35 m toward the forward mast. Verify they are accessible and
+   furl/unfurl and sheet to port/starboard. Sheet controls are beside the source stay's
+   winches; the furl control is beside the appropriate physical mast's furl winch.
+   Copies are offset 0.35 m toward the forward mast. Follow each halyard from its
+   control to that mast's guides and then the upper corner of the sail. Verify they are accessible and
    clear of surrounding fittings on the vessel being tested.
-4. Check that both stay endpoints are at the same height relative to the boat,
+4. On a three-masted rig, install both triatic stays. Check that the Formast
+   entry spans foremast–mainmast and the Mizzenmast entry spans mainmast–mizzenmast.
+   Each must meet its shorter end mast at the selected upper mount height.
+   Check that both endpoints of each stay are at the same height relative to the boat,
    and remain so while the boat heels. Inspect cloth, rope hardware, and collision
    clearance with both sails deployed.
 5. Reopen the shipyard, cancel an order, and save/reload with both stays fitted.
@@ -197,7 +236,7 @@ removing any fitted prototypes and saving, close the game and uninstall by remov
    no duplicate entries or winches appear. Remove the sail before removing its
    stay or required mast. Repeat on a second vessel layout.
 
-The log reports `Registered Fisherman's Top Middle Stay` with the source index,
+The log reports `Registered Formast Triatic Stay` with the source index,
 new mount index, span, and geometric availability. This proves registration,
 not successful cloth simulation. Fitted fisherman stays and their sails require
 this mod when loading the save. Remove the sails, set the fisherman entries to

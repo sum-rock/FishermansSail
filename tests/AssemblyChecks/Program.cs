@@ -83,8 +83,8 @@ foreach (var type in assembly.GetTypes())
     }
     count++;
 }
-if (count != 10)
-    throw new Exception($"Expected all 10 patch classes, found {count}.");
+if (count != 11)
+    throw new Exception($"Expected all 11 patch classes, found {count}.");
 
 var dataType = Assembly
     .LoadFrom(Path.Combine(libraryDirs[0], "Assembly-CSharp.dll"))

@@ -26,10 +26,23 @@ namespace FishermansSail
         public Transform[] Bones;
         public Vector3[] Corners;
         public Transform SheetAttachment;
+        public Transform[] HalyardAttachments;
+        public SkinnedMeshRenderer ReefedRenderer;
+        public MeshRenderer BundleRenderer;
+        private int lastRenderState = -1;
         private FishermanStay stay;
         private Mast lastMount;
+        private bool refreshRequested;
 
-        internal static void Configure(Sail sail, SailMeshData data, Mesh mesh, Mesh shadowMesh)
+        internal void RefreshCloth() => refreshRequested = true;
+
+        internal static void Configure(
+            Sail sail,
+            SailMeshData data,
+            Mesh mesh,
+            Mesh shadowMesh,
+            Mesh bundleMesh
+        )
         {
             var cloth = sail.cloth;
             var renderer = cloth.GetComponent<SkinnedMeshRenderer>();
@@ -60,6 +73,15 @@ namespace FishermansSail
                 bone.localPosition = data.Corners[i];
                 rig.Bones[i] = bone;
                 poses[i] = bone.worldToLocalMatrix * cloth.transform.localToWorldMatrix;
+            }
+            // RopeEffect.LookAt rotates both endpoint transforms. Never give
+            // it a skin bone directly: use independent leaves beneath the bones.
+            rig.HalyardAttachments = new Transform[2];
+            for (int i = 0; i < 2; i++)
+            {
+                var attachment = new GameObject("Fisherman head halyard " + i).transform;
+                attachment.SetParent(rig.Bones[i], false);
+                rig.HalyardAttachments[i] = attachment;
             }
             mesh.bindposes = poses;
             // The donor Cloth contains serialized simulation data for a different
@@ -133,6 +155,23 @@ namespace FishermansSail
                     box.size = new Vector3(mesh.bounds.size.x, 0.1f, mesh.bounds.size.z);
                 }
             }
+            var reefed = new GameObject("Fisherman reefing cloth");
+            reefed.transform.SetParent(scaleRoot, false);
+            rig.ReefedRenderer = reefed.AddComponent<SkinnedMeshRenderer>();
+            rig.ReefedRenderer.sharedMesh = mesh;
+            rig.ReefedRenderer.bones = rig.Bones;
+            rig.ReefedRenderer.rootBone = cloth.transform;
+            rig.ReefedRenderer.quality = SkinQuality.Bone4;
+            rig.ReefedRenderer.localBounds = renderer.localBounds;
+            rig.ReefedRenderer.sharedMaterials = renderer.sharedMaterials;
+            rig.ReefedRenderer.enabled = false;
+            var bundle = new GameObject("Fisherman furled bundle");
+            bundle.transform.SetParent(scaleRoot, false);
+            bundle.AddComponent<MeshFilter>().sharedMesh = bundleMesh;
+            rig.BundleRenderer = bundle.AddComponent<MeshRenderer>();
+            rig.BundleRenderer.sharedMaterials = renderer.sharedMaterials;
+            rig.BundleRenderer.enabled = false;
+            reef.furledSail = rig.BundleRenderer;
         }
 
         private static void ConfigureCollision(ShipyardSailColChecker checker, float width)
@@ -209,7 +248,29 @@ namespace FishermansSail
                 world = mount.transform.TransformPoint(Sail.transform.localPosition + local);
                 Bones[2].position = stay.ForeAttachment(world);
             }
-            Sail.cloth.enabled = Sail.currentUnroll > 0.02f;
+            if (stay != null)
+                stay.UpdateHalyard(Sail, HalyardAttachments);
+            int state = PrototypeGeometry.RenderState(Sail.currentUnroll);
+            if (refreshRequested || state != lastRenderState)
+            {
+                // Refresh after applying our corner poses. The donor animator's
+                // Start never runs, so its RefreshCloth must not be invoked.
+                Sail.cloth.enabled = false;
+                Sail.cloth.ClearTransformMotion();
+                refreshRequested = false;
+            }
+            Sail.cloth.enabled = state == 2;
+            var clothRenderer = Sail.cloth.GetComponent<SkinnedMeshRenderer>();
+            bool visible = !GameState.currentlyLoading;
+            // WindCloth writes renderer.enabled in Update; select the correct
+            // renderer here in LateUpdate so the disabled solver cannot leave
+            // stale full-size triangles visible when the sail is struck.
+            clothRenderer.enabled = visible && state == 2;
+            ReefedRenderer.sharedMaterial = clothRenderer.sharedMaterial;
+            BundleRenderer.sharedMaterial = clothRenderer.sharedMaterial;
+            ReefedRenderer.enabled = visible && state == 1;
+            BundleRenderer.enabled = visible && state == 0;
+            lastRenderState = state;
         }
     }
 }

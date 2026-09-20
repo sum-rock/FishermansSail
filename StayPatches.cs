@@ -6,6 +6,20 @@ using Object = UnityEngine.Object;
 
 namespace FishermansSail
 {
+    [HarmonyPatch(typeof(ReefEffectAnimUniversal), "RefreshCloth")]
+    internal static class FishermanClothRefreshPatch
+    {
+        [HarmonyPrefix]
+        private static bool Prefix(ReefEffectAnimUniversal __instance)
+        {
+            var rig = __instance.GetComponent<FishermanSailRig>();
+            if (!rig)
+                return true;
+            rig.RefreshCloth();
+            return false;
+        }
+    }
+
     [HarmonyPatch(typeof(SaveableBoatCustomization), "Awake")]
     internal static class RegisterFishermanStaysPatch
     {

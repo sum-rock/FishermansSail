@@ -8,7 +8,22 @@ internal static class Program
     {
         StayChecks.Run(args.Length == 2 && args[0] == "--stay-fixture" ? args[1] : null);
         foreach (float width in new[] { 0.25f, 6f, 13.8f, 40f })
+        {
             CheckSail(width);
+            CheckBundle(width);
+        }
+        Require(
+            PrototypeGeometry.RenderState(0) == 0 && PrototypeGeometry.RenderState(0.02f) == 0,
+            "A fully struck sail must show only the bundle."
+        );
+        Require(
+            PrototypeGeometry.RenderState(0.03f) == 1 && PrototypeGeometry.RenderState(0.5f) == 1,
+            "Partly furled sails must use the procedural renderer without cloth simulation."
+        );
+        Require(
+            PrototypeGeometry.RenderState(0.98f) == 2 && PrototypeGeometry.RenderState(1) == 2,
+            "Only fully set sails should use the cloth renderer."
+        );
         foreach (float width in new[] { 0f, -1f, float.NaN, float.PositiveInfinity, 101f })
         {
             try
@@ -22,7 +37,7 @@ internal static class Program
             throw new Exception("Invalid width accepted.");
         }
         Console.WriteLine(
-            "PASS: four-corner outline, 90/90/40/140 degree angles, area, winding, UVs, bone weights, cloth pins, furling, and independent mesh arrays."
+            "PASS: four-corner outline, 90/90/40/140 degree angles, area, winding, UVs, bone weights, cloth pins, furling, bundle geometry, render states, and independent mesh arrays."
         );
     }
 
@@ -118,6 +133,34 @@ internal static class Program
             d.Center.x < 0 && d.Center.z > -width && d.Center.z < 0,
             "Wind center lies outside the sail."
         );
+    }
+
+    private static void CheckBundle(float width)
+    {
+        var data = PrototypeGeometry.CreateBundle(width);
+        foreach (var vertex in data.Vertices)
+            Require(
+                float.IsFinite(vertex.x)
+                    && float.IsFinite(vertex.y)
+                    && float.IsFinite(vertex.z)
+                    && vertex.x >= -width * 0.01601f
+                    && vertex.x <= 0
+                    && Math.Abs(vertex.y) <= width * 0.00801f
+                    && vertex.z >= -width
+                    && vertex.z <= 0,
+                "Furled mesh must stay within a narrow bundle along the head."
+            );
+        double volume = 0;
+        for (int i = 0; i < data.Triangles.Length; i += 3)
+        {
+            var a = data.Vertices[data.Triangles[i]];
+            var b = data.Vertices[data.Triangles[i + 1]];
+            var c = data.Vertices[data.Triangles[i + 2]];
+            var normal = Vector3.Cross(b - a, c - a);
+            Require(normal.magnitude > 1e-9, "Furled bundle has a collapsed triangle.");
+            volume += Vector3.Dot(a, Vector3.Cross(b, c)) / 6;
+        }
+        Require(volume > 0, "Bundle faces must point outward.");
     }
 
     private static void Angle(Vector3 a, Vector3 b, Vector3 c, double expected)

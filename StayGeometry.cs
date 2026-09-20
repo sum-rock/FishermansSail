@@ -45,6 +45,29 @@ namespace FishermansSail
             aft = AtHeight(aftBottom, aftTop, foreMount.y);
         }
 
+        internal static bool IsFallbackMizzenStay(string stayName, string mastNames)
+        {
+            var words = (stayName ?? "")
+                .ToLowerInvariant()
+                .Split(new[] { ' ', '_', '-' }, StringSplitOptions.RemoveEmptyEntries);
+            return !IsUpperStay(stayName)
+                && IsMizzenPair(mastNames, false)
+                && Array.IndexOf(words, "lower") < 0
+                && Array.IndexOf(words, "bottom") < 0;
+        }
+
+        internal static bool IsMizzenPair(string names, bool hasPairAhead)
+        {
+            // Some ships name their aft spar "main 2"; connected mast pairs
+            // identify that rear position without a vessel-specific whitelist.
+            var words = (names ?? "")
+                .ToLowerInvariant()
+                .Split(new[] { ' ', '_', '-' }, StringSplitOptions.RemoveEmptyEntries);
+            return hasPairAhead
+                || Array.IndexOf(words, "mizzen") >= 0
+                || Array.IndexOf(words, "mizzenmast") >= 0;
+        }
+
         internal static Vector3 AtHeight(Vector3 bottom, Vector3 top, float height)
         {
             if (!Finite(bottom) || !Finite(top) || !Finite(height) || top.y - bottom.y < 0.01f)
