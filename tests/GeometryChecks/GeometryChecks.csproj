@@ -8,6 +8,11 @@
   <ItemGroup>
     <Compile Include="../../PrototypeGeometry.cs" Link="PrototypeGeometry.cs" />
     <Compile Include="../../StayGeometry.cs" Link="StayGeometry.cs" />
+    <Compile
+      Include="../../BoatRigs/*.cs"
+      Exclude="../../BoatRigs/ResolvedRig.cs"
+      Link="BoatRigs/%(Filename)%(Extension)"
+    />
     <Reference Include="UnityEngine.CoreModule">
       <HintPath>$(SailwindDir)/Sailwind_Data/Managed/UnityEngine.CoreModule.dll</HintPath>
     </Reference>

@@ -14,6 +14,23 @@ recalculates tangents. The geometry checks now enforce Unity's weight ordering
 as well as matching each weight to the correct corner. The visual artifact fix
 still needs an in-game check after restarting with the rebuilt DLL.
 
+Version **0.6.0** replaces heuristic stay discovery with explicit boat rig profiles
+in `BoatRigs/`. Brig, Junk, Jong, Sanbuq, Cog, Leopard, and Shroud each have a
+separate definition listing donor stays, mast pairs, attachment sections, height
+references, and furl-control masts. Positions still come from the live transforms.
+The existing mount IDs and appended group/option order are retained. Unknown boats
+or profiles that do not match the installed rig are logged and skipped. These
+profiles target the installed Shipyard Expansion rig layouts; additional rig mods
+may require profile updates. Sail mesh and furling behavior are unchanged.
+
+Version **0.5.3** resolves stay attachments against connected mast sections.
+The Brig's topmast variants can attach below the topmast collider when the required
+lower mainmast supplies the physical spar at that height. The lookup follows
+explicit mast dependencies and requires overlapping sections within one metre
+horizontally; it never treats a gap or a separate neighboring mast as solid spar.
+Rendering, availability checks, and halyard guides use the same resolved section.
+Existing stay names, indices, and part ordering are unchanged.
+
 Version **0.5.2** draws a separate gathered bundle when fully furled. Partly
 furled sails use a skinned renderer without cloth simulation; only fully deployed
 sails use the Cloth renderer. This avoids rendering stale solver triangles during
@@ -32,7 +49,7 @@ to unfurl the sail through its disabled donor animator. Ordinary sails retain
 the native refresh behavior. The reported hard freeze still needs an in-game
 retest; fixing the logged error alone does not prove its cause.
 
-This version also discovers main-to-mizzen donors named simply "middle stay"
+Version 0.5.1 also discovered main-to-mizzen donors named simply "middle stay"
 when their group has no upper/top donor, including the junk-medium boat's three
 mast configurations. These new groups are appended after existing triatic groups
 to preserve saved part positions. Explicit lower/bottom donors are excluded.
@@ -42,18 +59,18 @@ entry **Mizzenmast Triatic Stay**. Both can be selected independently on support
 three-masted rigs. The rear stay connects mainmast to mizzenmast at the mizzen's
 upper sail-mount height. Existing mount IDs and part ordering are preserved;
 previous rear entries receive the new name rather than creating duplicate stays.
-Named mizzen dependencies and the connected mast-pair layout identify rear stays,
-including layouts whose aft mast is named "main 2".
+The 0.6.0 profiles explicitly identify these rear stays, including layouts whose
+aft mast is named "main 2".
 
 The **Formast Triatic Stay** connects the forward mast pair.
 It runs horizontally at the foremast’s upper sail-mount height, meeting both
 mast axes at the same boat-relative height. It has its own sail mount and winches, so it can
 coexist with the original angled stay. The rope is visible in this version.
 
-The mod discovers upper stays through their mast dependencies, without a vessel
-whitelist. Each eligible shipyard stay group gains a separate fisherman entry
-with **None** and variants for its mast configurations. Upper mizzen stays are
-eligible too. The forward mast sets the height even when the aft mast is taller.
+Each configured shipyard stay group gains a separate fisherman entry with
+**None** and variants for its mast configurations. The boat profile selects
+the mast pair and attachment sections. The forward mast sets the height even
+when the aft mast is taller.
 For mizzen pairs, the aft mast sets the height instead.
 Both physical masts must reach the selected height for the variant to be installed. A source stay must provide two
 physical mast dependencies, spar capsule colliders, static stay geometry, and
@@ -149,7 +166,7 @@ These existing assemblies are not copied into the plugin output or committed her
    game directory and look for the startup message:
 
    ```text
-   [Info   :Fisherman's Sail] Fisherman's Sail 0.5.2 loaded!
+   [Info   :Fisherman's Sail] Fisherman's Sail 0.5.3 loaded!
    ```
 
 4. Load a test save with access to the brig and a shipyard. When the game's prefab
@@ -287,7 +304,7 @@ preserving the sail's existing orientation. Geometry is refreshed during ordinar
 and preview part changes.
 
 Mount indices use `128 + source mount index` (128–255), independently of sail
-prefab indices. Occupied indices stop that group's registration. The mod extends
+prefab indices. Occupied indices stop that boat's registration. The mod extends
 the native mount buttons and save-array capacity, appends customization parts,
 and registers mounts before saved sails load. Existing entries are not reordered.
 
@@ -309,3 +326,15 @@ stock-asset fixture covers 15 upper-stay samples across boat instances.
 
 Compilation and geometry checks pass locally. In-game appearance, rigging,
 furling, and save/reload still require the manual checks above.
+
+Boat profile maintenance: edit the corresponding `BoatRigs/<Boat>.cs` file.
+Each group names the original customization part index; each variant names its
+source mount, fore/aft physical masts, stay kind, height reference, furl-control
+mast, and ordered fore/aft spar sections. Additional sections must be explicit
+required continuations and physically adjoin. Native donor prerequisites and
+exclusions are retained (excluding angled stays), so both stays can coexist.
+Do not reorder existing groups or variants: saves address these by position.
+The resolver validates the complete profile before construction; construction
+failure rolls back all new groups on that boat to avoid shifting saved slots.
+Add new boat keys using the exact prefab name, without `(Clone)`, and extend the
+profile compatibility checks when adding support.

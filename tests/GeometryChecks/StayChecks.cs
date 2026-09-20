@@ -9,37 +9,7 @@ internal static class StayChecks
 {
     internal static void Run(string fixture = null)
     {
-        Check(
-            StayGeometry.IsMizzenPair("mizzen top stay 2 mast_mizzen_1", false),
-            "Named mizzen pair was missed."
-        );
-        Check(
-            StayGeometry.IsMizzenPair("mast_main_1 mast_main_2", true),
-            "Rear mast pair must work without mizzen names."
-        );
-        Check(
-            !StayGeometry.IsMizzenPair("mast_front mast_main", false),
-            "Forward pair was mislabeled."
-        );
-        Check(
-            StayGeometry.IsFallbackMizzenStay(
-                "midstay_1-0 middle stay 2",
-                "mast_mid_1 mast_mizzen_0"
-            ),
-            "The junk-medium main-to-mizzen stay must not require top/upper in its name."
-        );
-        Check(
-            !StayGeometry.IsFallbackMizzenStay("lower mizzen stay", "mast_mid_1 mast_mizzen_0"),
-            "Explicit lower stays must not be fallback donors."
-        );
-        Check(
-            !StayGeometry.IsFallbackMizzenStay("midstay_f-0", "mast_mid_0 mast_front_"),
-            "Fallback must not duplicate the forward stay group."
-        );
-        Check(
-            !StayGeometry.IsFallbackMizzenStay("mizzen top stay 2", "mast_Back_1 mast_mizzen_1"),
-            "Existing upper donors must not be registered a second time."
-        );
+        RigChecks.Run();
         StayGeometry.ForemastAttachments(
             new Vector3(0, 12, 0),
             new Vector3(10, 0, 0),
@@ -54,6 +24,41 @@ internal static class StayChecks
                 && mizzenEnd.y == 12
                 && StayGeometry.SupportsHeight(Vector3.zero, new Vector3(0, 14, 0), mizzenEnd.y),
             "The mizzen stay must use the shorter aft mast's upper attachment height."
+        );
+        // Brig topmast donor: fore attachment sits below the main topmast's
+        // collider, but inside its explicitly required lower mainmast section.
+        var mainTopBottom = new Vector3(-4.93f, 25.4414f, 0);
+        var mainTopTop = new Vector3(-4.93f, 35.382f, 0);
+        var mainLowerBottom = new Vector3(-5.504038f, 2.227722f, 0);
+        var mainLowerTop = new Vector3(-5.504038f, 28.407726f, 0);
+        Check(
+            !StayGeometry.SupportsHeight(mainTopBottom, mainTopTop, 24.236614f)
+                && StayGeometry.SupportsHeight(mainLowerBottom, mainLowerTop, 24.236614f)
+                && StayGeometry.AdjoiningSections(
+                    mainTopBottom,
+                    mainTopTop,
+                    mainLowerBottom,
+                    mainLowerTop
+                ),
+            "Brig attachment below the topmast must use its connected lower mainmast."
+        );
+        Check(
+            !StayGeometry.AdjoiningSections(
+                mainTopBottom,
+                mainTopTop,
+                new Vector3(-5.5f, 0, 0),
+                new Vector3(-5.5f, 24, 0)
+            ),
+            "Disconnected spar sections must not bridge a real gap."
+        );
+        Check(
+            !StayGeometry.AdjoiningSections(
+                mainTopBottom,
+                mainTopTop,
+                mainLowerBottom + new Vector3(10, 0, 0),
+                mainLowerTop + new Vector3(10, 0, 0)
+            ),
+            "A neighboring mast must not extend this mast's reach."
         );
         var foreBottom = new Vector3(12, 2, 0);
         var foreTop = new Vector3(12, 18, 0);
@@ -149,14 +154,6 @@ internal static class StayChecks
             StayGeometry.MountIndex(15) == 143 && StayGeometry.MountIndex(20) == 148,
             "Stable identities changed."
         );
-        Check(StayGeometry.IsUpperStay("middle top stay 1-1"), "Brig upper stay was missed.");
-        Check(StayGeometry.IsUpperStay("mid_stay_upper"), "Jong upper stay was missed.");
-        Check(
-            StayGeometry.IsUpperStay("mizzen top stay 2"),
-            "Aft mast names must not restrict discovery."
-        );
-        Check(!StayGeometry.IsUpperStay("midstay_0-0_bottom"), "A lower stay was misclassified.");
-        Check(!StayGeometry.IsUpperStay(null), "Missing names must not match.");
         Console.WriteLine(
             "PASS: horizontal stay placement, raked/short masts, alternate axes, stable mount identities, and invalid inputs."
         );
