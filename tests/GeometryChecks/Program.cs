@@ -59,6 +59,11 @@ internal static class Program
         {
             var w = d.Weights[i];
             Require(
+                w.weight0 >= w.weight1 && w.weight1 >= w.weight2 && w.weight2 >= w.weight3,
+                "Unity skin weights must be sorted largest first."
+            );
+            Require(w.weight0 > 0, "A vertex must start with a nonzero influence.");
+            Require(
                 w.weight0 >= 0 && w.weight1 >= 0 && w.weight2 >= 0 && w.weight3 >= 0,
                 "Negative skin weight."
             );
@@ -67,7 +72,10 @@ internal static class Program
                 "Skin weights do not sum to one."
             );
             var reconstructed =
-                c[0] * w.weight0 + c[1] * w.weight1 + c[2] * w.weight2 + c[3] * w.weight3;
+                c[w.boneIndex0] * w.weight0
+                + c[w.boneIndex1] * w.weight1
+                + c[w.boneIndex2] * w.weight2
+                + c[w.boneIndex3] * w.weight3;
             Require(
                 (reconstructed - d.Vertices[i]).magnitude < width * 1e-5,
                 "Skinning does not reproduce the rest mesh."

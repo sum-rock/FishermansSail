@@ -78,6 +78,7 @@ namespace FishermansSail
                 mesh.uv = geometry.UV;
                 mesh.boneWeights = geometry.Weights;
                 mesh.RecalculateNormals();
+                mesh.RecalculateTangents();
                 mesh.RecalculateBounds();
                 shadowMesh = new Mesh { name = "FishermansSail Shadow Samples" };
                 shadowMesh.vertices = geometry.Corners;

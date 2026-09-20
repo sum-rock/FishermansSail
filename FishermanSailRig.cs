@@ -62,10 +62,21 @@ namespace FishermansSail
                 poses[i] = bone.worldToLocalMatrix * cloth.transform.localToWorldMatrix;
             }
             mesh.bindposes = poses;
+            // The donor Cloth contains serialized simulation data for a different
+            // topology. Recreate only that component on the inactive clone, after
+            // saving its physical settings; WindCloth resolves it in Awake later.
+            var clothObject = cloth.gameObject;
+            float bending = cloth.bendingStiffness,
+                stretching = cloth.stretchingStiffness;
+            float damping = cloth.damping,
+                friction = cloth.friction;
+            bool gravity = cloth.useGravity;
             cloth.enabled = false;
+            UnityEngine.Object.DestroyImmediate(cloth);
+
             renderer.sharedMesh = mesh;
             renderer.bones = rig.Bones;
-            renderer.rootBone = cloth.transform;
+            renderer.rootBone = clothObject.transform;
             renderer.quality = SkinQuality.Bone4;
             renderer.localBounds = new Bounds(
                 mesh.bounds.center,
@@ -76,7 +87,21 @@ namespace FishermansSail
                 )
             );
             renderer.updateWhenOffscreen = true;
+            cloth = clothObject.AddComponent<Cloth>();
+            cloth.enabled = false;
+            sail.cloth = cloth;
+            cloth.bendingStiffness = bending;
+            cloth.stretchingStiffness = stretching;
+            cloth.damping = damping;
+            cloth.friction = friction;
+            cloth.useGravity = gravity;
+            cloth.worldVelocityScale = 0;
+            cloth.worldAccelerationScale = 0;
             cloth.coefficients = data.Constraints;
+            if (cloth.coefficients.Length != mesh.vertexCount)
+                throw new InvalidOperationException(
+                    "The new Cloth does not match the trapezoid vertex count."
+                );
             cloth.enabled = true;
 
             var connections = sail.GetComponent<SailConnections>();

@@ -57,17 +57,7 @@ namespace FishermansSail
                     -width * (1 - u)
                 );
                 data.UV[i] = new Vector2(u, 1 - v);
-                data.Weights[i] = new BoneWeight
-                {
-                    boneIndex0 = 0,
-                    boneIndex1 = 1,
-                    boneIndex2 = 2,
-                    boneIndex3 = 3,
-                    weight0 = (1 - u) * (1 - v),
-                    weight1 = u * (1 - v),
-                    weight2 = (1 - u) * v,
-                    weight3 = u * v,
-                };
+                data.Weights[i] = SortedWeights((1 - u) * (1 - v), u * (1 - v), (1 - u) * v, u * v);
                 bool pinned = row == 0 || (row == Rows && (col == 0 || col == Columns));
                 data.Constraints[i] = new ClothSkinningCoefficient
                 {
@@ -97,6 +87,36 @@ namespace FishermansSail
             }
             data.Center /= area;
             return data;
+        }
+
+        // Unity requires influences in descending order, with indices moving
+        // alongside weights. In particular, a fully pinned corner must put its
+        // one nonzero influence first rather than behind three zero weights.
+        private static BoneWeight SortedWeights(float a, float b, float c, float d)
+        {
+            var weights = new[] { a, b, c, d };
+            var indices = new[] { 0, 1, 2, 3 };
+            for (int i = 1; i < 4; i++)
+            for (int j = i; j > 0 && weights[j] > weights[j - 1]; j--)
+            {
+                float weight = weights[j - 1];
+                weights[j - 1] = weights[j];
+                weights[j] = weight;
+                int index = indices[j - 1];
+                indices[j - 1] = indices[j];
+                indices[j] = index;
+            }
+            return new BoneWeight
+            {
+                weight0 = weights[0],
+                weight1 = weights[1],
+                weight2 = weights[2],
+                weight3 = weights[3],
+                boneIndex0 = indices[0],
+                boneIndex1 = indices[1],
+                boneIndex2 = indices[2],
+                boneIndex3 = indices[3],
+            };
         }
 
         internal static Vector3 ReefCorner(Vector3 corner, float unroll)

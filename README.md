@@ -8,6 +8,12 @@ lower aft corner. The aft depth is half the top width; the forward depth is
 approximately 1.692 times the top width. These are the neutral, fully set angles;
 wind, sheeting, and mast rake can deform the working sail.
 
+Version **0.4.1** corrects skin influences to descending weight order, recreates
+Cloth for the new topology instead of retaining the donor's simulation data, and
+recalculates tangents. The geometry checks now enforce Unity's weight ordering
+as well as matching each weight to the correct corner. The visual artifact fix
+still needs an in-game check after restarting with the rebuilt DLL.
+
 The mod also includes an independent **Fisherman's Top Middle Stay**.
 It runs horizontally at the foremast’s upper sail-mount height, meeting both
 mast axes at the same boat-relative height. It has its own sail mount and winches, so it can
@@ -111,7 +117,7 @@ These existing assemblies are not copied into the plugin output or committed her
    game directory and look for the startup message:
 
    ```text
-   [Info   :Fisherman's Sail] Fisherman's Sail 0.4.0 loaded!
+   [Info   :Fisherman's Sail] Fisherman's Sail 0.4.1 loaded!
    ```
 
 4. Load a test save with access to the brig and a shipyard. When the game's prefab
