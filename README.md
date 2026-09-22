@@ -14,6 +14,173 @@ recalculates tangents. The geometry checks now enforce Unity's weight ordering
 as well as matching each weight to the correct corner. The visual artifact fix
 still needs an in-game check after restarting with the rebuilt DLL.
 
+Version **0.7.13** moves billow through an initialized grid of shaping bones.
+Seven control columns across 33 rows give 231 bones, retaining the original
+corner and leech indices. Each vertex blends between two neighboring controls;
+the rest curve is sampled on that same grid, removing any one-sided residual
+between the mesh and its skin targets. Top/luff camber still peaks at 12%/6% of
+width, and only the four corners are pinned.
+
+Apparent flow normal to the posed panel selects the target side outside a
+0.6 m/s dead band. The curve moves smoothly through the panel plane using the
+existing three-per-second exponential response. Top/luff travel is reduced so
+the loaded peaks follow the moving curve while the free leech and clew
+reinforcement retain their limits. Furling fades the shaping offsets through the
+bones instead of a flattening blend shape. Meshes, bind poses and bone scales
+remain fixed during play; tacking does not reset Cloth. Shadow samples sit on the
+center plane and collision bounds cover both camber directions using positive
+scales. Corner controls, the moving upper corner and propulsion are retained.
+
+Checks cover exact signed skin targets, corner pins, spare cloth, transition
+poses, repeated tacks at several frame rates, furling, wind frames and propulsion.
+Compiled-code checks reject runtime mesh replacement and cloth lifecycle changes
+inside the shaping update. Actual Unity cloth stability and appearance during
+repeated tacks still require in-game validation.
+
+Version **0.7.12** restores the 0.7.10 sail runtime after the 0.7.11 experiment
+caused the cloth to detach and repeatedly reset in game. Live cloth mesh swaps,
+wind-triggered cloth resets and negative shadow scaling are removed. The player
+log confirmed a negative-scale warning on the sail's shadow BoxCollider; the
+precise native cloth failure was not captured in the log. The moving upper
+corner, upper control lines, free leech, clew reinforcement and working propulsion
+remain as in 0.7.10. A compiled-code regression check rejects cloth mesh replacement
+from installed sail methods. The port-tack billow bias remains unresolved;
+0.7.11's pure geometry tests did not validate Unity's live cloth behavior.
+
+Version **0.7.11** (withdrawn after in-game cloth instability) gives the sail mirrored rest-camber meshes so billow can face
+the apparent wind's flow on either tack. The filtered wind component normal to
+the cloth selects the side; a dead band retains the previous side near
+head-to-wind. A side change swaps the full and reefed renderers to the matching
+immutable mesh, restores cloth constraints and requests one cloth refresh.
+Both meshes have identical topology, weights, bind poses and rest edge lengths,
+with separately recalculated normals and matching reef-gathering deltas. Shadow
+samples follow the chosen side, and shipyard collision strips cover both curves.
+The free leech, sheet routes, corner motion and propulsion are retained. Checks
+cover mirrored rest lengths, signed billow, stable tack selection, both camber
+variants across trim/furl poses, and propulsion. Cloth reset behavior and the
+visible transition between tacks still need in-game validation.
+
+Version **0.7.10** removes the visible rope along the leech and frees all 31
+intermediate aft-edge vertices. Only the four corners remain pinned. The leech
+can flex around its existing tension-fitted skin targets, with movement peaking
+at 6% of sail width midway along the edge and tapering tightly near the clew.
+The moving upper corner, upper sheet routes, sail cut, top/luff camber, cloth
+stiffness/damping and propulsion are retained. No extra inward bow or fabric is
+added. Checks cover the four-corner pin mask, bounded edge travel, clew
+reinforcement, trim/furl sweeps and propulsion; visible flex still needs an
+in-game comparison.
+
+Version **0.7.9** releases the upper aft corner from the triatic stay. It follows
+85% of the native sail angle around the forward mast, preserving the top span
+while letting the upper corner move outward with some twist relative to the clew.
+Upper sheet branches run from that corner through the actual aft mast/triatic
+attachment and down to the existing port and starboard sheet controls. Their sag
+follows the corresponding native sheet slack; they add no winches or physical
+rope constraints. The supported leech, clew reinforcement, top/luff camber and
+propulsion correction remain in place. Upper-corner rotation fades with deployment
+during furling, and the gathered bundle follows the resulting upper corners.
+Automated checks cover trim and furl sweeps, rope routes, rake/scaling, posed
+mesh geometry and propulsion. Wind-driven appearance still needs an in-game check.
+
+Version **0.7.8** attaches the entire leech to the clew-to-stay control line.
+The rope now samples the same bones as the pinned aft edge, removing the
+separate inward-bowing leech target. The coupled foot/leech tension solver
+retains a modest wind/gravity curve. Cloth movement tapers smoothly toward zero
+within 20% of the panel dimensions around the clew to reduce adjacent folding
+when easing the sheets. The top and forward edges retain their existing camber
+and freedom to billow between their corners; sail cut, propulsion and furling
+remain unchanged. Automated checks cover the supported edge, clew taper,
+continuous trim sweeps on both tacks, geometry, propulsion and game assembly
+compatibility. The resulting cloth motion still needs an in-game comparison.
+
+Version **0.7.7** fits the clew against both the foot and the curved leech.
+The independent 10–16%-of-width inward shortening is removed. The solver chooses
+the nearest sheet-requested position that maintains foot tension and the available
+leech arc length, with a 1% reserve when fully set. The reserve and edge lengths
+follow furling. Impossible anchor spans retain a finite fallback and log one
+warning when deployed rather than generating invalid positions.
+
+The forward edge now has actual spare cloth: a rest curve peaking at 6% of width
+adds about 0.3% to its edge length. Its movement allowance peaks at 13% of width
+so that curve can billow on either tack; both taper into the panel and fixed
+corners. Existing camber gathering handles furling, and collision strips include
+the revised camber. The four-corner attachment, separate control line, cloth
+stiffness/damping and corrected propulsion remain in place. Automated checks cover
+both edge lengths, symmetry, scaling, furling and propulsion. The reduction in
+folds and visible luff billow still require an in-game comparison.
+
+Version **0.7.6** attaches the cloth at only its four corners. Intermediate
+forward-edge vertices now have travel peaking at 4% of sail width midway along
+the luff, tapering toward the fixed corners and fading into the panel. Both the
+pin mask and zero-travel luff profile are updated. Corner poses, sail cut, cloth
+stiffness/damping, independent control line and the working 0.7.5 propulsion
+correction are retained. This is a focused change to compare in game before
+adjusting the mesh's slack further. Check luff movement, overall wrinkles, both
+tacks, furling and save/reload.
+
+Version **0.7.5** aligns the wind sensor and force direction with the posed
+fisherman sail. The inherited brig-jib sensor rotation was incompatible with the
+procedural mast frame: native wind capture could reject broadside wind as luffing.
+The sensor now uses the mast axis, effective fore-to-aft chord, and sail normal;
+the force application point follows the posed corner-area centroid. Only this
+prototype's frame and force direction are corrected. Native capture, furling,
+shadow, damage and propulsion calculations still run, so SailInfo reads their
+actual force output without a display override.
+
+Cloth travel is reduced, especially along the free leech, with stronger bending
+resistance and damping. The donor's serialized cloth wind response is retained
+(the inspected brig jib uses 5), replacing the weak 0.6 override that let gravity
+dominate. The fixed upper attachments, hollow free leech, and separate control
+line remain. Geometry, aerodynamic regression and game-assembly checks pass;
+cloth smoothness and actual propulsion still need an in-game test on both tacks.
+
+Version **0.7.4** frees the intermediate leech vertices from the control line.
+Only the upper aft corner and clew remain attached; the upper corner still meets
+the triatic stay. Under load the leech's skin targets bow into the sail, and the
+cloth solver has additional travel to billow around them. The visible line is now
+an independent, nearly taut clew-to-stay span with slight gravity sag. It no longer
+traces the fabric edge. The free-edge bow fades during furling; the line hides when
+fully struck. Cut, area, saved IDs and native sheet/windward slack controls are
+unchanged. Check the resulting rope/cloth separation against `model2.png` on both
+tacks in game, including furling and save/reload.
+
+Version **0.7.3** fixes the upper aft corner directly to the triatic stay.
+The revised cut has an aft depth equal to the sail width; the forward depth stays
+approximately 1.692 widths. This supersedes the original 40°/140° lower angles.
+The mesh includes top-edge camber of 12% of width, tapering to the side edges and
+foot, so billowing uses actual spare fabric. Top cloth remains free on both tacks.
+The entire leech and its visible control line share one curve ending at the fixed
+upper attachment. Curves exceeding 98% of available leech length bring the clew
+closer to that attachment instead of pulling the head off the stay. Existing sheet
+controls and windward slack remain native. Camber gathers away during furling,
+and the bundle stays between the fixed upper attachments.
+
+Area, centroid, bounds, shadow samples and shipyard collision strips follow the
+revised cut. Shadow sampling uses nine points and retains the native component's
+two-parent lookup of its Sail despite the added pivot frame. Existing sails load
+the new cut at their saved scale and may need clearance checked in the shipyard.
+Geometry and compatibility checks cover the new shape; in-game comparison against
+the annotated outline, tacking, furling, and save/reload remain necessary.
+
+Version **0.7.2** makes the loaded clew-to-stay line define the sail's aft edge.
+The upper aft corner lies partway along that curve, closer to the centerline than
+the clew. Each leech mesh row has its own moving attachment on the same curve;
+the rendered line uses those exact points before continuing to the fixed stay.
+The supported leech keeps within its original length. Greater chord slack and
+interior cloth travel allow a deeper belly. Existing port/starboard sheet controls
+and their native slack behavior are retained. The shape blends back into the
+reefed outline as it is furled. In-game cloth fullness, both tacks, and save/reload
+still need visual verification.
+
+Version **0.7.1** adds a visible running line from the clew through the upper aft
+corner to a fixed point on the triatic stay. The existing sheet winches still
+control the sail. The aft corners move slightly toward the mast to leave spare
+cloth, while the upper aft corner also twists with apparent wind relative to the
+clew. Softer bending, increased cloth travel through the belly, and stronger
+cloth wind response allow a fuller shape. Corner slack fades out during furling;
+the added line hides when fully struck. These settings require in-game comparison
+on both tacks, including furling and save/reload.
+
 Version **0.7.0** gives the fisherman sail a pivot along the forward mast when
 installed on a triatic stay. Its whole forward edge stays at that mast, including
 at smaller sail scales, while the upper aft corner and clew swing outward together
@@ -197,7 +364,7 @@ These existing assemblies are not copied into the plugin output or committed her
    game directory and look for the startup message:
 
    ```text
-   [Info   :Fisherman's Sail] Fisherman's Sail 0.5.3 loaded!
+   [Info   :Fisherman's Sail] Fisherman's Sail 0.7.13 loaded!
    ```
 
 4. Load a test save with access to the brig and a shipyard. When the game's prefab
@@ -207,7 +374,7 @@ These existing assemblies are not copied into the plugin output or committed her
    Registered Fisherman's Sail Prototype: source=110, index=400, vertices=825, ...
    ```
 
-   That line reports vertex and corner counts, the forward angle, and sail areas.
+   That line reports vertex and corner counts, aft depth, head camber, and sail areas.
    It confirms registration, not that cloth simulation has been verified.
 
 5. At a shipyard, select the **Formast Triatic Stay**, open **Staysails**, and
@@ -220,8 +387,19 @@ These existing assemblies are not copied into the plugin output or committed her
    the deck and lower sails. The base top width remains the donor's install height
    (13.8 m in the inspected game assets); smaller rigs will need scaling down.
    Keep the default flip setting and align the forward top corner with the foremast.
-7. Sheet on both sides: the lower aft corner follows the sheets, while the lower
-   forward corner remains on the physical foremast axis. Furl halfway, strike fully,
+7. Sheet on both sides: the upper aft corner must swing away from the stay at
+   slightly less than the clew's angle. The new upper sheets must pass through
+   the aft mast's triatic attachment and join the existing sheet controls, with
+   more sag on the slack side. The top and forward edges must billow between
+   their corners. The aft edge must show raw cloth without a rope joining its
+   corners, and should flex in the wind between its two controlled endpoints.
+   Tack repeatedly through the wind: the top/luff curve should pass smoothly to
+   the leeward side while every corner stays attached. Check for detachment,
+   repeated resets or flickering in light wind. Repeat with eased sheets and
+   after save/reload, and check separate fisherman sails on opposite tacks.
+   Ease the sheets and check that cloth beside the clew stays smooth instead
+   of folding over, and confirm the sail still produces forward force. Both forward
+   corners stay on the physical foremast axis. Furl halfway, strike fully,
    and unfurl again. The lower corners should rise toward the top, leaving a narrow
    gathered bundle when struck. Check for cloth explosions, detached ropes, or an
    unexpected triangular remnant. Verify that only one sail visual is displayed
@@ -299,15 +477,28 @@ components. Registration runs before All Sails in All Shipyards caches its sail
 list. Shipyard hooks append the prototype once, without replacing inventory entries.
 
 `PrototypeGeometry.cs` generates a separate 24-by-32 quad grid (825 vertices,
-1,536 triangles), UVs, four-corner bone weights, and cloth constraints. Both
-corners on the aft edge and the whole forward edge are pinned to the moving rig;
-other vertices, including the top edge between its corners, can billow. The source
-brig mesh and prefab remain unchanged.
+1,536 triangles), UVs, sorted bone weights, and cloth constraints. Only the four
+corners are pinned. The forward corners stay at the mast, while the aft corners
+follow the sheet-driven pose. The free leech has bounded travel around its
+tension-fitted skin curve. The top and forward edges can billow between their
+corners, and movement tapers through the cloth near the clew. The source brig
+mesh and prefab remain unchanged.
+
+The prototype owns one shared cloth mesh. Installed sails retain that mesh and
+their bind poses throughout trimming and tacking. A grid of shaping bones carries
+the signed camber; the cloth can flex around those targets. Both the cloth and
+reefed renderers use these bones, with shaping offsets fading during furling.
+Wind changes do not replace the mesh or trigger a cloth reset.
 
 `FishermanSailRig.cs` replaces the cloned triangle animation with four procedural
-bones driven by the native reef control. It attaches the sheets to the lower aft
-corner. A frame around the physical forward mast keeps the whole luff in place
-while the aft edge swings under wind and sheet control, including during furling.
+corner bones, intermediate leech bones driven by the tension solver, and shaping
+bones driven by apparent wind and the native reef control. It attaches the native sheets to the lower aft
+corner. A frame around the physical forward mast keeps the forward corners in
+place while the clew swings under wind and sheet control and the upper aft
+corner follows 85% of the native sheet angle, fading back to its neutral position
+with furling. Separate upper sheet visuals route through the aft mast's triatic
+attachment to the same controls. The tension solver
+fits the clew using both the foot and leech lengths, including during furling.
 The triatic mount remains the game's save and installation reference. The disabled donor Animator remains as
 Shipyard Expansion's scaling reference. The shipyard collider uses narrow strips
 inside the trapezoid; the wind-shadow box covers its bounds. Normals, bounds,
@@ -324,7 +515,7 @@ nix develop -c dotnet --list-sdks
 nix develop -c dotnet run --project tests/GeometryChecks -c Release
 ```
 
-The geometry checks verify all four angles, proportions, triangle winding, area,
+The geometry checks verify the revised cut, top camber, triangle winding, area,
 UVs, skin weights, attachment constraints, furl positions, independent arrays,
 and invalid inputs over multiple sizes. They run managed geometry code, not
 Unity's cloth simulation. Game geometry is not included in this repository.

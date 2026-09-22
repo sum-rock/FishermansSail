@@ -82,8 +82,47 @@ namespace FishermansSail
                 mesh.RecalculateTangents();
                 mesh.RecalculateBounds();
                 shadowMesh = new Mesh { name = "FishermansSail Shadow Samples" };
-                shadowMesh.vertices = geometry.Corners;
-                shadowMesh.triangles = new[] { 0, 2, 1, 1, 2, 3 };
+                // Native shadow checking casts one ray per vertex per frame.
+                // Use a coarse 3x3 sample grid, not all 825 cloth vertices.
+                var shadowPoints = new Vector3[9];
+                for (int row = 0; row < 3; row++)
+                for (int col = 0; col < 3; col++)
+                {
+                    shadowPoints[row * 3 + col] = geometry.Vertices[
+                        row * (PrototypeGeometry.Rows / 2) * (PrototypeGeometry.Columns + 1)
+                            + col * (PrototypeGeometry.Columns / 2)
+                    ];
+                    // Fixed center-plane samples are neutral between tacks.
+                    shadowPoints[row * 3 + col].y = 0;
+                }
+                shadowMesh.vertices = shadowPoints;
+                shadowMesh.triangles = new[]
+                {
+                    0,
+                    3,
+                    1,
+                    1,
+                    3,
+                    4,
+                    1,
+                    4,
+                    2,
+                    2,
+                    4,
+                    5,
+                    3,
+                    6,
+                    4,
+                    4,
+                    6,
+                    7,
+                    4,
+                    7,
+                    5,
+                    5,
+                    7,
+                    8,
+                };
                 shadowMesh.RecalculateBounds();
                 var bundle = PrototypeGeometry.CreateBundle(sourceSail.installHeight);
                 bundleMesh = new Mesh { name = "FishermansSail Furled Bundle" };
@@ -105,7 +144,7 @@ namespace FishermansSail
 
                 string registrationMessage =
                     $"Registered {DisplayName}: source={SourceIndex}, index={PrototypeIndex}, "
-                    + $"vertices={mesh.vertexCount}, corners=4, forwardAngle=40, "
+                    + $"vertices={mesh.vertexCount}, corners=4, aftDepthRatio=1, headCamber=0.12, "
                     + $"area={sourceSail.GetSailArea():F2}->{sail.sailArea:F2}. Original brig jib preserved.";
 
                 if (directory.sails.Length <= PrototypeIndex)

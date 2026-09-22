@@ -11,6 +11,65 @@ namespace FishermansSail
         internal static bool PositionChanged(Vector3 a, Vector3 b) =>
             (a - b).sqrMagnitude > 0.000004f;
 
+        internal static Vector3 UpperHead(
+            Vector3 neutralHead,
+            Vector3 requestedHead,
+            Vector3 foreHead,
+            Vector3 mastAxis,
+            float unroll
+        )
+        {
+            var axis = mastAxis.normalized;
+            var neutral = neutralHead - foreHead;
+            var requested = requestedHead - foreHead;
+            neutral -= axis * Vector3.Dot(neutral, axis);
+            requested -= axis * Vector3.Dot(requested, axis);
+            float angle = (float)(
+                Math.Atan2(
+                    Vector3.Dot(axis, Vector3.Cross(neutral, requested)),
+                    Vector3.Dot(neutral, requested)
+                )
+                * 180
+                / Math.PI
+            );
+            return RotateAroundMast(
+                neutralHead,
+                foreHead,
+                axis,
+                angle * 0.85f * FishermanBillow.Deployment(unroll)
+            );
+        }
+
+        internal static float SheetSlack(float currentLength, float totalLength)
+        {
+            if (
+                currentLength <= 1e-8f
+                || float.IsNaN(currentLength)
+                || float.IsInfinity(currentLength)
+                || float.IsNaN(totalLength)
+                || float.IsInfinity(totalLength)
+            )
+                return 0;
+            return Math.Max(0, Math.Min(1, 1 - totalLength / currentLength));
+        }
+
+        // Two spans meet exactly at the mast guide (t = 0.5). These are visual
+        // sheets driven by native slack, not additional physical constraints.
+        internal static Vector3 UpperSheetPoint(
+            Vector3 head,
+            Vector3 guide,
+            Vector3 control,
+            float slack,
+            float t
+        )
+        {
+            var from = t <= 0.5f ? head : guide;
+            var to = t <= 0.5f ? guide : control;
+            float along = t <= 0.5f ? t * 2 : (t - 0.5f) * 2;
+            float sag = (to - from).magnitude * (0.005f + 0.08f * Math.Max(0, Math.Min(1, slack)));
+            return FishermanBillow.SupportPoint(from, to, new Vector3(0, -sag, 0), along);
+        }
+
         internal static Vector3 RotateAroundMast(
             Vector3 point,
             Vector3 pivot,

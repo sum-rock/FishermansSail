@@ -309,6 +309,8 @@ namespace FishermansSail
             axis = boat.transform.TransformDirection((top - bottom).normalized);
         }
 
+        internal Vector3 AftSheetGuide => Mount.transform.position;
+
         internal void Refresh()
         {
             try

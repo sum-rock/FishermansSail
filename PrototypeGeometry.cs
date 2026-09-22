@@ -11,6 +11,7 @@ namespace FishermansSail
         internal BoneWeight[] Weights;
         internal ClothSkinningCoefficient[] Constraints;
         internal Vector3[] Corners;
+        internal Vector3[] BonePositions;
         internal Vector3 Center;
     }
 
@@ -18,9 +19,12 @@ namespace FishermansSail
     {
         internal const int Columns = 24;
         internal const int Rows = 32;
-        internal const float AftDepthRatio = 0.5f;
+        internal const int ShapeColumns = 6;
+        internal const int ShapeStride = Columns / ShapeColumns;
+        internal const int BoneCount = (ShapeColumns + 1) * (Rows + 1);
+        internal const float AftDepthRatio = 1f;
         internal static readonly float ForeDepthRatio =
-            AftDepthRatio + 1f / (float)Math.Tan(40 * Math.PI / 180);
+            0.5f + 1f / (float)Math.Tan(40 * Math.PI / 180);
 
         // Sail mount frame: +X is up, -Z points forward along the stay.
         // Corner order: top fore, top aft, bottom fore, bottom aft.
@@ -45,6 +49,18 @@ namespace FishermansSail
                     new Vector3(-width * AftDepthRatio, 0, 0),
                 },
             };
+            data.BonePositions = new Vector3[BoneCount];
+            for (int row = 0; row <= Rows; row++)
+            for (int column = 0; column <= ShapeColumns; column++)
+            {
+                float u = (float)column / ShapeColumns,
+                    v = (float)row / Rows;
+                data.BonePositions[ShapeBone(row, column)] = new Vector3(
+                    -width * (ForeDepthRatio + (AftDepthRatio - ForeDepthRatio) * u) * v,
+                    RestCamber(width, u, v),
+                    -width * (1 - u)
+                );
+            }
             for (int row = 0; row <= Rows; row++)
             for (int col = 0; col <= Columns; col++)
             {
@@ -53,17 +69,23 @@ namespace FishermansSail
                 int i = row * (Columns + 1) + col;
                 data.Vertices[i] = new Vector3(
                     -width * (ForeDepthRatio + (AftDepthRatio - ForeDepthRatio) * u) * v,
-                    0,
+                    RestCamber(width, u, v),
                     -width * (1 - u)
                 );
                 data.UV[i] = new Vector2(u, 1 - v);
-                data.Weights[i] = SortedWeights((1 - u) * (1 - v), u * (1 - v), (1 - u) * v, u * v);
-                // The luff follows the mast. The aft head and clew follow the
-                // moving sail frame; the head between its corners is flying.
-                bool pinned = col == 0 || (col == Columns && (row == 0 || row == Rows));
+                int left = Math.Min(ShapeColumns - 1, col / ShapeStride);
+                float blend = (float)(col - left * ShapeStride) / ShapeStride;
+                data.Weights[i] = ShapeWeights(
+                    ShapeBone(row, left),
+                    ShapeBone(row, left + 1),
+                    blend
+                );
+                // Only the four corners are attached. Intermediate edge
+                // vertices can flex around their tension-fitted skin targets.
+                bool pinned = (col == 0 || col == Columns) && (row == 0 || row == Rows);
                 data.Constraints[i] = new ClothSkinningCoefficient
                 {
-                    maxDistance = pinned ? 0 : width * 0.06f * u,
+                    maxDistance = pinned ? 0 : FishermanBillow.ClothTravel(width, u, v),
                     collisionSphereDistance = 0,
                 };
                 if (row == Rows || col == Columns)
@@ -91,35 +113,59 @@ namespace FishermansSail
             return data;
         }
 
+        // Extra top-edge cloth is part of the rest mesh, rather than simulated
+        // by stretching a straight panel between two fully separated corners.
+        internal static float RestCamber(float width, float u, float v)
+        {
+            if (u < 0 || u >= 1 || v >= 1)
+                return 0;
+            int left = Math.Min(ShapeColumns - 1, (int)(u * ShapeColumns));
+            float blend = u * ShapeColumns - left;
+            return CamberSample(width, (float)left / ShapeColumns, v) * (1 - blend)
+                + CamberSample(width, (float)(left + 1) / ShapeColumns, v) * blend;
+        }
+
+        private static float CamberSample(float width, float u, float v)
+        {
+            if (u >= 1 || v >= 1)
+                return 0;
+            float curve = (float)Math.Sin(Math.PI * u);
+            // The luff needs actual extra edge length, not just permission
+            // to leave the straight line between its fixed corners.
+            return width
+                * (
+                    0.12f * curve * curve * (1 - v)
+                    + 0.06f * (float)Math.Pow(1 - u, 4) * (float)Math.Sin(Math.PI * v)
+                );
+        }
+
         // Unity requires influences in descending order, with indices moving
         // alongside weights. In particular, a fully pinned corner must put its
         // one nonzero influence first rather than behind three zero weights.
-        private static BoneWeight SortedWeights(float a, float b, float c, float d)
-        {
-            var weights = new[] { a, b, c, d };
-            var indices = new[] { 0, 1, 2, 3 };
-            for (int i = 1; i < 4; i++)
-            for (int j = i; j > 0 && weights[j] > weights[j - 1]; j--)
+        internal static int LeechBone(int row) =>
+            row == 0 ? 1
+            : row == Rows ? 3
+            : row + 3;
+
+        // Keep the original corner and leech indices for ropes and tension.
+        internal static int ShapeBone(int row, int column) =>
+            column == ShapeColumns ? LeechBone(row)
+            : column == 0
+                ? (
+                    row == 0 ? 0
+                    : row == Rows ? 2
+                    : Rows + 3 + row - 1
+                )
+            : Rows + 3 + Rows - 1 + (column - 1) * (Rows + 1) + row;
+
+        private static BoneWeight ShapeWeights(int left, int right, float blend) =>
+            new BoneWeight
             {
-                float weight = weights[j - 1];
-                weights[j - 1] = weights[j];
-                weights[j] = weight;
-                int index = indices[j - 1];
-                indices[j - 1] = indices[j];
-                indices[j] = index;
-            }
-            return new BoneWeight
-            {
-                weight0 = weights[0],
-                weight1 = weights[1],
-                weight2 = weights[2],
-                weight3 = weights[3],
-                boneIndex0 = indices[0],
-                boneIndex1 = indices[1],
-                boneIndex2 = indices[2],
-                boneIndex3 = indices[3],
+                weight0 = Math.Max(blend, 1 - blend),
+                weight1 = Math.Min(blend, 1 - blend),
+                boneIndex0 = blend > 0.5f ? right : left,
+                boneIndex1 = blend > 0.5f ? left : right,
             };
-        }
 
         // 0 = bundled, 1 = procedural reefing, 2 = fully deployed cloth.
         internal static int RenderState(float unroll) =>

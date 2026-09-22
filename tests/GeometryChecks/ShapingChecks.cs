@@ -1,0 +1,177 @@
+using System;
+using FishermansSail;
+using UnityEngine;
+
+internal static class ShapingChecks
+{
+    internal static void Run()
+    {
+        foreach (float width in new[] { 0.25f, 6f, 13.8f, 40f })
+        {
+            var data = PrototypeGeometry.Create(width);
+            // The two signed target surfaces mirror about the same attached
+            // outline; this checks the actual weighted skin, not just the bones.
+            var positive = Pose(data, width, 1, 1);
+            var negative = Pose(data, width, -1, 1);
+            var neutral = Pose(data, width, 0, 1);
+            for (int i = 0; i < data.Vertices.Length; i++)
+            {
+                Near(positive[i], data.Vertices[i], width, "Positive pose changed the rest cut.");
+                Near(
+                    negative[i],
+                    new Vector3(positive[i].x, -positive[i].y, positive[i].z),
+                    width,
+                    "Opposite camber retained a one-sided skin offset."
+                );
+                Near(
+                    neutral[i],
+                    new Vector3(positive[i].x, 0, positive[i].z),
+                    width,
+                    "Mid-transition camber must cross the panel plane."
+                );
+                if (data.Constraints[i].maxDistance == 0)
+                    Near(negative[i], positive[i], width, "Billow moved a pinned attachment.");
+            }
+            for (int i = 0; i < data.Triangles.Length; i++)
+            {
+                int a = data.Triangles[i],
+                    b = data.Triangles[i / 3 * 3 + (i + 1) % 3];
+                Check(
+                    Math.Abs(
+                        (positive[a] - positive[b]).magnitude
+                            - (negative[a] - negative[b]).magnitude
+                    )
+                        < width * 1e-5f,
+                    "Mirroring camber changed the required fabric length."
+                );
+            }
+            int top = PrototypeGeometry.Columns / 2;
+            int luff = PrototypeGeometry.Rows / 2 * (PrototypeGeometry.Columns + 1);
+            foreach (int peak in new[] { top, luff })
+            {
+                float travel = data.Constraints[peak].maxDistance;
+                Check(
+                    positive[peak].y - travel > 0 && negative[peak].y + travel < 0,
+                    "Settled top/luff peaks can still billow on the wrong side within their travel sphere."
+                );
+            }
+            foreach (float unroll in new[] { 0f, 0.02f, 0.5f, 0.75f, 0.9f, 0.98f, 1f })
+            {
+                var a = Pose(data, width, -1, unroll);
+                var b = Pose(data, width, 1, unroll);
+                for (int i = 0; i < a.Length; i++)
+                    Near(
+                        a[i],
+                        new Vector3(b[i].x, -b[i].y, b[i].z),
+                        width,
+                        "Furling failed to gather either signed curve through the bones."
+                    );
+            }
+            foreach (int fps in new[] { 15, 30, 60, 144 })
+            {
+                float camber = 1;
+                int side = 1,
+                    flips = 0;
+                var previous = positive;
+                for (int tack = 0; tack < 4; tack++)
+                {
+                    int desired = tack % 2 == 0 ? -1 : 1;
+                    for (int frame = 0; frame < fps * 3; frame++)
+                    {
+                        int next = FishermanBillow.CamberSide(side, desired * 8);
+                        if (next != side)
+                            flips++;
+                        side = next;
+                        camber = FishermanBillow.SmoothLoad(camber, side, 1f / fps);
+                        Check(camber >= -1 && camber <= 1, "Camber interpolation overshot.");
+                        var pose = Pose(data, width, camber, 1);
+                        for (int i = 0; i < pose.Length; i++)
+                            Check(
+                                (pose[i] - previous[i]).magnitude < width * 0.8f / fps,
+                                "A tack abruptly displaced the shaping surface."
+                            );
+                        previous = pose;
+                    }
+                    Check(
+                        Math.Abs(camber - desired) < 0.001f,
+                        "Billow failed to settle on the new side."
+                    );
+                }
+                Check(flips == 4, "Sustained tacks must select one side each.");
+            }
+        }
+        foreach (int side in new[] { -1, 1 })
+        foreach (float flow in new[] { -0.6f, -0.1f, 0f, 0.1f, 0.6f, float.NaN })
+            Check(
+                FishermanBillow.CamberSide(side, flow) == side,
+                "Weak wind must retain the previous target side."
+            );
+        // Apparent flow and the panel normal rotate together on a heeled/raked boat.
+        var head = new Vector3(0, 0, 6);
+        var fore = Vector3.zero;
+        var tackPoint = new Vector3(-10, 0, 0);
+        var clew = new Vector3(-6, 0, 6);
+        var normal = FishermanBillow.CamberNormal(fore, tackPoint, head, clew);
+        Vector3 Rotate(Vector3 p) =>
+            FlyingSailGeometry.RotateAroundMast(p, Vector3.zero, new Vector3(1, 2, 3), 53);
+        var offset = new Vector3(13, -8, 25);
+        var moved = FishermanBillow.CamberNormal(
+            Rotate(fore) + offset,
+            Rotate(tackPoint) + offset,
+            Rotate(head) + offset,
+            Rotate(clew) + offset
+        );
+        Near(moved, Rotate(normal), 1, "Heel/rake changed the camber normal incorrectly.");
+        Check(
+            FishermanBillow.CamberSide(1, Vector3.Dot(Rotate(-normal * 8), moved)) == -1,
+            "Boat rotation changed which side the apparent wind selects."
+        );
+        Console.WriteLine(
+            "PASS: exact signed skin targets, fixed corners, loaded edge limits, bone-driven furling, repeated smooth tacks and rotated wind frames."
+        );
+    }
+
+    private static Vector3[] Pose(SailMeshData data, float width, float camber, float unroll)
+    {
+        var bones = new Vector3[PrototypeGeometry.BoneCount];
+        var foreHead = data.Corners[0];
+        var tack = PrototypeGeometry.ReefCorner(data.Corners[2], unroll);
+        var head = data.Corners[1];
+        var clew = PrototypeGeometry.ReefCorner(data.Corners[3], unroll);
+        float amount = camber * FishermanBillow.Deployment(unroll);
+        for (int row = 0; row <= PrototypeGeometry.Rows; row++)
+        for (int col = 0; col <= PrototypeGeometry.ShapeColumns; col++)
+        {
+            float v = (float)row / PrototypeGeometry.Rows,
+                u = (float)col / PrototypeGeometry.ShapeColumns;
+            bones[PrototypeGeometry.ShapeBone(row, col)] = FishermanBillow.ShapePoint(
+                Vector3.Lerp(foreHead, tack, v),
+                Vector3.Lerp(head, clew, v),
+                Vector3.up,
+                width,
+                u,
+                v,
+                amount
+            );
+        }
+        var result = new Vector3[data.Vertices.Length];
+        for (int i = 0; i < result.Length; i++)
+        {
+            var w = data.Weights[i];
+            result[i] =
+                data.Vertices[i]
+                + (bones[w.boneIndex0] - data.BonePositions[w.boneIndex0]) * w.weight0
+                + (bones[w.boneIndex1] - data.BonePositions[w.boneIndex1]) * w.weight1;
+        }
+        return result;
+    }
+
+    private static void Near(Vector3 a, Vector3 b, float width, string message) =>
+        Check((a - b).magnitude < width * 1e-5f, message);
+
+    private static void Check(bool value, string message)
+    {
+        if (!value)
+            throw new Exception(message);
+    }
+}
