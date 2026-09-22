@@ -87,8 +87,8 @@ foreach (var type in assembly.GetTypes())
     }
     count++;
 }
-if (count != 13)
-    throw new Exception($"Expected all 13 patch classes, found {count}.");
+if (count != 14)
+    throw new Exception($"Expected all 14 patch classes, found {count}.");
 
 // Run the actual text prefix without Unity objects. HarmonyX runs later
 // prefixes even when this one returns false, so their input must be safe too.

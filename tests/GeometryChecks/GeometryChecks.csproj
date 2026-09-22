@@ -10,6 +10,7 @@
     <Compile Include="../../StayGeometry.cs" Link="StayGeometry.cs" />
     <Compile Include="../../StayRequirements.cs" Link="StayRequirements.cs" />
     <Compile Include="../../StayOrderText.cs" Link="StayOrderText.cs" />
+    <Compile Include="../../FlyingSailGeometry.cs" Link="FlyingSailGeometry.cs" />
     <Compile
       Include="../../BoatRigs/*.cs"
       Exclude="../../BoatRigs/ResolvedRig.cs"

@@ -58,10 +58,12 @@ namespace FishermansSail
                 );
                 data.UV[i] = new Vector2(u, 1 - v);
                 data.Weights[i] = SortedWeights((1 - u) * (1 - v), u * (1 - v), (1 - u) * v, u * v);
-                bool pinned = row == 0 || (row == Rows && (col == 0 || col == Columns));
+                // The luff follows the mast. The aft head and clew follow the
+                // moving sail frame; the head between its corners is flying.
+                bool pinned = col == 0 || (col == Columns && (row == 0 || row == Rows));
                 data.Constraints[i] = new ClothSkinningCoefficient
                 {
-                    maxDistance = pinned ? 0 : width * 0.06f * v,
+                    maxDistance = pinned ? 0 : width * 0.06f * u,
                     collisionSphereDistance = 0,
                 };
                 if (row == Rows || col == Columns)

@@ -20,6 +20,7 @@ namespace FishermansSail
     }
 
     // Serialized fields are intentionally copied into each installed prefab instance.
+    [DefaultExecutionOrder(100)]
     internal sealed class FishermanSailRig : MonoBehaviour
     {
         public Sail Sail;
@@ -29,10 +30,25 @@ namespace FishermansSail
         public Transform[] HalyardAttachments;
         public SkinnedMeshRenderer ReefedRenderer;
         public MeshRenderer BundleRenderer;
+        public Transform FlyingFrame;
+        public Vector3 OriginalHingeAxis;
+        public Vector3 OriginalHingeAnchor;
+        public bool OriginalAutoAnchor;
         private int lastRenderState = -1;
         private FishermanStay stay;
         private Mast lastMount;
         private bool refreshRequested;
+        private bool bindingDirty = true;
+        private bool boundToStay;
+        private Vector3 pivot;
+        private Vector3 pivotAxis;
+        private Vector3 lastScale;
+        private Vector3 lastFramePosition;
+        private Quaternion lastFrameRotation;
+
+        private void OnEnable() => bindingDirty = true;
+
+        private void FixedUpdate() => RefreshFlyingFrame();
 
         internal void RefreshCloth() => refreshRequested = true;
 
@@ -64,6 +80,13 @@ namespace FishermansSail
             var rig = sail.gameObject.AddComponent<FishermanSailRig>();
             rig.Sail = sail;
             rig.Corners = data.Corners;
+            var originalHinge = sail.GetComponent<HingeJoint>();
+            rig.OriginalHingeAxis = originalHinge.axis;
+            rig.OriginalHingeAnchor = originalHinge.anchor;
+            rig.OriginalAutoAnchor = originalHinge.autoConfigureConnectedAnchor;
+            rig.FlyingFrame = new GameObject("Fisherman mast pivot frame").transform;
+            rig.FlyingFrame.SetParent(sail.transform, false);
+            scaleRoot.SetParent(rig.FlyingFrame, false);
             rig.Bones = new Transform[4];
             var poses = new Matrix4x4[4];
             for (int i = 0; i < 4; i++)
@@ -88,8 +111,7 @@ namespace FishermansSail
             // topology. Recreate only that component on the inactive clone, after
             // saving its physical settings; WindCloth resolves it in Awake later.
             var clothObject = cloth.gameObject;
-            float bending = cloth.bendingStiffness,
-                stretching = cloth.stretchingStiffness;
+            float bending = cloth.bendingStiffness;
             float damping = cloth.damping,
                 friction = cloth.friction;
             bool gravity = cloth.useGravity;
@@ -113,7 +135,7 @@ namespace FishermansSail
             cloth.enabled = false;
             sail.cloth = cloth;
             cloth.bendingStiffness = bending;
-            cloth.stretchingStiffness = stretching;
+            cloth.stretchingStiffness = 1f;
             cloth.damping = damping;
             cloth.friction = friction;
             cloth.useGravity = gravity;
@@ -221,33 +243,122 @@ namespace FishermansSail
             }
         }
 
-        private void LateUpdate()
+        internal bool RefreshFlyingFrame()
         {
-            if (!Sail || Bones == null || Bones.Length != 4)
-                return;
+            if (!Sail || !FlyingFrame || Bones == null || Bones.Length != 4)
+                return false;
             var mount = Sail.transform.parent ? Sail.transform.parent.GetComponent<Mast>() : null;
             if (mount != lastMount)
             {
+                bool wasBound = boundToStay;
                 lastMount = mount;
                 stay = null;
                 var registry = mount ? mount.GetComponentInParent<FishermanStayRegistry>() : null;
                 if (registry)
                     stay = registry.Stays.Find(s => s.Mount == mount);
+                if (wasBound && stay == null)
+                {
+                    FlyingFrame.localPosition = Vector3.zero;
+                    FlyingFrame.localRotation = Quaternion.identity;
+                    var originalHinge = Sail.GetComponent<HingeJoint>();
+                    originalHinge.axis = OriginalHingeAxis;
+                    originalHinge.anchor = OriginalHingeAnchor;
+                    originalHinge.autoConfigureConnectedAnchor = OriginalAutoAnchor;
+                    refreshRequested = true;
+                }
+                boundToStay = false;
+                bindingDirty = true;
             }
-            Bones[2].localPosition = PrototypeGeometry.ReefCorner(Corners[2], Sail.currentUnroll);
-            Bones[3].localPosition = PrototypeGeometry.ReefCorner(Corners[3], Sail.currentUnroll);
-            if (stay != null)
+            if (stay == null)
+                return false;
+
+            stay.ForeSailFrame(out var forePoint, out var foreAxis);
+            var scaleRoot = Sail.cloth.transform.parent;
+            // Preserve the native saved installation coordinate. Offset the
+            // model so its whole luff sits on the physical forward mast even
+            // when the sail is narrower than the distance between the masts.
+            var origin = new Vector3(0, 0, Sail.GetCurrentInstallHeight() - mount.mastHeight);
+            var nextPivot = mount.transform.InverseTransformPoint(forePoint) - origin;
+            var nextAxis = mount.transform.InverseTransformDirection(foreAxis).normalized;
+            var alignment = Quaternion.FromToRotation(
+                scaleRoot.localRotation * Vector3.right,
+                nextAxis
+            );
+            FlyingFrame.localRotation = alignment;
+            FlyingFrame.localPosition = FlyingSailGeometry.ModelOffset(
+                nextPivot,
+                alignment
+                    * (
+                        scaleRoot.localPosition
+                        + scaleRoot.localRotation * Vector3.Scale(Corners[0], scaleRoot.localScale)
+                    )
+            );
+            bool changed =
+                bindingDirty
+                || !boundToStay
+                || FlyingSailGeometry.PositionChanged(nextPivot, pivot)
+                || FlyingSailGeometry.PositionChanged(nextAxis, pivotAxis)
+                || FlyingSailGeometry.PositionChanged(lastScale, scaleRoot.localScale)
+                || FlyingSailGeometry.PositionChanged(lastFramePosition, FlyingFrame.localPosition)
+                || Quaternion.Angle(lastFrameRotation, FlyingFrame.localRotation) > 0.05f;
+            if (changed)
             {
-                // The forward lower corner belongs to the physical mast, not the
-                // rotating sail. It rises along that mast as the sail is struck.
-                var cloth = Sail.cloth.transform;
-                var neutral = cloth.localToWorldMatrix;
-                var world = neutral.MultiplyPoint3x4(Bones[2].localPosition);
-                // Height must come from the resting sail frame, independent of sheet angle.
-                var local = Sail.transform.InverseTransformPoint(world);
-                world = mount.transform.TransformPoint(Sail.transform.localPosition + local);
-                Bones[2].position = stay.ForeAttachment(world);
+                var body = Sail.GetComponent<Rigidbody>();
+                var hinge = Sail.GetComponent<HingeJoint>();
+                if (!boundToStay || GameState.currentShipyard)
+                    body.rotation = mount.transform.rotation;
+                body.position = forePoint - body.rotation * nextPivot;
+                hinge.autoConfigureConnectedAnchor = false;
+                hinge.connectedBody = mount.shipRigidbody;
+                hinge.axis = nextAxis;
+                hinge.anchor = nextPivot;
+                hinge.connectedAnchor = mount.shipRigidbody.transform.InverseTransformPoint(
+                    forePoint
+                );
+                if (!boundToStay)
+                    Sail.GetComponent<JibAngleMaster>().UpdateInitialAngle();
+                pivot = nextPivot;
+                pivotAxis = nextAxis;
+                lastScale = scaleRoot.localScale;
+                lastFramePosition = FlyingFrame.localPosition;
+                lastFrameRotation = FlyingFrame.localRotation;
+                boundToStay = true;
+                bindingDirty = false;
+                refreshRequested = true;
             }
+            return true;
+        }
+
+        internal bool PositionCollisionChecker(Transform checker, float angle)
+        {
+            var walk = lastMount.walkColMast;
+            if (!walk || checker.parent != walk)
+                return false;
+            var scaleRoot = Sail.cloth.transform.parent;
+            var rotation = Quaternion.AngleAxis(angle, pivotAxis);
+            var origin = new Vector3(0, 0, Sail.GetCurrentInstallHeight() - lastMount.mastHeight);
+            var modelOffset =
+                FlyingFrame.localPosition + FlyingFrame.localRotation * scaleRoot.localPosition;
+            var position =
+                origin + FlyingSailGeometry.RotateAroundMast(modelOffset, pivot, pivotAxis, angle);
+            checker.SetPositionAndRotation(
+                walk.TransformPoint(position),
+                walk.rotation * rotation * FlyingFrame.localRotation * scaleRoot.localRotation
+            );
+            checker.localScale = scaleRoot.localScale;
+            return true;
+        }
+
+        private void LateUpdate()
+        {
+            if (!Sail || Bones == null || Bones.Length != 4)
+                return;
+            RefreshFlyingFrame();
+            for (int i = 0; i < Bones.Length; i++)
+                Bones[i].localPosition = PrototypeGeometry.ReefCorner(
+                    Corners[i],
+                    Sail.currentUnroll
+                );
             if (stay != null)
                 stay.UpdateHalyard(Sail, HalyardAttachments);
             int state = PrototypeGeometry.RenderState(Sail.currentUnroll);

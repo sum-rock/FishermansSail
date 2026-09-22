@@ -300,6 +300,15 @@ namespace FishermansSail
             return boat.transform.TransformPoint(point);
         }
 
+        internal void ForeSailFrame(out Vector3 point, out Vector3 axis)
+        {
+            float height = boat.transform.InverseTransformPoint(Mount.transform.position).y;
+            ResolveAttachment(foreMast, height, out var localPoint, out var section);
+            PhysicalSegment(section, out var bottom, out var top);
+            point = boat.transform.TransformPoint(localPoint);
+            axis = boat.transform.TransformDirection((top - bottom).normalized);
+        }
+
         internal void Refresh()
         {
             try

@@ -14,6 +14,16 @@ recalculates tangents. The geometry checks now enforce Unity's weight ordering
 as well as matching each weight to the correct corner. The visual artifact fix
 still needs an in-game check after restarting with the rebuilt DLL.
 
+Version **0.7.0** gives the fisherman sail a pivot along the forward mast when
+installed on a triatic stay. Its whole forward edge stays at that mast, including
+at smaller sail scales, while the upper aft corner and clew swing outward together
+under the game's existing apparent-wind forces and sheet limits. The top-edge
+fabric between its corners can billow; it is no longer pinned along the stay.
+The model, wind center, shadow, halyard endpoints, and furled visuals move together.
+The shipyard collision sweep uses the same mast axis. Sail and stay IDs and native
+saved installation coordinates are retained. This motion needs in-game validation
+on both tacks, at different sheet settings, and through furling and save/reload.
+
 Version **0.6.2** prevents recursion in NANDFixes 1.4.3's order-text wrapping.
 Removing or replacing a triatic stay can put more than 45 characters before the
 order arrow. NANDFixes then recursively passes that same prefix to `AddLine`
@@ -289,14 +299,16 @@ components. Registration runs before All Sails in All Shipyards caches its sail
 list. Shipyard hooks append the prototype once, without replacing inventory entries.
 
 `PrototypeGeometry.cs` generates a separate 24-by-32 quad grid (825 vertices,
-1,536 triangles), UVs, four-corner bone weights, and cloth constraints. The top
-edge and both lower corners are pinned; other vertices can billow. The source
+1,536 triangles), UVs, four-corner bone weights, and cloth constraints. Both
+corners on the aft edge and the whole forward edge are pinned to the moving rig;
+other vertices, including the top edge between its corners, can billow. The source
 brig mesh and prefab remain unchanged.
 
 `FishermanSailRig.cs` replaces the cloned triangle animation with four procedural
 bones driven by the native reef control. It attaches the sheets to the lower aft
-corner and constrains the lower forward corner to the foremast on fisherman stays,
-including during sheeting and furling. The disabled donor Animator remains as
+corner. A frame around the physical forward mast keeps the whole luff in place
+while the aft edge swings under wind and sheet control, including during furling.
+The triatic mount remains the game's save and installation reference. The disabled donor Animator remains as
 Shipyard Expansion's scaling reference. The shipyard collider uses narrow strips
 inside the trapezoid; the wind-shadow box covers its bounds. Normals, bounds,
 and sail area are recalculated from the new mesh.

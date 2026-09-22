@@ -7,6 +7,7 @@ internal static class Program
     private static void Main(string[] args)
     {
         StayChecks.Run(args.Length == 2 && args[0] == "--stay-fixture" ? args[1] : null);
+        FlyingSailChecks.Run();
         foreach (float width in new[] { 0.25f, 6f, 13.8f, 40f })
         {
             CheckSail(width);
@@ -103,16 +104,16 @@ internal static class Program
             Require(
                 pinned
                     == (
-                        d.Vertices[i].x == 0
-                        || i == PrototypeGeometry.Rows * (PrototypeGeometry.Columns + 1)
+                        i % (PrototypeGeometry.Columns + 1) == 0
+                        || i == PrototypeGeometry.Columns
                         || i == d.Vertices.Length - 1
                     ),
                 "Wrong cloth attachment."
             );
         }
         Require(
-            pins == PrototypeGeometry.Columns + 3,
-            "Expected pinned top edge and both lower corners."
+            pins == PrototypeGeometry.Rows + 3,
+            "Expected mast-side luff and moving aft corners to be pinned."
         );
         foreach (var corner in c)
         {
