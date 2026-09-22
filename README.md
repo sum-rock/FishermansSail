@@ -14,6 +14,27 @@ recalculates tangents. The geometry checks now enforce Unity's weight ordering
 as well as matching each weight to the correct corner. The visual artifact fix
 still needs an in-game check after restarting with the rebuilt DLL.
 
+Version **0.6.2** prevents recursion in NANDFixes 1.4.3's order-text wrapping.
+Removing or replacing a triatic stay can put more than 45 characters before the
+order arrow. NANDFixes then recursively passes that same prefix to `AddLine`
+without shortening it. Triatic order lines now wrap iteratively into the native
+scrollable line list, before NANDFixes runs. Prices, arrows and error text are
+retained; short and unrelated lines retain their normal handling. No external
+mod settings, stay identities, or save data are changed.
+
+Version **0.6.1** makes installation prerequisites follow the resolved attachment
+sections. The Brig's forward topmast-stay variants no longer require an unused
+main topmast when the horizontal stay touches the lower mainmast. Height-reference
+and furl-control masts remain required, as do unrelated donor prerequisites and
+exclusions. Native checks still reject missing supporting masts.
+
+When previewing removal or replacement of an installed triatic stay carrying a
+sail, the occupied mount and its walking collision root remain active. The native
+"current mast still has sails attached" error still blocks confirmation, while
+the sail's collision checker remains able to finish. Restore the original option
+or remove the sail before changing the stay. This addresses a disabled-checker
+path; the reported full game freeze still requires an in-game retest.
+
 Version **0.6.0** replaces heuristic stay discovery with explicit boat rig profiles
 in `BoatRigs/`. Brig, Junk, Jong, Sanbuq, Cog, Leopard, and Shroud each have a
 separate definition listing donor stays, mast pairs, attachment sections, height
@@ -331,8 +352,9 @@ Boat profile maintenance: edit the corresponding `BoatRigs/<Boat>.cs` file.
 Each group names the original customization part index; each variant names its
 source mount, fore/aft physical masts, stay kind, height reference, furl-control
 mast, and ordered fore/aft spar sections. Additional sections must be explicit
-required continuations and physically adjoin. Native donor prerequisites and
-exclusions are retained (excluding angled stays), so both stays can coexist.
+required continuations and physically adjoin. Donor endpoint prerequisites are
+replaced with the resolved attachment sections; height/control masts and other
+prerequisites and exclusions are retained (excluding angled stays).
 Do not reorder existing groups or variants: saves address these by position.
 The resolver validates the complete profile before construction; construction
 failure rolls back all new groups on that boat to avoid shifting saved slots.

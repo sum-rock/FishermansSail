@@ -54,7 +54,11 @@ foreach (var type in assembly.GetTypes())
         )
     )
     {
-        if (!patch.IsDefined(typeof(HarmonyPrefix)) && !patch.IsDefined(typeof(HarmonyPostfix)))
+        if (
+            !patch.IsDefined(typeof(HarmonyPrefix))
+            && !patch.IsDefined(typeof(HarmonyPostfix))
+            && !patch.IsDefined(typeof(HarmonyFinalizer))
+        )
             continue;
         foreach (var parameter in patch.GetParameters())
         {
@@ -83,8 +87,41 @@ foreach (var type in assembly.GetTypes())
     }
     count++;
 }
-if (count != 11)
-    throw new Exception($"Expected all 11 patch classes, found {count}.");
+if (count != 13)
+    throw new Exception($"Expected all 13 patch classes, found {count}.");
+
+// Run the actual text prefix without Unity objects. HarmonyX runs later
+// prefixes even when this one returns false, so their input must be safe too.
+var textPrefix = assembly
+    .GetType("FishermansSail.StayOrderTextPatch")
+    .GetMethod("Prefix", BindingFlags.Static | BindingFlags.NonPublic);
+if (!textPrefix.GetCustomAttribute<HarmonyBefore>().info.before.Contains("com.nandbrew.nandfixes"))
+    throw new Exception("Triatic text protection must run before NANDFixes.");
+var orderLines = new System.Collections.Generic.List<string> { "existing order line" };
+object[] textArguments =
+{
+    "0: Mizzenmast Triatic Stay (mizzen top stay 1) -> (no Mizzenmast Triatic Stay)",
+    orderLines,
+};
+if (
+    (bool)textPrefix.Invoke(null, textArguments)
+    || (string)textArguments[0] != ""
+    || orderLines.Count < 3
+    || orderLines[0] != "existing order line"
+    || orderLines.Any(line => line.Length > 45)
+)
+    throw new Exception("Text guard did not consume and append the removal order safely.");
+textArguments[0] = "192: shipyard fee";
+int previousCount = orderLines.Count;
+if (
+    !(bool)textPrefix.Invoke(null, textArguments)
+    || orderLines.Count != previousCount
+    || (string)textArguments[0] != "192: shipyard fee"
+)
+    throw new Exception("Text guard changed an unrelated order line.");
+Console.WriteLine(
+    "PASS: actual order-text prefix, NANDFixes ordering, safe input for later HarmonyX prefixes, and native-list preservation."
+);
 
 var dataType = Assembly
     .LoadFrom(Path.Combine(libraryDirs[0], "Assembly-CSharp.dll"))

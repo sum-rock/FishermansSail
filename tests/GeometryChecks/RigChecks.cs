@@ -6,6 +6,8 @@ internal static class RigChecks
 {
     internal static void Run()
     {
+        CheckAttachmentRequirements();
+        OrderTextChecks.Run();
         // Recorded v0.5.3 appended group/option sequence. Save files use positions,
         // so sorting these groups globally or omitting one breaks compatibility.
         string[] names =
@@ -87,6 +89,52 @@ internal static class RigChecks
         Reject(() => new StayVariantDefinition(1, 2, 2, false, 2, 2, new[] { 2 }, new[] { 2 }));
         Console.WriteLine(
             "PASS: seven boat profiles, saved group/option ordering, mount identities, explicit mast sections and unknown-boat handling."
+        );
+    }
+
+    private static void CheckAttachmentRequirements()
+    {
+        var brig = BoatRigCatalog.Find("BOAT medi medium (50)");
+        foreach (var variant in brig.Groups.Single(g => g.SourcePart == 26).Variants)
+        {
+            // Horizontal endpoints touch the lower mainmast, unlike the donors.
+            var donorRequirements = new[] { variant.Fore, variant.Aft, 99 };
+            var required = StayRequirements.ForAttachments(
+                donorRequirements,
+                variant.Fore,
+                variant.Aft,
+                variant.Fore,
+                variant.AftSections[1],
+                variant.HeightReference,
+                variant.FurlControl
+            );
+            var installed = new[] { variant.Fore, variant.AftSections[1], 99 };
+            Assert(
+                required.All(installed.Contains),
+                "Brig stay still requires the unused main topmast."
+            );
+            Assert(
+                !required.All(new[] { variant.Fore, 99 }.Contains),
+                "Missing lower mainmast must block installation."
+            );
+            Assert(required.Contains(99), "Unrelated donor prerequisites were dropped.");
+            Assert(
+                donorRequirements.SequenceEqual(new[] { variant.Fore, variant.Aft, 99 }),
+                "Donor prerequisites were mutated."
+            );
+        }
+        var mizzen = StayRequirements.ForAttachments(new[] { 4, 59 }, 4, 59, 4, 7, 59, 59);
+        Assert(
+            mizzen.OrderBy(i => i).SequenceEqual(new[] { 4, 7, 59 }),
+            "A required height/furl topmast must remain required even when the endpoint touches a lower section."
+        );
+        var upper = StayRequirements.ForAttachments(new[] { 2, 58 }, 2, 58, 2, 58, 2, 2);
+        Assert(
+            upper.OrderBy(i => i).SequenceEqual(new[] { 2, 58 }),
+            "A stay that actually touches the topmast must require it."
+        );
+        Console.WriteLine(
+            "PASS: Brig attachment prerequisites, missing lower masts, retained height/control donors and untouched source requirements."
         );
     }
 

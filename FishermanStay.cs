@@ -14,6 +14,7 @@ namespace FishermansSail
         internal readonly List<BoatPart> Parts = new List<BoatPart>();
         internal readonly List<GameObject> AuxiliaryObjects = new List<GameObject>();
         internal bool Registered;
+        internal bool PreviewingOrder;
 
         private void OnDestroy()
         {
@@ -42,6 +43,7 @@ namespace FishermansSail
         private Mast aftMast;
         private Mast heightReference;
         private Mast furlControl;
+        private List<BoatPartOption> originalRequirements;
         private Mast[] foreSections,
             aftSections;
         private BoatRefs boat;
@@ -248,7 +250,8 @@ namespace FishermansSail
             Option.basePrice = original.basePrice;
             Option.installCost = original.installCost;
             Option.mass = original.mass;
-            Option.requires = FilterDependencies(original.requires);
+            originalRequirements = FilterDependencies(original.requires);
+            Option.requires = originalRequirements.ToList();
             Option.requiresDisabled = FilterDependencies(original.requiresDisabled);
             Option.childOptions = new GameObject[0];
             Option.childMast = Mount;
@@ -304,8 +307,24 @@ namespace FishermansSail
                 float height = boat
                     .transform.InverseTransformPoint(heightReference.transform.position)
                     .y;
-                bool foreFits = ResolveAttachment(foreMast, height, out var fore);
-                bool aftFits = ResolveAttachment(aftMast, height, out var aft);
+                bool foreFits = ResolveAttachment(
+                    foreMast,
+                    height,
+                    out var fore,
+                    out var foreSection
+                );
+                bool aftFits = ResolveAttachment(aftMast, height, out var aft, out var aftSection);
+                // A horizontal stay may meet the lower mainmast beneath its
+                // donor topmast. Installation must require the spar we touch.
+                Option.requires = StayRequirements.ForAttachments(
+                    originalRequirements,
+                    foreMast.GetComponent<BoatPartOption>(),
+                    aftMast.GetComponent<BoatPartOption>(),
+                    foreSection.GetComponent<BoatPartOption>(),
+                    aftSection.GetComponent<BoatPartOption>(),
+                    heightReference.GetComponent<BoatPartOption>(),
+                    furlControl.GetComponent<BoatPartOption>()
+                );
                 float span = StayGeometry.Span(aft, fore);
                 Fits = foreFits && aftFits;
                 UnavailableReason = Fits
@@ -377,10 +396,19 @@ namespace FishermansSail
             }
         }
 
-        private bool ResolveAttachment(Mast mast, float height, out Vector3 point)
+        private bool ResolveAttachment(Mast mast, float height, out Vector3 point) =>
+            ResolveAttachment(mast, height, out point, out _);
+
+        private bool ResolveAttachment(
+            Mast mast,
+            float height,
+            out Vector3 point,
+            out Mast attachmentSection
+        )
         {
             // Only use the sections explicitly named by this boat's profile.
             var sections = mast == foreMast ? foreSections : aftSections;
+            attachmentSection = sections[0];
             PhysicalSegment(sections[0], out var firstBottom, out var firstTop);
             point = StayGeometry.AtHeight(firstBottom, firstTop, height);
             var previousBottom = firstBottom;
@@ -392,6 +420,7 @@ namespace FishermansSail
                     break;
                 if (StayGeometry.SupportsHeight(bottom, top, height))
                 {
+                    attachmentSection = section;
                     point = StayGeometry.AtHeight(bottom, top, height);
                     return true;
                 }
