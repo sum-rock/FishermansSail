@@ -10,7 +10,7 @@ namespace FishermansSail
     {
         public const string PluginGuid = "com.august.fishermanssail";
         public const string PluginName = "Fisherman's Sail";
-        public const string PluginVersion = "0.8.5";
+        public const string PluginVersion = "0.8.6";
 
         internal static ManualLogSource Log { get; private set; }
 

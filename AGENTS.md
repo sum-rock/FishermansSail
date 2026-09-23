@@ -25,9 +25,9 @@ Follow current user instructions over historical design choices
 
 | Area                                                           | Main files                                                      |
 | -------------------------------------------------------------- | --------------------------------------------------------------- |
-| Plugin metadata, registration and independent assets           | `Plugin.cs`, `PrototypeSail.cs`                                 |
+| Plugin metadata, registration and independent assets           | `Plugin.cs`, `FishermanSail.cs`                                 |
 | Native appearance defaults and texture options                 | `FishermanAppearance.cs`                                       |
-| Mesh, skin weights, pins and bone indexing             | `PrototypeGeometry.cs`                                          |
+| Mesh, skin weights, pins and bone indexing             | `FishermanGeometry.cs`                                          |
 | Live rig, corners, shaping bones, furling and render selection | `FishermanSailRig.cs`                                           |
 | Camber response, movement limits and edge curves               | `FishermanBillow.cs`                                            |
 | Coupled foot/leech length constraints                          | `FishermanTension.cs`                                           |

@@ -53,7 +53,7 @@ internal static class MastInstallationChecks
         foreach (float width in new[] { 0.25f, 6f, 13.8f, 40f })
         foreach (float scale in new[] { 0.3f, 0.6f, 1f, 1.5f })
         {
-            var cut = PrototypeGeometry.Create(width).Corners.Select(c => c * scale).ToArray();
+            var cut = FishermanGeometry.Create(width).Corners.Select(c => c * scale).ToArray();
             var deck = cut[0] - Vector3.right * (width * scale * 2.2f);
             var previous = cut.Select(c => MastInstallationGeometry.HoistCorner(c, cut[0], deck, 0))
                 .ToArray();
@@ -93,7 +93,7 @@ internal static class MastInstallationChecks
                         );
                 }
                 // The tension solver must accept the new partially raised pose.
-                var leech = new Vector3[PrototypeGeometry.Rows + 1];
+                var leech = new Vector3[FishermanGeometry.Rows + 1];
                 bool fitted = FishermanTension.Fit(
                     posed[3],
                     posed[1],
@@ -196,7 +196,7 @@ internal static class MastInstallationChecks
             const float width = 13.8f;
             float clearance = 0.42f / scale; // Brig mast radius + contact allowance.
             int enabled = 0;
-            for (int i = 0; i < PrototypeGeometry.Columns; i++)
+            for (int i = 0; i < FishermanGeometry.Columns; i++)
             {
                 bool active = MastInstallationGeometry.CollisionStrip(
                     width,
@@ -234,16 +234,16 @@ internal static class MastInstallationChecks
         // shrouds, while the spreader root only touched the intentional mast rim.
         const float testScale = 0.65f;
         float oldHalfThickness = 0.025f * testScale;
-        for (int row = 0; row <= PrototypeGeometry.Rows; row++)
+        for (int row = 0; row <= FishermanGeometry.Rows; row++)
             oldHalfThickness = Math.Max(
                 oldHalfThickness,
                 testScale
                     * (
                         0.025f
-                        + PrototypeGeometry.RestCamber(
+                        + FishermanGeometry.RestCamber(
                             13.8f,
-                            0.5f / PrototypeGeometry.Columns,
-                            (float)row / PrototypeGeometry.Rows
+                            0.5f / FishermanGeometry.Columns,
+                            (float)row / FishermanGeometry.Rows
                         )
                     )
             );

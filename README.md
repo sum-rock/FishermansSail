@@ -1,7 +1,7 @@
 # Fisherman's Sail
 
-A Sailwind mod providing a four-corner **Fisherman's Sail Prototype**, installed
-on a physical mast under **Other**. Version **0.8.5** targets BepInEx 5 and
+A Sailwind mod providing a four-corner **Fisherman's Sail**, installed
+on a physical mast under **Other**. Version **0.8.6** targets BepInEx 5 and
 Shipyard Expansion, using the brig jib's native cloth and control assets.
 
 The selected mast needs a supported active mast aft of it, with halyard fittings
@@ -43,6 +43,8 @@ experiment caused creases and was reverted; the upper corner still follows 85%
 of the sheet angle. Version 0.8.5 changes only appearance defaults and texture
 choices. In-game validation of this appearance change remains pending; automated
 checks do not simulate Unity rendering, Cloth, hinge physics or the live shipyard.
+Version 0.8.6 names the sail **Fisherman's Sail** throughout the menu, Unity
+objects and code. Prefab index 400 and existing save compatibility are retained.
 
 ## Development environment
 
@@ -50,7 +52,7 @@ This repository provides a Nix flake for **x86_64 Linux**. It supplies the .NET 
 SDK, which compiles the plugin for the game's older `netstandard2.0` API target.
 You need Nix with `nix-command` and `flakes` enabled, a local Sailwind installation,
 and working **BepInEx 5** and **Shipyard Expansion** (developed against 0.11.1).
-No separate Unity editor or asset bundle is needed for this prototype.
+No separate Unity editor or asset bundle is needed for this mod.
 
 From this directory, enter the shell:
 
@@ -125,11 +127,11 @@ These existing assemblies are not copied into the plugin output or committed her
    Use `./install-local.sh "/path/to/Sailwind"` for another installation. The
    script copies only `bin/Release/netstandard2.0/FishermansSail.dll`; it does not
    build the mod. Builds and tests do not replace the installed DLL or change saves.
-2. Launch the game and confirm `Fisherman's Sail 0.8.5 loaded!` in
+2. Launch the game and confirm `Fisherman's Sail 0.8.6 loaded!` in
    `BepInEx/LogOutput.log`. Registration reports source **110**, sail prefab index
    **400**, and **825** vertices.
 3. On the Brig, select the physical **foremast**, open **Other**, and choose
-   **Fisherman's Sail Prototype**. The active mainmast supplies aft support.
+   **Fisherman's Sail**. The active mainmast supplies aft support.
    On supported three-masted boats, the mainmast can use a mizzenmast aft.
 4. Resize and move the preview using normal shipyard controls. The forward edge
    must fit the selected mast, both upper corners must sit below their pulleys,
@@ -162,7 +164,7 @@ Keep this mod installed to load them; remove its sails and save before uninstall
 
 ## Implementation
 
-- `PrototypeSail.cs` registers an independent prefab after Shipyard Expansion and
+- `FishermanSail.cs` registers an independent prefab after Shipyard Expansion and
   before All Sails in All Shipyards caches its list. It preserves the donor's
   mass, angular damping and wind-cloth response.
 - `BoatRigs/` defines physical mast sections and native sheet-control sources.
@@ -184,7 +186,7 @@ Keep this mod installed to load them; remove its sails and save before uninstall
   hinge limits after sway, preserving narrower collision limits on each side.
 - `FishermanAppearance.cs` uses native white palette entry 11 and SE plain texture
   index 0, limits the sail to that texture and hides its texture selector.
-- `PrototypeGeometry.cs`, `FishermanBillow.cs` and `FishermanTension.cs` define the
+- `FishermanGeometry.cs`, `FishermanBillow.cs` and `FishermanTension.cs` define the
   fixed mesh, camber response and coupled edge constraints. `FishermanAerodynamics.cs`
   and `AerodynamicPatches.cs` align native forces with the posed sail.
 - `FishermanOrderText.cs` and its patch wrap long sail order/error text safely

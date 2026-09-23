@@ -222,7 +222,11 @@ var textPrefix = assembly
 if (!textPrefix.GetCustomAttribute<HarmonyBefore>().info.before.Contains("com.nandbrew.nandfixes"))
     throw new Exception("Fisherman text protection must run before NANDFixes.");
 var orderLines = new System.Collections.Generic.List<string> { "existing order line" };
-object[] textArguments = { "0: Fisherman's Sail Prototype (150% x 115%) -> (no sail)", orderLines };
+object[] textArguments =
+{
+    "192: (ERROR): Fisherman's Sail (150% x 115%) -> (no sail)",
+    orderLines,
+};
 if (
     (bool)textPrefix.Invoke(null, textArguments)
     || (string)textArguments[0] != ""

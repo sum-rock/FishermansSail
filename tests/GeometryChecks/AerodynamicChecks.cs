@@ -10,7 +10,7 @@ internal static class AerodynamicChecks
         foreach (float trim in new[] { -70f, -40f, -15f, 15f, 40f, 70f })
         {
             var foreHead = Vector3.zero;
-            var foreTack = Vector3.down * (width * PrototypeGeometry.ForeDepthRatio);
+            var foreTack = Vector3.down * (width * FishermanGeometry.ForeDepthRatio);
             var aftHead = FlyingSailGeometry.UpperHead(
                 Vector3.forward * width,
                 FlyingSailGeometry.RotateAroundMast(
@@ -29,7 +29,7 @@ internal static class AerodynamicChecks
                 Vector3.up,
                 trim
             );
-            var leech = new Vector3[PrototypeGeometry.Rows + 1];
+            var leech = new Vector3[FishermanGeometry.Rows + 1];
             Check(
                 FishermanTension.Fit(
                     requestedClew,
@@ -133,13 +133,13 @@ internal static class AerodynamicChecks
             ),
             "An uninitialized sail must use the guarded fallback."
         );
-        for (int col = 0; col <= PrototypeGeometry.Columns; col++)
-        for (int row = 0; row <= PrototypeGeometry.Rows; row++)
+        for (int col = 0; col <= FishermanGeometry.Columns; col++)
+        for (int row = 0; row <= FishermanGeometry.Rows; row++)
         {
             float travel = FishermanBillow.ClothTravel(
                 1,
-                (float)col / PrototypeGeometry.Columns,
-                (float)row / PrototypeGeometry.Rows
+                (float)col / FishermanGeometry.Columns,
+                (float)row / FishermanGeometry.Rows
             );
             Check(
                 travel >= -1e-6f && travel <= 0.28f,

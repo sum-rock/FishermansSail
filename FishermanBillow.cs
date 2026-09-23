@@ -68,7 +68,7 @@ namespace FishermansSail
             float camber
         ) =>
             Vector3.Lerp(fore, aft, u)
-            + normal * (PrototypeGeometry.RestCamber(width, u, v) * camber);
+            + normal * (FishermanGeometry.RestCamber(width, u, v) * camber);
 
         internal static Vector3 SupportPoint(Vector3 clew, Vector3 head, Vector3 bow, float t) =>
             clew + (head - clew) * t + bow * (4 * t * (1 - t));

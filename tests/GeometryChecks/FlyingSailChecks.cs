@@ -11,7 +11,7 @@ internal static class FlyingSailChecks
         foreach (float scale in new[] { 0.55f, 1f, 1.5f })
         foreach (float rake in new[] { 0f, 8f, -12f })
         {
-            var data = PrototypeGeometry.Create(width);
+            var data = FishermanGeometry.Create(width);
             var pivot = new Vector3(0, 0, -width * 2);
             var axis = FlyingSailGeometry.RotateAroundMast(
                 Vector3.right,
@@ -88,7 +88,7 @@ internal static class FlyingSailChecks
                     );
                 }
             }
-            for (int col = 1; col < PrototypeGeometry.Columns; col++)
+            for (int col = 1; col < FishermanGeometry.Columns; col++)
                 Check(
                     data.Constraints[col].maxDistance > 0,
                     "Top-edge cloth must remain free between corners."

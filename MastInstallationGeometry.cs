@@ -57,15 +57,15 @@ namespace FishermansSail
             out Vector3 size
         )
         {
-            float step = width / PrototypeGeometry.Columns;
+            float step = width / FishermanGeometry.Columns;
             float start = Math.Max((column + 0.05f) * step, mastClearance);
             float end = (column + 0.95f) * step;
             float depth =
                 width
                 * (
-                    PrototypeGeometry.ForeDepthRatio
-                    + (PrototypeGeometry.AftDepthRatio - PrototypeGeometry.ForeDepthRatio)
-                        * ((column + 1f) / PrototypeGeometry.Columns)
+                    FishermanGeometry.ForeDepthRatio
+                    + (FishermanGeometry.AftDepthRatio - FishermanGeometry.ForeDepthRatio)
+                        * ((column + 1f) / FishermanGeometry.Columns)
                 );
             center = new Vector3(-depth * 0.5f, 0, -width + (start + end) * 0.5f);
             size = new Vector3(Math.Max(0.01f, depth - 0.1f), 0.05f, Math.Max(0.001f, end - start));
