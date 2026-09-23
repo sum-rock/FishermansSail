@@ -18,6 +18,7 @@ string[] libraryDirs =
 {
     Path.Combine(gameDir, "Sailwind_Data/Managed"),
     Path.Combine(gameDir, "BepInEx/core"),
+    Path.Combine(gameDir, "BepInEx/plugins/ShipyardExpansion"),
 };
 AssemblyLoadContext.Default.Resolving += (context, name) =>
 {
@@ -95,8 +96,35 @@ foreach (var type in assembly.GetTypes())
     }
     count++;
 }
-if (count != 19)
-    throw new Exception($"Expected all 19 patch classes, found {count}.");
+if (count != 21)
+    throw new Exception($"Expected all 21 patch classes, found {count}.");
+
+// The installed SE save loader and texture button both go through this update.
+// Guarding only the selector would allow an old saved pattern to reappear.
+var textureTarget = assembly
+    .GetType("FishermansSail.FishermanPlainTexturePatch")
+    .GetCustomAttribute<HarmonyPatch>()
+    .info;
+foreach (var name in new[] { "SetTexture", "NextTexture" })
+    if (
+        !CalledMethods(textureTarget.declaringType.GetMethod(name))
+            .Any(m =>
+                m.DeclaringType == textureTarget.declaringType && m.Name == textureTarget.methodName
+            )
+    )
+        throw new Exception($"SE {name} no longer passes through the plain-texture guard.");
+var textureButtonPostfix = assembly
+    .GetType("FishermansSail.FishermanTextureButtonPatch")
+    .GetMethod("Postfix", BindingFlags.Static | BindingFlags.NonPublic);
+if (
+    !textureButtonPostfix
+        .GetCustomAttribute<HarmonyAfter>()
+        .info.after.Contains("com.nandbrew.shipyardexpansion")
+)
+    throw new Exception("Hide texture options after SE refreshes its button visibility.");
+Console.WriteLine(
+    "PASS: installed SE saved/cycled texture routes and texture-button patch ordering."
+);
 
 var travelPatch = assembly.GetType("FishermansSail.FishermanTravelPatch");
 var travelTarget = travelPatch.GetCustomAttribute<HarmonyPatch>().info;

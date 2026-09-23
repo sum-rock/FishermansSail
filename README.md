@@ -1,7 +1,7 @@
 # Fisherman's Sail
 
 A Sailwind mod providing a four-corner **Fisherman's Sail Prototype**, installed
-on a physical mast under **Other**. Version **0.8.3** targets BepInEx 5 and
+on a physical mast under **Other**. Version **0.8.5** targets BepInEx 5 and
 Shipyard Expansion, using the brig jib's native cloth and control assets.
 
 The selected mast needs a supported active mast aft of it, with halyard fittings
@@ -16,6 +16,11 @@ deck height is estimated from that mast's hoist winch. Fully lowered cloth is
 invisible; upper control-line ends park at the aft pulley and lower sheet ends
 at the forward pulley, retaining the deck-to-mast runs. Existing pulley hardware
 is reused. Only the four corners are pinned, leaving the edges free to billow.
+
+New sails default to the game's existing white color and Shipyard Expansion's
+plain, unpainted texture. Recoloring remains available, but the texture selector
+is hidden for this sail and saved patterns are replaced with the plain option.
+Existing saved colors are retained. No custom color or texture is added.
 
 Outward rotation is limited to **40 degrees on each side** of the neutral
 fore-and-aft alignment along the hull. Obstructions can restrict travel further.
@@ -33,10 +38,11 @@ supporting mast radius plus 2 cm at the luff, where attachment contact is
 intentional. Other rigging and sail collisions still apply. Its angular sweep
 returns to the panel's aligned neutral position and rotation.
 
-The user confirmed the 0.8.1 result looked good in game. Version 0.8.3 adds the
-40-degree travel limit on top of the 0.8.2 support-profile cleanup. In-game
-validation of both changes remains pending; automated checks do not simulate
-Unity Cloth, hinge physics or the live shipyard.
+The user confirmed the 0.8.3 result looked good in game. The 0.8.4 upper-corner
+experiment caused creases and was reverted; the upper corner still follows 85%
+of the sheet angle. Version 0.8.5 changes only appearance defaults and texture
+choices. In-game validation of this appearance change remains pending; automated
+checks do not simulate Unity rendering, Cloth, hinge physics or the live shipyard.
 
 ## Development environment
 
@@ -103,8 +109,8 @@ For another installation, pass the game directory explicitly:
 dotnet build -c Release -p:SailwindDir="/path/to/Sailwind"
 ```
 
-The build references BepInEx, its bundled Harmony library, the game's
-`Assembly-CSharp.dll`, and Unity's core and cloth assemblies.
+The build references BepInEx, its bundled Harmony library, Shipyard Expansion,
+the game's `Assembly-CSharp.dll`, and Unity's core and cloth assemblies.
 These existing assemblies are not copied into the plugin output or committed here.
 
 ## Install and verify
@@ -119,7 +125,7 @@ These existing assemblies are not copied into the plugin output or committed her
    Use `./install-local.sh "/path/to/Sailwind"` for another installation. The
    script copies only `bin/Release/netstandard2.0/FishermansSail.dll`; it does not
    build the mod. Builds and tests do not replace the installed DLL or change saves.
-2. Launch the game and confirm `Fisherman's Sail 0.8.3 loaded!` in
+2. Launch the game and confirm `Fisherman's Sail 0.8.5 loaded!` in
    `BepInEx/LogOutput.log`. Registration reports source **110**, sail prefab index
    **400**, and **825** vertices.
 3. On the Brig, select the physical **foremast**, open **Other**, and choose
@@ -142,6 +148,10 @@ These existing assemblies are not copied into the plugin output or committed her
    40 degrees to port and starboard (or sooner where obstructed), including after
    loading an older save. Tightening should remain smooth. Check that shipyard
    rotation angles are at most 40 degrees per side. Repeat on another supported boat.
+   Check that a new sail starts white and plain, including when partly hoisted.
+   Its texture button should be hidden; selecting another sail should restore
+   that sail's texture options. Confirm recoloring still works and saved colors
+   survive reload while old patterns become plain.
 8. Preview removing either supporting mast or an occupied topmast: removal must
    be rejected until the sail is removed. Test optional topmasts present and absent,
    and check for extra winches after canceling orders. The `Fisherman mast rig`
@@ -172,6 +182,8 @@ Keep this mod installed to load them; remove its sails and save before uninstall
   are separate leaves, so native rope rotation cannot rotate skin bones.
 - `FishermanTravel.cs` and its patch bound native sheet limits and the final
   hinge limits after sway, preserving narrower collision limits on each side.
+- `FishermanAppearance.cs` uses native white palette entry 11 and SE plain texture
+  index 0, limits the sail to that texture and hides its texture selector.
 - `PrototypeGeometry.cs`, `FishermanBillow.cs` and `FishermanTension.cs` define the
   fixed mesh, camber response and coupled edge constraints. `FishermanAerodynamics.cs`
   and `AerodynamicPatches.cs` align native forces with the posed sail.

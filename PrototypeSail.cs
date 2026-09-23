@@ -137,6 +137,7 @@ namespace FishermansSail
                 };
                 shadowMesh.RecalculateBounds();
                 FishermanSailRig.Configure(sail, geometry, mesh, shadowMesh);
+                FishermanAppearance.Configure(sail);
                 var renderer = sail.cloth.GetComponent<SkinnedMeshRenderer>();
                 clone.SetActive(true);
                 sail.SetSailArea();

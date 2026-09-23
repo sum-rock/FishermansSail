@@ -26,6 +26,7 @@ Follow current user instructions over historical design choices
 | Area                                                           | Main files                                                      |
 | -------------------------------------------------------------- | --------------------------------------------------------------- |
 | Plugin metadata, registration and independent assets           | `Plugin.cs`, `PrototypeSail.cs`                                 |
+| Native appearance defaults and texture options                 | `FishermanAppearance.cs`                                       |
 | Mesh, skin weights, pins and bone indexing             | `PrototypeGeometry.cs`                                          |
 | Live rig, corners, shaping bones, furling and render selection | `FishermanSailRig.cs`                                           |
 | Camber response, movement limits and edge curves               | `FishermanBillow.cs`                                            |
@@ -233,14 +234,27 @@ support-mast removal, deck-up hoisting and parked ropes with invisible struck cl
     clipped by the supporting mast radius plus 2 cm, retaining other collision
     and overlap rules. Preserve the aligned neutral rotation when the native
     sweep completes. The user approved the 0.8.1 in-game result; the 0.8.2
-    cleanup still needs a fresh in-game check.
+    cleanup was included in the later 0.8.3 result the user said looked great.
 
 11. **Keep outward travel within 40 degrees per side.** Version 0.8.3 caps the
     fisherman prefab, collision sweep, restored limits and final native hinge
     limits. `JibAngleMaster.Update` adds sway after combining sheets, so reducing
     only `Sail.minAngle/maxAngle` is insufficient. Preserve tighter collision
     restrictions and apply the final cap after sway without resetting Cloth or
-    snapping transforms. The 0.8.3 limit still needs in-game validation.
+    snapping transforms. The user reported that 0.8.3 looked great in game.
+
+12. **Do not repeat the 0.8.4 upper-corner experiment.** Reducing the upper
+    corner's angle ratio from 85% to 60% passed automated checks but produced
+    creases in game. The user reverted it. Retain the 85% ratio and existing
+    geometry; mathematical feasibility did not establish stable Cloth behavior.
+
+13. **Use the existing white/plain appearance options.** Version 0.8.5 defaults
+    new sails to native palette entry 11 and SE texture index 0 (the unpainted
+    stock square sail's texture). Keep recoloring and saved colors, restrict
+    texture choices to plain, and hide SE's selector only for fisherman sails.
+    Guard SE's material update so saved patterns cannot return. Do not invent
+    RGB colors or textures, or change donor/shared assets. Appearance validation
+    in game remains pending.
 
 For handoff, report the version, behavioral change, checks actually run, remaining
 in-game uncertainty, and the built DLL path. Update these notes when a later
