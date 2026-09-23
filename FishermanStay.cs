@@ -14,6 +14,7 @@ namespace FishermansSail
         internal readonly List<BoatPart> Parts = new List<BoatPart>();
         internal readonly List<GameObject> AuxiliaryObjects = new List<GameObject>();
         internal bool Registered;
+        internal bool PreviewingOrder;
 
         private void OnDestroy()
         {
@@ -28,7 +29,10 @@ namespace FishermansSail
 
     internal sealed class FishermanStay
     {
-        internal const string DisplayName = "Fisherman's Top Middle Stay";
+        internal const string ForeDisplayName = "Formast Triatic Stay";
+        internal const string MizzenDisplayName = "Mizzenmast Triatic Stay";
+        internal string DisplayName => isMizzen ? MizzenDisplayName : ForeDisplayName;
+        private bool isMizzen;
         internal Mast Mount;
         internal BoatPartOption Option;
         internal GameObject WalkObject;
@@ -37,6 +41,11 @@ namespace FishermansSail
         private Mast source;
         private Mast foreMast;
         private Mast aftMast;
+        private Mast heightReference;
+        private Mast furlControl;
+        private List<BoatPartOption> originalRequirements;
+        private Mast[] foreSections,
+            aftSections;
         private BoatRefs boat;
         private Transform visual;
         private Transform walkVisual;
@@ -60,41 +69,49 @@ namespace FishermansSail
 
             // Keep source parts/options intact. Each new part mirrors the source
             // group's mutually exclusive mast configurations, not its on/off state.
-            foreach (var sourcePart in parts.availableParts.ToArray())
+            var sourceParts = parts.availableParts.ToArray();
+            var definition = BoatRigCatalog.Find(boat.name);
+            if (definition == null)
             {
-                var candidates = sourcePart
-                    .partOptions.Where(o =>
-                        o && StayGeometry.IsUpperStay(o.optionName + " " + o.name)
-                    )
-                    .Select(o => o.GetComponent<Mast>())
-                    .Where(m =>
-                        m && m.onlyStaysails && m.orderIndex < StayGeometry.SourceIndexLimit
-                    )
-                    .OrderBy(m => m.orderIndex)
-                    .ToArray();
+                Plugin.Log.LogInfo($"No triatic rig definition for {boat.name}; skipped.");
+                return;
+            }
+            ResolvedStayGroup[] groups;
+            try
+            {
+                groups = ResolvedStayGroup.Resolve(definition, sourceParts, boat);
+            }
+            catch (Exception exception)
+            {
+                Plugin.Log.LogWarning(
+                    $"Triatic rig definition does not match {boat.name}; skipped: {exception.Message}"
+                );
+                return;
+            }
+            foreach (var group in groups)
+            {
+                var sourcePart = group.SourcePart;
                 var added = new List<FishermanStay>();
                 GameObject empty = null;
                 GameObject emptyWalk = null;
                 try
                 {
-                    foreach (var source in candidates)
+                    foreach (var resolved in group.Variants)
                     {
-                        var option = source.GetComponent<BoatPartOption>();
-                        var dependencies = PhysicalMasts(option).Distinct().ToArray();
-                        if (dependencies.Length != 2)
-                            continue; // A forestay to a bowsprit is not an inter-mast stay.
-                        if (!source.walkColMast || !boat.walkCol || source.mastHeight < 0.25f)
-                            throw new InvalidOperationException(
-                                $"{source.name} has no usable stay geometry."
-                            );
-                        int index = StayGeometry.MountIndex(source.orderIndex);
-                        if (boat.masts.Length > index && boat.masts[index])
-                            throw new InvalidOperationException(
-                                $"Mount index {index} is occupied; no mount was replaced."
-                            );
-                        var stay = new FishermanStay { source = source, boat = boat };
-                        added.Add(stay); // Include partially constructed objects in rollback.
-                        stay.Create(dependencies);
+                        var stay = new FishermanStay
+                        {
+                            source = resolved.Donor,
+                            boat = boat,
+                            isMizzen = resolved.Definition.IsMizzen,
+                            foreMast = resolved.Fore,
+                            aftMast = resolved.Aft,
+                            heightReference = resolved.HeightReference,
+                            furlControl = resolved.FurlControl,
+                            foreSections = resolved.ForeSections,
+                            aftSections = resolved.AftSections,
+                        };
+                        added.Add(stay);
+                        stay.Create();
                     }
                     if (added.Count == 0)
                         continue;
@@ -105,7 +122,7 @@ namespace FishermansSail
                         added[0].WalkObject.transform.parent
                     );
                     var none = empty.AddComponent<BoatPartOption>();
-                    none.optionName = "(no fisherman's top middle stay)";
+                    none.optionName = "(no " + added[0].DisplayName + ")";
                     none.requires = new List<BoatPartOption>();
                     none.requiresDisabled = new List<BoatPartOption>();
                     none.childOptions = new GameObject[0];
@@ -132,7 +149,7 @@ namespace FishermansSail
                             );
                         stay.Mount.gameObject.SetActive(false);
                         Plugin.Log.LogInfo(
-                            $"Registered {DisplayName}: boat={boat.name}, source={stay.source.orderIndex}, "
+                            $"Registered {stay.DisplayName}: boat={boat.name}, source={stay.source.orderIndex}, "
                                 + $"mount={stay.Mount.orderIndex}, span={stay.Mount.mastHeight:F2}, available={stay.Fits}."
                         );
                     }
@@ -140,12 +157,13 @@ namespace FishermansSail
                     registry.Stays.AddRange(added);
                     registry.Parts.Add(part);
                     registry.AuxiliaryObjects.Add(emptyWalk);
+                    registry.AuxiliaryObjects.Add(empty);
                     empty.SetActive(true);
                     emptyWalk.SetActive(true);
                 }
                 catch (Exception exception)
                 {
-                    foreach (var stay in added)
+                    foreach (var stay in added.Concat(registry.Stays))
                     {
                         if (stay.Mount)
                         {
@@ -169,46 +187,21 @@ namespace FishermansSail
                     Plugin.Log.LogError(
                         $"Could not register fisherman stay group on {boat.name}: {exception}"
                     );
+                    foreach (var part in registry.Parts)
+                        parts.availableParts.Remove(part);
+                    foreach (var item in registry.AuxiliaryObjects)
+                        if (item)
+                            Object.Destroy(item);
+                    registry.Stays.Clear();
+                    registry.Parts.Clear();
+                    registry.AuxiliaryObjects.Clear();
+                    return;
                 }
             }
         }
 
-        private static IEnumerable<Mast> PhysicalMasts(BoatPartOption option)
+        private void Create()
         {
-            foreach (var required in option.requires ?? new List<BoatPartOption>())
-            {
-                if (!required)
-                    continue;
-                var mast = required.GetComponent<Mast>();
-                // Square-only physical masts are valid too; exclude horizontal
-                // spars/bowsprits geometrically, not by their names/categories.
-                if (
-                    mast
-                    && !mast.onlyStaysails
-                    && Math.Abs(
-                        Vector3.Dot(
-                            mast.transform.forward,
-                            option.GetComponent<Mast>().shipRigidbody.transform.up
-                        )
-                    ) > 0.8f
-                )
-                    yield return mast;
-            }
-        }
-
-        private void Create(Mast[] dependencies)
-        {
-            var origin = boat.transform.InverseTransformPoint(source.transform.position);
-            var ordered = dependencies
-                .OrderBy(m =>
-                    StayGeometry.HorizontalDistanceSquared(
-                        origin,
-                        boat.transform.InverseTransformPoint(m.transform.position)
-                    )
-                )
-                .ToArray();
-            aftMast = ordered[0];
-            foreMast = ordered[1];
             // Parent directly to the boat: an optional donor rigging container
             // must not disable this independent stay. This also makes the native
             // Mast's localPosition-based hinge anchor a boat-local coordinate.
@@ -227,7 +220,8 @@ namespace FishermansSail
             Mount.leftAngleWinch = CloneWinches(source.leftAngleWinch, "Port sheet");
             Mount.rightAngleWinch = CloneWinches(source.rightAngleWinch, "Starboard sheet");
             Mount.midAngleWinch = CloneWinches(source.midAngleWinch, "Sheet");
-            Mount.reefWinch = CloneWinches(source.reefWinch, "Furl");
+            var halyardMast = furlControl;
+            Mount.reefWinch = CloneWinches(halyardMast.reefWinch, "Furl");
             if (
                 Mount.reefWinch.Length == 0
                 || (
@@ -239,13 +233,8 @@ namespace FishermansSail
                     "The source stay does not provide a complete set of sail controls."
                 );
             Mount.midRopeAtt = CloneAnchors(source.midRopeAtt, "Sheet attachment");
-            Mount.mastReefAtt = CloneAnchors(source.mastReefAtt, "Furl attachment");
-            Mount.mastReefAttExtension = CloneAnchors(
-                source.mastReefAttExtension,
-                "Furl extension"
-            );
-            if (Mount.mastReefAtt.Length == 0)
-                throw new InvalidOperationException("The source stay has no furl attachment.");
+            Mount.mastReefAtt = new[] { NewHalyardAnchor("Halyard mast guide") };
+            Mount.mastReefAttExtension = new[] { NewHalyardAnchor("Halyard upper guide") };
 
             visual = CopyGeometry(source.transform, root.transform, true);
             if (visual.GetComponentsInChildren<MeshRenderer>(true).Length == 0)
@@ -261,7 +250,8 @@ namespace FishermansSail
             Option.basePrice = original.basePrice;
             Option.installCost = original.installCost;
             Option.mass = original.mass;
-            Option.requires = FilterDependencies(original.requires);
+            originalRequirements = FilterDependencies(original.requires);
+            Option.requires = originalRequirements.ToList();
             Option.requiresDisabled = FilterDependencies(original.requiresDisabled);
             Option.childOptions = new GameObject[0];
             Option.childMast = Mount;
@@ -274,25 +264,83 @@ namespace FishermansSail
                 .Where(o => o && !(o.GetComponent<Mast>() && o.GetComponent<Mast>().onlyStaysails))
                 .ToList();
 
+        private Transform NewHalyardAnchor(string name)
+        {
+            var anchor = new GameObject(name).transform;
+            anchor.SetParent(Mount.transform, false);
+            return anchor;
+        }
+
+        internal void UpdateHalyard(Sail sail, Transform[] attachments)
+        {
+            var connections = sail.GetComponent<SailConnections>();
+            var guide = connections.mastReefAttachment;
+            var upperGuide = connections.mastReefAttExtension;
+            if (!connections.reefController || !guide || !upperGuide)
+                return;
+            // Set an explicit winch -> mast guides -> upper sail corner route.
+            // Shipyard Expansion can swap the two donor guide references in Awake.
+            guide.SetParent(Mount.mastReefAtt[0], false);
+            guide.localPosition = Vector3.zero;
+            upperGuide.SetParent(Mount.mastReefAttExtension[0], false);
+            upperGuide.localPosition = Vector3.zero;
+            connections.reefController.GetComponent<RopeEffect>().attachment = guide;
+            guide.GetComponent<RopeEffect>().attachment = upperGuide;
+            upperGuide.GetComponent<RopeEffect>().attachment = attachments[
+                furlControl == aftMast ? 1 : 0
+            ];
+            var winch = Mount.reefWinch[0].transform;
+            connections.reefController.transform.position = winch.position + winch.right * 0.06f;
+        }
+
+        internal Vector3 ForeAttachment(Vector3 requestedWorld)
+        {
+            float height = boat.transform.InverseTransformPoint(requestedWorld).y;
+            ResolveAttachment(foreMast, height, out var point);
+            return boat.transform.TransformPoint(point);
+        }
+
+        internal void ForeSailFrame(out Vector3 point, out Vector3 axis)
+        {
+            float height = boat.transform.InverseTransformPoint(Mount.transform.position).y;
+            ResolveAttachment(foreMast, height, out var localPoint, out var section);
+            PhysicalSegment(section, out var bottom, out var top);
+            point = boat.transform.TransformPoint(localPoint);
+            axis = boat.transform.TransformDirection((top - bottom).normalized);
+        }
+
+        internal Vector3 AftSheetGuide => Mount.transform.position;
+
         internal void Refresh()
         {
             try
             {
-                Vector3 foreBottom,
-                    foreTop,
-                    aftBottom,
-                    aftTop;
-                PhysicalSegment(foreMast, out foreBottom, out foreTop);
-                PhysicalSegment(aftMast, out aftBottom, out aftTop);
-                var aft = boat.transform.InverseTransformPoint(source.transform.position);
-                var fore = StayGeometry.AtHeight(foreBottom, foreTop, aft.y);
+                float height = boat
+                    .transform.InverseTransformPoint(heightReference.transform.position)
+                    .y;
+                bool foreFits = ResolveAttachment(
+                    foreMast,
+                    height,
+                    out var fore,
+                    out var foreSection
+                );
+                bool aftFits = ResolveAttachment(aftMast, height, out var aft, out var aftSection);
+                // A horizontal stay may meet the lower mainmast beneath its
+                // donor topmast. Installation must require the spar we touch.
+                Option.requires = StayRequirements.ForAttachments(
+                    originalRequirements,
+                    foreMast.GetComponent<BoatPartOption>(),
+                    aftMast.GetComponent<BoatPartOption>(),
+                    foreSection.GetComponent<BoatPartOption>(),
+                    aftSection.GetComponent<BoatPartOption>(),
+                    heightReference.GetComponent<BoatPartOption>(),
+                    furlControl.GetComponent<BoatPartOption>()
+                );
                 float span = StayGeometry.Span(aft, fore);
-                Fits =
-                    StayGeometry.SupportsHeight(foreBottom, foreTop, aft.y)
-                    && StayGeometry.SupportsHeight(aftBottom, aftTop, aft.y);
+                Fits = foreFits && aftFits;
                 UnavailableReason = Fits
                     ? null
-                    : "Both masts must reach the aft upper stay attachment.";
+                    : $"{(!foreFits ? foreMast.name : aftMast.name)} has no connected mast section at {height:F2} m (boat-local height).";
                 var forward = boat.transform.TransformDirection((aft - fore).normalized);
                 // Preserve the donor mount's roll. Cloth mesh axes are not the
                 // mount axes: forcing mount +X downward flips the stock rig.
@@ -326,6 +374,11 @@ namespace FishermansSail
                 walkVisual.localScale = new Vector3(1f, 1f, span / source.mastHeight);
                 foreach (var pair in anchors)
                     pair.Item2.SetPositionAndRotation(pair.Item1.position, pair.Item1.rotation);
+                var halyardMast = furlControl;
+                var guidePoint = furlControl == aftMast ? aft : fore;
+                Mount.mastReefAtt[0].position = boat.transform.TransformPoint(guidePoint);
+                ResolveAttachment(halyardMast, guidePoint.y + 0.15f, out var upperGuide);
+                Mount.mastReefAttExtension[0].position = boat.transform.TransformPoint(upperGuide);
                 var towardsFore = Vector3
                     .ProjectOnPlane(
                         foreMast.transform.position - aftMast.transform.position,
@@ -352,6 +405,40 @@ namespace FishermansSail
                     $"Fisherman stay {source.name} is unavailable: {exception.Message}"
                 );
             }
+        }
+
+        private bool ResolveAttachment(Mast mast, float height, out Vector3 point) =>
+            ResolveAttachment(mast, height, out point, out _);
+
+        private bool ResolveAttachment(
+            Mast mast,
+            float height,
+            out Vector3 point,
+            out Mast attachmentSection
+        )
+        {
+            // Only use the sections explicitly named by this boat's profile.
+            var sections = mast == foreMast ? foreSections : aftSections;
+            attachmentSection = sections[0];
+            PhysicalSegment(sections[0], out var firstBottom, out var firstTop);
+            point = StayGeometry.AtHeight(firstBottom, firstTop, height);
+            var previousBottom = firstBottom;
+            var previousTop = firstTop;
+            foreach (var section in sections)
+            {
+                PhysicalSegment(section, out var bottom, out var top);
+                if (!StayGeometry.AdjoiningSections(previousBottom, previousTop, bottom, top))
+                    break;
+                if (StayGeometry.SupportsHeight(bottom, top, height))
+                {
+                    attachmentSection = section;
+                    point = StayGeometry.AtHeight(bottom, top, height);
+                    return true;
+                }
+                previousBottom = bottom;
+                previousTop = top;
+            }
+            return false;
         }
 
         private void PhysicalSegment(Mast mast, out Vector3 bottom, out Vector3 top)

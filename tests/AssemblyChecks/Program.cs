@@ -54,7 +54,11 @@ foreach (var type in assembly.GetTypes())
         )
     )
     {
-        if (!patch.IsDefined(typeof(HarmonyPrefix)) && !patch.IsDefined(typeof(HarmonyPostfix)))
+        if (
+            !patch.IsDefined(typeof(HarmonyPrefix))
+            && !patch.IsDefined(typeof(HarmonyPostfix))
+            && !patch.IsDefined(typeof(HarmonyFinalizer))
+        )
             continue;
         foreach (var parameter in patch.GetParameters())
         {
@@ -83,8 +87,89 @@ foreach (var type in assembly.GetTypes())
     }
     count++;
 }
-if (count != 10)
-    throw new Exception($"Expected all 10 patch classes, found {count}.");
+if (count != 16)
+    throw new Exception($"Expected all 16 patch classes, found {count}.");
+
+// Cloth mesh assignment belongs to inactive prefab construction. Replacing
+// a live Cloth renderer's mesh caused the 0.7.11 detach/reset regression even
+// though the two meshes passed all pure geometry checks.
+var rigType = assembly.GetType("FishermansSail.FishermanSailRig");
+foreach (
+    var method in rigType.GetMethods(
+        BindingFlags.Instance
+            | BindingFlags.Public
+            | BindingFlags.NonPublic
+            | BindingFlags.DeclaredOnly
+    )
+)
+{
+    foreach (var called in CalledMethods(method))
+        if (
+            called.Name == "set_sharedMesh"
+            && called.DeclaringType.FullName == "UnityEngine.SkinnedMeshRenderer"
+        )
+            throw new Exception(
+                $"Live cloth mesh replacement in {method.Name}; only prefab construction may assign it."
+            );
+}
+Console.WriteLine("PASS: installed sail callbacks retain their initialized cloth mesh.");
+
+var shapeUpdate = rigType.GetMethod(
+    "UpdateShapeBones",
+    BindingFlags.Instance | BindingFlags.NonPublic
+);
+if (shapeUpdate == null)
+    throw new Exception("Missing bone-driven billow update.");
+foreach (var called in CalledMethods(shapeUpdate))
+    if (
+        called.DeclaringType.FullName == "UnityEngine.Cloth"
+        || called.Name
+            is "set_sharedMesh"
+                or "set_bones"
+                or "set_bindposes"
+                or "set_localScale"
+                or "set_localRotation"
+                or "set_enabled"
+    )
+        throw new Exception(
+            "Billow must move existing bones without resetting or replacing cloth or reflecting transforms."
+        );
+Console.WriteLine(
+    "PASS: billow update only moves existing shaping transforms; cloth lifecycle and transform scales remain untouched."
+);
+
+// Run the actual text prefix without Unity objects. HarmonyX runs later
+// prefixes even when this one returns false, so their input must be safe too.
+var textPrefix = assembly
+    .GetType("FishermansSail.StayOrderTextPatch")
+    .GetMethod("Prefix", BindingFlags.Static | BindingFlags.NonPublic);
+if (!textPrefix.GetCustomAttribute<HarmonyBefore>().info.before.Contains("com.nandbrew.nandfixes"))
+    throw new Exception("Triatic text protection must run before NANDFixes.");
+var orderLines = new System.Collections.Generic.List<string> { "existing order line" };
+object[] textArguments =
+{
+    "0: Mizzenmast Triatic Stay (mizzen top stay 1) -> (no Mizzenmast Triatic Stay)",
+    orderLines,
+};
+if (
+    (bool)textPrefix.Invoke(null, textArguments)
+    || (string)textArguments[0] != ""
+    || orderLines.Count < 3
+    || orderLines[0] != "existing order line"
+    || orderLines.Any(line => line.Length > 45)
+)
+    throw new Exception("Text guard did not consume and append the removal order safely.");
+textArguments[0] = "192: shipyard fee";
+int previousCount = orderLines.Count;
+if (
+    !(bool)textPrefix.Invoke(null, textArguments)
+    || orderLines.Count != previousCount
+    || (string)textArguments[0] != "192: shipyard fee"
+)
+    throw new Exception("Text guard changed an unrelated order line.");
+Console.WriteLine(
+    "PASS: actual order-text prefix, NANDFixes ordering, safe input for later HarmonyX prefixes, and native-list preservation."
+);
 
 var dataType = Assembly
     .LoadFrom(Path.Combine(libraryDirs[0], "Assembly-CSharp.dll"))
@@ -106,3 +191,46 @@ foreach (int length in new[] { 30, 128, 256, 384 })
 Console.WriteLine(
     $"PASS: {count} Harmony targets and injected argument types; old and extended save-array capacity."
 );
+
+// Decode call operands without asking Harmony to create native patch stubs.
+static System.Collections.Generic.IEnumerable<MethodBase> CalledMethods(MethodInfo method)
+{
+    var bytes = method.GetMethodBody()?.GetILAsByteArray();
+    if (bytes == null)
+        yield break;
+    var opcodes = typeof(System.Reflection.Emit.OpCodes)
+        .GetFields(BindingFlags.Public | BindingFlags.Static)
+        .Where(f => f.FieldType == typeof(System.Reflection.Emit.OpCode))
+        .Select(f => (System.Reflection.Emit.OpCode)f.GetValue(null))
+        .ToDictionary(op => unchecked((ushort)op.Value));
+    using var reader = new BinaryReader(new MemoryStream(bytes));
+    while (reader.BaseStream.Position < bytes.Length)
+    {
+        ushort key = reader.ReadByte();
+        if (key == 0xfe)
+            key = (ushort)(0xfe00 | reader.ReadByte());
+        var operand = opcodes[key].OperandType;
+        if (operand == System.Reflection.Emit.OperandType.InlineMethod)
+        {
+            yield return method.Module.ResolveMethod(
+                reader.ReadInt32(),
+                method.DeclaringType.GetGenericArguments(),
+                method.GetGenericArguments()
+            );
+            continue;
+        }
+        int size = operand switch
+        {
+            System.Reflection.Emit.OperandType.InlineNone => 0,
+            System.Reflection.Emit.OperandType.ShortInlineBrTarget
+            or System.Reflection.Emit.OperandType.ShortInlineI
+            or System.Reflection.Emit.OperandType.ShortInlineVar => 1,
+            System.Reflection.Emit.OperandType.InlineVar => 2,
+            System.Reflection.Emit.OperandType.InlineI8
+            or System.Reflection.Emit.OperandType.InlineR => 8,
+            System.Reflection.Emit.OperandType.InlineSwitch => reader.ReadInt32() * 4,
+            _ => 4,
+        };
+        reader.BaseStream.Position += size;
+    }
+}

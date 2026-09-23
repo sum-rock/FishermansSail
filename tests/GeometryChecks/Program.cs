@@ -1,7 +1,4 @@
 using System;
-using System.IO;
-using System.Linq;
-using System.Text.Json;
 using FishermansSail;
 using UnityEngine;
 
@@ -9,145 +6,278 @@ internal static class Program
 {
     private static void Main(string[] args)
     {
-        if (args.Length == 2 && args[0] == "--stay-fixture")
+        StayChecks.Run(args.Length == 2 && args[0] == "--stay-fixture" ? args[1] : null);
+        FlyingSailChecks.Run();
+        BillowChecks.Run();
+        ShapingChecks.Run();
+        AerodynamicChecks.Run();
+        foreach (float width in new[] { 0.25f, 6f, 13.8f, 40f })
         {
-            StayChecks.Run(args[1]);
-            args = Array.Empty<string>();
+            CheckSail(width);
+            CheckBundle(width);
         }
-        else
-            StayChecks.Run();
-        // A triangular sail in X/Z, with a pinned luff and a free clew.
-        var vertices = new[]
-        {
-            new Vector3(0, 0, 0),
-            new Vector3(0, 0, 14),
-            new Vector3(7, 0, 7),
-            new Vector3(3.5f, 0, 3.5f),
-            new Vector3(3.5f, 0, 10.5f),
-            new Vector3(2, 0, 7),
-            new Vector3(0, 0, 7),
-        };
-        var constraints = Constraints(
-            new[] { 0f, 0f, float.MaxValue, float.MaxValue, float.MaxValue, 0f, 0f }
-        );
-        var output = CheckInvariants(vertices, constraints);
         Require(
-            output[3].x > vertices[3].x && output[4].x > vertices[4].x,
-            "Both free edges must visibly widen."
+            PrototypeGeometry.RenderState(0) == 0 && PrototypeGeometry.RenderState(0.02f) == 0,
+            "A fully struck sail must show only the bundle."
         );
-        Require(Same(output[2], vertices[2]), "The clew must remain at its rope attachment.");
-        Require(Same(output[5], vertices[5]), "Even interior pinned vertices must remain fixed.");
-        ExpectFailure(() => PrototypeGeometry.Deform(vertices, new ClothSkinningCoefficient[1]));
-        ExpectFailure(() =>
-            PrototypeGeometry.Deform(new Vector3[3], new ClothSkinningCoefficient[3])
+        Require(
+            PrototypeGeometry.RenderState(0.03f) == 1 && PrototypeGeometry.RenderState(0.5f) == 1,
+            "Partly furled sails must use the procedural renderer without cloth simulation."
         );
-        var invalid = (Vector3[])vertices.Clone();
-        invalid[1].x = float.NaN;
-        ExpectFailure(() => PrototypeGeometry.Deform(invalid, constraints));
-        Console.WriteLine(
-            "PASS: mesh isolation, pinned vertices, corner positions, visible deformation, bounds, and invalid inputs."
+        Require(
+            PrototypeGeometry.RenderState(0.98f) == 2 && PrototypeGeometry.RenderState(1) == 2,
+            "Only fully set sails should use the cloth renderer."
         );
-
-        // Optional local game fixture; proprietary geometry is never committed.
-        if (args.Length > 0)
+        foreach (float width in new[] { 0f, -1f, float.NaN, float.PositiveInfinity, 101f })
         {
-            using var document = JsonDocument.Parse(File.ReadAllText(args[0]));
-            var root = document.RootElement;
-            var source = root.GetProperty("vertices")
-                .EnumerateArray()
-                .Select(v => new Vector3(v[0].GetSingle(), v[1].GetSingle(), v[2].GetSingle()))
-                .ToArray();
-            var coefficients = Constraints(
-                root.GetProperty("maxDistances")
-                    .EnumerateArray()
-                    .Select(v => v.GetSingle())
-                    .ToArray()
-            );
-            var changed = CheckInvariants(source, coefficients);
-            double before = 0,
-                after = 0;
-            foreach (var triangle in root.GetProperty("triangles").EnumerateArray())
+            try
             {
-                int a = triangle[0].GetInt32(),
-                    b = triangle[1].GetInt32(),
-                    c = triangle[2].GetInt32();
-                double oldArea = SignedArea(source[a], source[b], source[c]);
-                double newArea = SignedArea(changed[a], changed[b], changed[c]);
-                if (Math.Abs(oldArea) > 1e-7)
-                    Require(oldArea * newArea > 0, "A triangle collapsed or inverted.");
-                before += Math.Abs(oldArea);
-                after += Math.Abs(newArea);
+                PrototypeGeometry.Create(width);
             }
-            Require(after > before, "The deformed sail should have greater area.");
-            Console.WriteLine(
-                $"PASS: actual brig mesh ({source.Length} vertices, {coefficients.Count(c => c.maxDistance == 0)} pinned); "
-                    + $"no inverted triangles; projected area {before:F2} -> {after:F2}."
-            );
+            catch (ArgumentException)
+            {
+                continue;
+            }
+            throw new Exception("Invalid width accepted.");
         }
-    }
-
-    private static Vector3[] CheckInvariants(
-        Vector3[] source,
-        ClothSkinningCoefficient[] constraints
-    )
-    {
-        var snapshot = (Vector3[])source.Clone();
-        var originalConstraints = constraints.Select(c => c.maxDistance).ToArray();
-        var output = PrototypeGeometry.Deform(source, constraints);
-        Require(
-            !ReferenceEquals(source, output) && source.Length == output.Length,
-            "Return a separate array with the original topology."
+        Console.WriteLine(
+            "PASS: four-corner outline, revised cut, spare top-edge cloth, area, winding, UVs, bone weights, cloth pins, furling, bundle geometry, render states, and independent mesh arrays."
         );
-        float minX = source.Min(v => v.x),
-            maxX = source.Max(v => v.x);
-        bool anyChanged = false;
-        for (int i = 0; i < source.Length; i++)
-        {
-            Require(Same(source[i], snapshot[i]), "The input geometry was mutated.");
-            Require(
-                constraints[i].maxDistance == originalConstraints[i],
-                "The cloth constraints were mutated."
-            );
-            Require(
-                output[i].y == source[i].y && output[i].z == source[i].z,
-                "Deformation must stay in the existing cloth plane."
-            );
-            Require(
-                float.IsFinite(output[i].x) && output[i].x >= minX && output[i].x <= maxX,
-                "The deformation escaped its original bounds."
-            );
-            if (constraints[i].maxDistance <= 0)
-                Require(Same(output[i], source[i]), "An attachment vertex moved.");
-            anyChanged |= !Same(output[i], source[i]);
-        }
-        Require(anyChanged, "The deformation must change the mesh.");
-        return output;
     }
 
-    private static double SignedArea(Vector3 a, Vector3 b, Vector3 c) =>
-        ((double)(b.x - a.x) * (c.z - a.z) - (double)(b.z - a.z) * (c.x - a.x)) * 0.5;
-
-    private static ClothSkinningCoefficient[] Constraints(float[] values) =>
-        values.Select(v => new ClothSkinningCoefficient { maxDistance = v }).ToArray();
-
-    private static bool Same(Vector3 a, Vector3 b) => a.x == b.x && a.y == b.y && a.z == b.z;
-
-    private static void Require(bool condition, string message)
+    private static void CheckSail(float width)
     {
-        if (!condition)
+        var d = PrototypeGeometry.Create(width);
+        var second = PrototypeGeometry.Create(width);
+        Require(
+            !ReferenceEquals(d.Vertices, second.Vertices)
+                && !ReferenceEquals(d.Constraints, second.Constraints),
+            "Sails share mutable geometry."
+        );
+        var c = d.Corners;
+        Angle(c[2], c[0], c[1], 90);
+        Angle(c[0], c[1], c[3], 90);
+        Require(Math.Abs(c[3].x / width + 1f) < 1e-5, "Wrong revised aft depth.");
+        Require(
+            Math.Abs(c[2].x / width + 1.6917536f) < 1e-5,
+            "The original forward depth changed."
+        );
+        Require(c[2].x < c[3].x && c[2].z == -width, "The lowest corner must be forward.");
+        double area = 0,
+            projectedArea = 0;
+        var centroid = Vector3.zero;
+        for (int i = 0; i < d.Triangles.Length; i += 3)
+        {
+            var a = d.Vertices[d.Triangles[i]];
+            var b = d.Vertices[d.Triangles[i + 1]];
+            var e = d.Vertices[d.Triangles[i + 2]];
+            var cross = Vector3.Cross(b - a, e - a);
+            Require(cross.y > 0, "A triangle collapsed or inverted.");
+            area += cross.magnitude * 0.5;
+            projectedArea += cross.y * 0.5;
+            centroid += (a + b + e) * (cross.magnitude / 6);
+        }
+        double expected = width * -(c[2].x + c[3].x) / 2;
+        Require(Math.Abs(projectedArea / expected - 1) < 1e-5, "Projected cut area is wrong.");
+        Require(
+            area > expected * 1.005 && area < expected * 1.05,
+            "Camber must add actual cloth area."
+        );
+        Require(
+            (centroid / (float)area - d.Center).magnitude < width * 1e-5f,
+            "Wind center must use the revised surface centroid."
+        );
+        double topLength = 0;
+        for (int col = 1; col <= PrototypeGeometry.Columns; col++)
+            topLength += (d.Vertices[col] - d.Vertices[col - 1]).magnitude;
+        Require(
+            topLength > width * 1.03 && topLength < width * 1.04,
+            "The head needs spare cloth between its fixed endpoints."
+        );
+        Require(
+            Math.Abs(d.Vertices[PrototypeGeometry.Columns / 2].y - width * 0.12f) < width * 1e-5f,
+            "Top camber must peak at twelve percent of width."
+        );
+        double luffLength = 0;
+        for (int row = 1; row <= PrototypeGeometry.Rows; row++)
+            luffLength += (
+                d.Vertices[row * (PrototypeGeometry.Columns + 1)]
+                - d.Vertices[(row - 1) * (PrototypeGeometry.Columns + 1)]
+            ).magnitude;
+        double luffChord = (c[2] - c[0]).magnitude;
+        Require(
+            luffLength > luffChord * 1.002 && luffLength < luffChord * 1.004,
+            "Luff needs a small amount of actual extra cloth length, not just movement permission."
+        );
+        var boneSeen = new bool[PrototypeGeometry.BoneCount];
+        for (int row = 0; row <= PrototypeGeometry.Rows; row++)
+        for (int col = 0; col <= PrototypeGeometry.ShapeColumns; col++)
+        {
+            int bone = PrototypeGeometry.ShapeBone(row, col);
+            Require(
+                bone >= 0 && bone < boneSeen.Length && !boneSeen[bone],
+                "Invalid or duplicate shaping bone index."
+            );
+            boneSeen[bone] = true;
+        }
+        Require(Array.TrueForAll(boneSeen, b => b), "Uninitialized shaping bone.");
+        Require(
+            d.Constraints[PrototypeGeometry.Columns / 2].maxDistance < width * 0.12f,
+            "Top travel must keep the loaded peak on the target side."
+        );
+        int pins = 0;
+        for (int i = 0; i < d.Vertices.Length; i++)
+        {
+            var w = d.Weights[i];
+            Require(
+                w.weight0 >= w.weight1 && w.weight1 >= w.weight2 && w.weight2 >= w.weight3,
+                "Unity skin weights must be sorted largest first."
+            );
+            Require(w.weight0 > 0, "A vertex must start with a nonzero influence.");
+            Require(
+                w.weight0 >= 0 && w.weight1 >= 0 && w.weight2 >= 0 && w.weight3 >= 0,
+                "Negative skin weight."
+            );
+            Require(
+                Math.Abs(w.weight0 + w.weight1 + w.weight2 + w.weight3 - 1) < 1e-5,
+                "Skin weights do not sum to one."
+            );
+            var reconstructed =
+                d.BonePositions[w.boneIndex0] * w.weight0
+                + d.BonePositions[w.boneIndex1] * w.weight1
+                + d.BonePositions[w.boneIndex2] * w.weight2
+                + d.BonePositions[w.boneIndex3] * w.weight3;
+            Require(
+                (reconstructed - d.Vertices[i]).magnitude < width * 1e-5f,
+                "Shaping bones must reconstruct the whole rest mesh without a one-sided residual."
+            );
+            var uv = d.UV[i];
+            Require(uv.x >= 0 && uv.x <= 1 && uv.y >= 0 && uv.y <= 1, "Invalid UV.");
+            bool pinned = d.Constraints[i].maxDistance == 0;
+            if (pinned)
+                pins++;
+            Require(
+                pinned
+                    == (
+                        i == 0
+                        || i == PrototypeGeometry.Columns
+                        || i == PrototypeGeometry.Rows * (PrototypeGeometry.Columns + 1)
+                        || i == d.Vertices.Length - 1
+                    ),
+                "Wrong cloth attachment."
+            );
+        }
+        Require(pins == 4, "Only the four sail corners should be pinned.");
+        for (int row = 1; row < PrototypeGeometry.Rows; row++)
+        {
+            int fore = row * (PrototypeGeometry.Columns + 1);
+            float travel = d.Constraints[fore].maxDistance;
+            Require(
+                travel > 0 && travel <= width * 0.04001f,
+                "Intermediate luff vertices must be free with a modest travel limit."
+            );
+            int mirrored = (PrototypeGeometry.Rows - row) * (PrototypeGeometry.Columns + 1);
+            Require(
+                Math.Abs(travel - d.Constraints[mirrored].maxDistance) < width * 1e-6f,
+                "Luff travel must taper symmetrically toward its fixed corners."
+            );
+            Require(
+                travel < d.Vertices[fore].y,
+                "Loaded forward-edge travel must stay within its moving camber target."
+            );
+            int i = row * (PrototypeGeometry.Columns + 1) + PrototypeGeometry.Columns;
+            Require(
+                d.Constraints[i].maxDistance > 0
+                    && d.Constraints[i].maxDistance <= width * 0.06001f,
+                "Intermediate leech vertices need bounded movement away from their skin targets."
+            );
+        }
+        Require(
+            Math.Abs(
+                d.Constraints[
+                    (PrototypeGeometry.Rows / 2) * (PrototypeGeometry.Columns + 1)
+                ].maxDistance
+                    - width * 0.04f
+            )
+                < width * 1e-6f,
+            "Luff travel must allow flex around the moving six-percent curve."
+        );
+        float leechMiddle = d.Constraints[
+            (PrototypeGeometry.Rows / 2) * (PrototypeGeometry.Columns + 1)
+                + PrototypeGeometry.Columns
+        ].maxDistance;
+        Require(
+            Math.Abs(leechMiddle - width * 0.06f) < width * 1e-6f,
+            "Mid-leech must have six percent of width to flex naturally."
+        );
+        float nearClew = d.Constraints[
+            (PrototypeGeometry.Rows - 1) * (PrototypeGeometry.Columns + 1)
+                + PrototypeGeometry.Columns
+        ].maxDistance;
+        Require(
+            nearClew > 0 && nearClew < width * 0.002f,
+            "The free leech must retain reinforcement beside the clew."
+        );
+        foreach (var corner in c)
+        {
+            var full = PrototypeGeometry.ReefCorner(corner, 1);
+            var half = PrototypeGeometry.ReefCorner(corner, 0.5f);
+            var furled = PrototypeGeometry.ReefCorner(corner, 0);
+            Require((full - corner).magnitude < 1e-6, "Unfurling changes the rest shape.");
+            Require(
+                half.x == corner.x * 0.5f && half.z == corner.z,
+                "Furling must raise corners without moving along the stay."
+            );
+            Require(
+                Math.Abs(furled.x) <= Math.Abs(corner.x) * 0.016f && furled.z == corner.z,
+                "Struck sail must gather at the top."
+            );
+        }
+        Require(
+            d.Center.x < 0 && d.Center.z > -width && d.Center.z < 0,
+            "Wind center lies outside the sail."
+        );
+    }
+
+    private static void CheckBundle(float width)
+    {
+        var data = PrototypeGeometry.CreateBundle(width);
+        foreach (var vertex in data.Vertices)
+            Require(
+                float.IsFinite(vertex.x)
+                    && float.IsFinite(vertex.y)
+                    && float.IsFinite(vertex.z)
+                    && vertex.x >= -width * 0.01601f
+                    && vertex.x <= 0
+                    && Math.Abs(vertex.y) <= width * 0.00801f
+                    && vertex.z >= -width
+                    && vertex.z <= 0,
+                "Furled mesh must stay within a narrow bundle along the head."
+            );
+        double volume = 0;
+        for (int i = 0; i < data.Triangles.Length; i += 3)
+        {
+            var a = data.Vertices[data.Triangles[i]];
+            var b = data.Vertices[data.Triangles[i + 1]];
+            var c = data.Vertices[data.Triangles[i + 2]];
+            var normal = Vector3.Cross(b - a, c - a);
+            Require(normal.magnitude > 1e-9, "Furled bundle has a collapsed triangle.");
+            volume += Vector3.Dot(a, Vector3.Cross(b, c)) / 6;
+        }
+        Require(volume > 0, "Bundle faces must point outward.");
+    }
+
+    private static void Angle(Vector3 a, Vector3 b, Vector3 c, double expected)
+    {
+        var u = (a - b).normalized;
+        var v = (c - b).normalized;
+        double actual = Math.Acos(Math.Max(-1, Math.Min(1, Vector3.Dot(u, v)))) * 180 / Math.PI;
+        Require(Math.Abs(actual - expected) < 0.001, "Wrong corner angle: " + actual);
+    }
+
+    private static void Require(bool value, string message)
+    {
+        if (!value)
             throw new Exception(message);
-    }
-
-    private static void ExpectFailure(Action action)
-    {
-        try
-        {
-            action();
-        }
-        catch (ArgumentException)
-        {
-            return;
-        }
-        throw new Exception("Expected an invalid mesh to be rejected.");
     }
 }

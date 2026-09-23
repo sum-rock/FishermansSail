@@ -6,6 +6,20 @@ using Object = UnityEngine.Object;
 
 namespace FishermansSail
 {
+    [HarmonyPatch(typeof(ReefEffectAnimUniversal), "RefreshCloth")]
+    internal static class FishermanClothRefreshPatch
+    {
+        [HarmonyPrefix]
+        private static bool Prefix(ReefEffectAnimUniversal __instance)
+        {
+            var rig = __instance.GetComponent<FishermanSailRig>();
+            if (!rig)
+                return true;
+            rig.RefreshCloth();
+            return false;
+        }
+    }
+
     [HarmonyPatch(typeof(SaveableBoatCustomization), "Awake")]
     internal static class RegisterFishermanStaysPatch
     {
@@ -104,14 +118,62 @@ namespace FishermansSail
     [HarmonyPatch(typeof(BoatCustomParts), "RefreshPartsWithOrder")]
     internal static class StayOrderRefreshPatch
     {
+        [HarmonyPrefix]
+        private static void Prefix(BoatCustomParts __instance)
+        {
+            var registry = __instance.GetComponent<FishermanStayRegistry>();
+            if (registry)
+                registry.PreviewingOrder = true;
+        }
+
         [HarmonyPostfix]
         private static void Postfix(BoatCustomParts __instance) =>
             StayRefreshPatch.Postfix(__instance);
+
+        [HarmonyFinalizer]
+        private static void Finalizer(BoatCustomParts __instance)
+        {
+            var registry = __instance.GetComponent<FishermanStayRegistry>();
+            if (registry)
+                registry.PreviewingOrder = false;
+        }
+    }
+
+    [HarmonyPatch(typeof(BoatPart), "SetOptionEnabled")]
+    internal static class StayOccupiedPreviewPatch
+    {
+        [HarmonyPrefix]
+        internal static void Prefix(BoatPart __instance, int i, ref bool state)
+        {
+            if (state || i != __instance.activeOption)
+                return;
+            var option = __instance.partOptions[i];
+            var registry = option.GetComponentInParent<FishermanStayRegistry>();
+            if (!registry || !registry.PreviewingOrder)
+                return;
+            var stay = registry.Stays.FirstOrDefault(s => s.Option == option);
+            if (stay == null || !stay.Mount.sails.Any(s => s))
+                return;
+            // Keep both the occupied mount and its walking collision root alive.
+            // Native CanUninstall still rejects the requested change, but its
+            // sail's collision check can finish and the order remains editable.
+            state = true;
+        }
     }
 
     [HarmonyPatch(typeof(BoatCustomParts), "CanInstall")]
     internal static class StayCanInstallPatch
     {
+        [HarmonyPrefix]
+        private static void Prefix(BoatCustomParts __instance, int partIndex, int optionIndex)
+        {
+            var registry = __instance.GetComponent<FishermanStayRegistry>();
+            if (!registry)
+                return;
+            var option = __instance.availableParts[partIndex].partOptions[optionIndex];
+            registry.Stays.FirstOrDefault(s => s.Option == option)?.Refresh();
+        }
+
         [HarmonyPostfix]
         private static void Postfix(
             BoatCustomParts __instance,
@@ -128,7 +190,6 @@ namespace FishermansSail
             var stay = registry.Stays.FirstOrDefault(s => s.Option == option);
             if (stay == null)
                 return;
-            stay.Refresh();
             if (!stay.Fits)
             {
                 __result = false;

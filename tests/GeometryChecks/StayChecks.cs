@@ -9,25 +9,101 @@ internal static class StayChecks
 {
     internal static void Run(string fixture = null)
     {
-        var aft = new Vector3(0, 20, 0);
-        var foreBottom = new Vector3(12, 2, 0);
-        var foreTop = new Vector3(12, 25, 0);
-        var fore = StayGeometry.AtHeight(foreBottom, foreTop, aft.y);
+        RigChecks.Run();
+        StayGeometry.ForemastAttachments(
+            new Vector3(0, 12, 0),
+            new Vector3(10, 0, 0),
+            new Vector3(10, 25, 0),
+            Vector3.zero,
+            new Vector3(0, 14, 0),
+            out var mainEnd,
+            out var mizzenEnd
+        );
         Check(
-            fore.x == 12 && fore.y == aft.y && fore.z == 0,
-            "The fore attachment must match the aft height."
+            mainEnd.y == 12
+                && mizzenEnd.y == 12
+                && StayGeometry.SupportsHeight(Vector3.zero, new Vector3(0, 14, 0), mizzenEnd.y),
+            "The mizzen stay must use the shorter aft mast's upper attachment height."
+        );
+        // Brig topmast donor: fore attachment sits below the main topmast's
+        // collider, but inside its explicitly required lower mainmast section.
+        var mainTopBottom = new Vector3(-4.93f, 25.4414f, 0);
+        var mainTopTop = new Vector3(-4.93f, 35.382f, 0);
+        var mainLowerBottom = new Vector3(-5.504038f, 2.227722f, 0);
+        var mainLowerTop = new Vector3(-5.504038f, 28.407726f, 0);
+        Check(
+            !StayGeometry.SupportsHeight(mainTopBottom, mainTopTop, 24.236614f)
+                && StayGeometry.SupportsHeight(mainLowerBottom, mainLowerTop, 24.236614f)
+                && StayGeometry.AdjoiningSections(
+                    mainTopBottom,
+                    mainTopTop,
+                    mainLowerBottom,
+                    mainLowerTop
+                ),
+            "Brig attachment below the topmast must use its connected lower mainmast."
+        );
+        Check(
+            !StayGeometry.AdjoiningSections(
+                mainTopBottom,
+                mainTopTop,
+                new Vector3(-5.5f, 0, 0),
+                new Vector3(-5.5f, 24, 0)
+            ),
+            "Disconnected spar sections must not bridge a real gap."
+        );
+        Check(
+            !StayGeometry.AdjoiningSections(
+                mainTopBottom,
+                mainTopTop,
+                mainLowerBottom + new Vector3(10, 0, 0),
+                mainLowerTop + new Vector3(10, 0, 0)
+            ),
+            "A neighboring mast must not extend this mast's reach."
+        );
+        var foreBottom = new Vector3(12, 2, 0);
+        var foreTop = new Vector3(12, 18, 0);
+        var aftBottom = new Vector3(0, 0, 0);
+        var aftTop = new Vector3(0, 30, 0);
+        StayGeometry.ForemastAttachments(
+            new Vector3(12, 16, 0),
+            foreBottom,
+            foreTop,
+            aftBottom,
+            aftTop,
+            out var fore,
+            out var aft
+        );
+        Check(
+            fore == new Vector3(12, 16, 0) && aft == new Vector3(0, 16, 0),
+            "A taller aft mast must not lift the stay above the foremast mount."
         );
         Check(
             Math.Abs(StayGeometry.Span(aft, fore) - 12) < 0.0001,
             "Mount length must be horizontal mast spacing."
         );
         Check(
-            StayGeometry.SupportsHeight(foreBottom, foreTop, aft.y),
-            "A taller foremast must accept the attachment."
+            StayGeometry.SupportsHeight(foreBottom, foreTop, fore.y)
+                && StayGeometry.SupportsHeight(aftBottom, aftTop, fore.y),
+            "A shorter foremast must support a stay at its own upper mount."
         );
         Check(
-            !StayGeometry.SupportsHeight(foreBottom, new Vector3(12, 18, 0), aft.y),
-            "A short foremast must not accept a floating attachment."
+            !StayGeometry.SupportsHeight(aftBottom, new Vector3(0, 14, 0), fore.y),
+            "An aft mast below the forward mount must reject the attachment."
+        );
+        StayGeometry.ForemastAttachments(
+            new Vector3(12, 16, 0),
+            foreBottom,
+            foreTop,
+            new Vector3(0, 0, 0),
+            new Vector3(3, 30, 6),
+            out var rakedFore,
+            out var rakedAft
+        );
+        Check(
+            Math.Abs(rakedAft.x - 1.6f) < 0.0001f
+                && Math.Abs(rakedAft.z - 3.2f) < 0.0001f
+                && rakedAft.y == rakedFore.y,
+            "The lowered aft attachment must intersect the raked mast axis."
         );
 
         // A raked spar: intersect its actual axis, rather than keeping the lower
@@ -78,14 +154,6 @@ internal static class StayChecks
             StayGeometry.MountIndex(15) == 143 && StayGeometry.MountIndex(20) == 148,
             "Stable identities changed."
         );
-        Check(StayGeometry.IsUpperStay("middle top stay 1-1"), "Brig upper stay was missed.");
-        Check(StayGeometry.IsUpperStay("mid_stay_upper"), "Jong upper stay was missed.");
-        Check(
-            StayGeometry.IsUpperStay("mizzen top stay 2"),
-            "Aft mast names must not restrict discovery."
-        );
-        Check(!StayGeometry.IsUpperStay("midstay_0-0_bottom"), "A lower stay was misclassified.");
-        Check(!StayGeometry.IsUpperStay(null), "Missing names must not match.");
         Console.WriteLine(
             "PASS: horizontal stay placement, raked/short masts, alternate axes, stable mount identities, and invalid inputs."
         );
@@ -97,10 +165,18 @@ internal static class StayChecks
             supported = 0;
         foreach (var item in doc.RootElement.EnumerateArray())
         {
-            var a = Read(item, "aft");
+            var mount = Read(item, "foreMount");
             var bottom = Read(item, "foreBottom");
             var top = Read(item, "foreTop");
-            var b = StayGeometry.AtHeight(bottom, top, a.y);
+            StayGeometry.ForemastAttachments(
+                mount,
+                bottom,
+                top,
+                Read(item, "aftBottom"),
+                Read(item, "aftTop"),
+                out var b,
+                out var a
+            );
             Check(b.y == a.y && StayGeometry.Span(a, b) > 0, "Invalid local game stay geometry.");
             if (
                 StayGeometry.SupportsHeight(bottom, top, a.y)
