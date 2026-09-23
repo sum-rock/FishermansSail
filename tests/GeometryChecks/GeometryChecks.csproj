@@ -7,6 +7,19 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile
+      Include="../../Stays/FishermansStay/FishermansStaySaveState.cs"
+      Link="FishermansStaySaveState.cs"
+    />
+    <None Update="StayMeasurements.txt" CopyToOutputDirectory="PreserveNewest" />
+    <Compile
+      Include="../../Stays/FishermansStay/FishermansStayGeometry.cs"
+      Link="FishermansStayGeometry.cs"
+    />
+    <Compile
+      Include="../../Stays/FishermansStay/FishermansStayOrderText.cs"
+      Link="FishermansStayOrderText.cs"
+    />
+    <Compile
       Include="../../Sails/FishermansFlyingSail/FishermansFlyingSailGeometry.cs"
       Link="FishermansFlyingSailGeometry.cs"
     />
@@ -38,7 +51,10 @@
       Include="../../Sails/FishermansFlyingSail/FishermansFlyingSailAerodynamics.cs"
       Link="FishermansFlyingSailAerodynamics.cs"
     />
-    <Compile Include="../../BoatRigs/*.cs" Link="BoatRigs/%(Filename)%(Extension)" />
+    <Compile
+      Include="../../BoatRigs/**/*.cs"
+      Link="BoatRigs/%(RecursiveDir)%(Filename)%(Extension)"
+    />
     <Reference Include="UnityEngine.CoreModule">
       <HintPath>$(SailwindDir)/Sailwind_Data/Managed/UnityEngine.CoreModule.dll</HintPath>
     </Reference>

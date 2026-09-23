@@ -7,6 +7,7 @@ internal static class Program
     private static void Main()
     {
         RigChecks.Run();
+        StayChecks.Run();
         OrderTextChecks.Run();
         FlyingSailChecks.Run();
         TravelChecks.Run();

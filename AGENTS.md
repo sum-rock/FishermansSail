@@ -49,11 +49,13 @@ version **0.1.0** and prefab index **400** remain unchanged.
 | Shipyard order-text freeze protection | [FishermansFlyingSailOrderText.cs](Sails/FishermansFlyingSail/FishermansFlyingSailOrderText.cs), [Patches/FishermansFlyingSailOrderTextPatch.cs](Sails/FishermansFlyingSail/Patches/FishermansFlyingSailOrderTextPatch.cs) |
 | Boat-specific mast pairs | [BoatRigs/](BoatRigs/) |
 
-Future stays belong in `Stays/`; other sail types belong in sibling directories
-under `Sails/`. The existing flying sail remains a separate feature. No stay or
-new sail implementation is included in this naming and organization change.
-The renamed menu entry and existing-save loading remain unverified in game;
-prior behavior observations below still apply to the unchanged mechanics.
+The independent Fisherman's Stay feature is in `Stays/FishermansStay/`, with
+patches in its `Patches/` subdirectory. `BoatRigs/Stays/` holds its authored
+mast-local attachment references and fixed mount IDs. See the development guide
+for profile counts, asset provenance and the stay verification checklist.
+The separate custom staysail is not implemented yet. The stay feature and
+renamed flying-sail menu entry remain unverified in game; prior observations
+below apply to the unchanged flying-sail mechanics.
 
 ## Build and checks
 
@@ -274,6 +276,23 @@ support-mast removal, deck-up hoisting and parked ropes with invisible struck cl
     Guard SE's material update so saved patterns cannot return. Do not invent
     RGB colors or textures, or change donor/shared assets. Appearance validation
     in game remains pending.
+
+14. **Keep new stays independent and use authored endpoints.** Fisherman's Stays
+    are separate native staysail mounts, not changes to the flying sail. Their
+    aft attachment follows explicit highest-section variants beside the halyard
+    guide. Prefer 70° from the aft spar; if the forward spar is too short, use
+    its physical masthead and steepen the stay. Coordinates are authored per
+    configuration, not inferred at runtime. Keep fore/aft direction physical
+    (the old Cog support ordering cannot be reused blindly).
+15. **Keep stay save layout and preview handling stable.** Append new part groups
+    without reordering existing slots; preserve explicit mount IDs 128–255 and
+    grow capacity without shrinking other mods' arrays. Older snapshots default
+    new parts to None. Preserve occupied stays and supports during invalid order
+    previews and always restore preview state in a finalizer. Retain the separate
+    Fisherman's Stay text guard before NANDFixes. Validate profiles before
+    registration and roll back the whole boat's new stays if construction fails.
+    Automated checks pass; stay installation, controls and saving remain pending
+    in-game validation.
 
 For handoff, report the version, behavioral change, checks actually run, remaining
 in-game uncertainty, and the built DLL path. Update these notes when a later

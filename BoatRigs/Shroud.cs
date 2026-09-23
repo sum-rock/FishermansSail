@@ -4,6 +4,7 @@ namespace FishermansSail.BoatRigs
     {
         private static readonly BoatRigDefinition Shroud = new BoatRigDefinition(
             "BOAT Shroud Large",
+            ShroudStays(),
             new MastSupportDefinition(25, new[] { 7 }, new[] { 9 })
         );
     }

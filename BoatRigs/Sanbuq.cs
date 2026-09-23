@@ -4,6 +4,7 @@ namespace FishermansSail.BoatRigs
     {
         private static readonly BoatRigDefinition Sanbuq = new BoatRigDefinition(
             "BOAT dhow medium (20)",
+            SanbuqStays(),
             new MastSupportDefinition(60, new[] { 10 }, new[] { 59, 55 }),
             new MastSupportDefinition(67, new[] { 11 }, new[] { 59, 55 }),
             new MastSupportDefinition(71, new[] { 10 }, new[] { 70, 69 }),
