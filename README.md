@@ -80,7 +80,12 @@ selection. Some mast combinations have no authored stay variant.
 Select a **Fisherman's Stay** in the shipyard and choose **Fisherman's Staysail
 Mk.A** from the staysails. Mk.A cannot be fitted to other stays or physical masts.
 Its deployed luff follows the fore mast; its free aft head sheets like the
-Flying Sail, with the same 40° maximum travel on either side.
+Flying Sail, with the same 40° maximum travel on either side. Under wind load,
+the top-aft corner draws slightly toward the aft mast's pulley, capped at 2.5%
+of sail width (about 17 cm at the default size). This pull preserves the head
+span, respects foot/leech tension, and fades out during reefing or calm wind.
+A rounded billow profile carries fullness through the middle of the sail, with
+cloth movement bounded around that profile on both tacks.
 
 The nominal cut has two 110° luff corners, a head rising aft along the stay,
 and a foot falling aft at 20°. The head follows steeper masthead-fallback stays.

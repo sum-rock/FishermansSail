@@ -124,6 +124,16 @@ internal static class PatchChecks
                 .Any(m => m.DeclaringType.Name == "FishermansStaysailShape" && m.Name == "Create")
         )
             throw new Exception("The family rig must request the cut from its mark.");
+        var lateUpdate = CalledMethods(Method("FishermansStaysailRig", "LateUpdate")).ToArray();
+        if (
+            !lateUpdate.Any(m =>
+                m.DeclaringType.Name == "FishermansStaysailUpperTrim" && m.Name == "Fit"
+            )
+            || !lateUpdate.Any(m =>
+                m.DeclaringType.Name == "FishermansStaysailShape" && m.Name == "get_UpperCornerTrim"
+            )
+        )
+            throw new Exception("Upper trim must be fitted using the mark's tuning.");
         var prefix = Patch("OrderText");
         if (
             !prefix

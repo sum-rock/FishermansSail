@@ -276,7 +276,7 @@ support-mast removal, deck-up hoisting and parked ropes with invisible struck cl
     restrictions and apply the final cap after sway without resetting Cloth or
     snapping transforms. The user reported that this limit looked great in game.
 
-12. **Do not repeat the tighter upper-corner experiment.** Reducing the upper
+12. **Do not repeat the Flying Sail tighter upper-corner experiment.** Reducing the upper
     corner's angle ratio from 85% to 60% passed automated checks but produced
     creases in game. The user reverted it. Retain the 85% ratio and existing
     geometry; mathematical feasibility did not establish stable Cloth behavior.
@@ -323,6 +323,29 @@ support-mast removal, deck-up hoisting and parked ropes with invisible struck cl
     without clamping the label. Preserve the final ±40° hinge cap and tighter
     collision limits. Revised reefing, bundle appearance, starting size, angle
     readout, Cloth behavior and save/reload still need in-game validation.
+
+17. **Mk.A upper trim preserves the head span.** Its baseline remains the 85%
+    sheeting response. The approved additional pull toward the aft pulley is
+    capped at 2.5% of width and scaled by smoothed absolute wind load and
+    deployment. Move along the head-span sphere, then fit both foot and leech;
+    back off the new trim if those constraints reject it. Keep the family default
+    at zero for future marks and keep Flying Sail mechanics unchanged. Upper
+    ropes follow the resulting corner through independent attachments. Automated
+    geometry/assembly checks pass. The user found the initial 1.5% trim generally
+    good, with better appearance on starboard than port. The revised 2.5% trim
+    awaits validation; check both tacks, calm/load transitions and reefs for
+    creases, jumping corners, slack collapse and detached ropes.
+
+18. **Match Mk.A cloth travel to its own billow depth.** The user's Sanbuq
+    screenshots (`starbord tack.png`, `port tack.png`) showed upper/middle folds
+    on port. Full weighted-skin and triangle-length tests mirror under equivalent
+    tack conditions; no directional cut failure was reproduced. The prior motion
+    bounds exceeded the shallow interior camber, allowing crossing of the target
+    plane. This is a plausible contributor, not a proven runtime cause. Mk.A now
+    uses rounded sine shoulders, a fuller middle and interior travel capped near
+    its own camber, retaining foot/leech freedom. Do not mirror/swap a live mesh
+    or reset Cloth to change tacks. The new shape and bound changes await in-game
+    comparison, especially on Sanbuq (the reported boat) and Brig.
 
 For handoff, report the version, behavioral change, checks actually run, remaining
 in-game uncertainty, and the built DLL path. Update these notes when a later

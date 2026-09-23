@@ -657,24 +657,23 @@ namespace FishermansSail.Sails.FishermansStaysail
                         sheetAngle * FishermansStaysailBillow.Deployment(Sail.currentUnroll)
                     )
                 );
-                var bow = FishermansStaysailBillow.SupportBow(
-                    clew,
+                var tack = Bones[2].localPosition;
+                bool fitted = FishermansStaysailUpperTrim.Fit(
                     localHead,
+                    Bones[0].localPosition,
+                    clothTransform.InverseTransformPoint(rigging.Pair.AftGuide.position),
+                    clew,
+                    tack,
                     clothTransform.InverseTransformDirection(normal),
                     clothTransform.InverseTransformDirection(Vector3.down),
                     -Corners[0].z,
-                    clothLoad
-                );
-                var tack = Bones[2].localPosition;
-                bool fitted = FishermansStaysailTension.Fit(
-                    clew,
-                    localHead,
-                    tack,
-                    bow * FishermansStaysailBillow.Deployment(Sail.currentUnroll),
+                    clothLoad,
+                    Sail.currentUnroll,
+                    GetComponent<FishermansStaysailShape>().UpperCornerTrim,
                     (Corners[1] - Corners[3]).magnitude * Mathf.Max(0.015f, Reefing.Lift),
                     (clew - tack).magnitude,
-                    FishermansStaysailBillow.Deployment(Sail.currentUnroll),
-                    leechPoints
+                    leechPoints,
+                    out _
                 );
                 if (!fitted && !tensionWarning && state == 2)
                 {

@@ -5,20 +5,27 @@ namespace FishermansSail.Sails.FishermansStaysail
 {
     internal static class FishermansStaysailBillow
     {
-        // The free leech has up to 6% width of travel about its fitted curve.
-        // Reduce movement progressively through the cloth near the clew.
-        // Moving skin targets carry the top/luff camber across the sail.
-        // Their travel can remain inside the loaded curve at its peaks,
-        // while the foot, free leech and clew reinforcement retain their limits.
-        internal static float ClothTravel(float width, float u, float v) =>
-            width
-            * ClewTaper(u, v)
-            * (
-                (0.08f * (1 - v) + 0.13f * v) * (float)Math.Sin(Math.PI * u)
-                + 0.015f * u
-                + 0.045f * u * (float)Math.Sin(Math.PI * v)
-                + 0.04f * (float)Math.Pow(1 - u, 4) * (float)Math.Sin(Math.PI * v)
-            );
+        internal static float ClothTravel(float width, float u, float v)
+        {
+            float taper = ClewTaper(u, v);
+            float freeTravel =
+                width
+                * taper
+                * (
+                    (0.08f * (1 - v) + 0.13f * v) * (float)Math.Sin(Math.PI * u)
+                    + 0.015f * u
+                    + 0.045f * u * (float)Math.Sin(Math.PI * v)
+                    + 0.04f * (float)Math.Pow(1 - u, 4) * (float)Math.Sin(Math.PI * v)
+                );
+            // The old flying-sail allowances exceeded this sail's shallow belly
+            // depth, permitting folds across the intended billow surface. Bound
+            // the interior relative to its own camber on either tack; retain
+            // free motion near the foot/leech and the existing clew taper.
+            float edgeFreedom = width * 0.015f * (float)(Math.Pow(u, 8) + Math.Pow(v, 8));
+            float shapedTravel =
+                taper * (0.6f * FishermansStaysailGeometry.RestCamber(width, u, v) + edgeFreedom);
+            return Math.Min(freeTravel, shapedTravel);
+        }
 
         internal static float ClewTaper(float u, float v)
         {

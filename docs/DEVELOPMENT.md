@@ -190,6 +190,35 @@ coupled foot/leech solver. Uniform scaling preserves the cut. New shipyard
 selections use `SailScaler.SetScaleAbs(0.5, 0.5)` after SE's initialization;
 existing saves retain their stored dimensions.
 
+Mk.A adds a small load-dependent upper-corner trim after its baseline 85%
+sheeting response. The mark specifies a maximum travel of 0.025 × sail width;
+the family default is zero. `FishermansStaysailUpperTrim` moves the corner toward
+the actual aft pulley on an arc about the fore head, retaining its existing
+head span and stopping at the nearest point on that sphere. Travel uses the
+existing smoothed absolute wind load and deployment factor. The coupled solver
+fits the new head; if the requested trim is infeasible, it checks the baseline
+and uses 16 bisection steps to retain a smaller feasible adjustment. Invalid
+baseline fits retain the original finite failure behavior. Shaping, upper-line
+rendering and aerodynamic framing then consume the fitted corner positions.
+No mesh replacement, rope constraint or additional winch is involved.
+
+The user's Sanbuq screenshots showed a smoother starboard tack and pronounced
+upper/middle folds on port after the first upper-trim pass. The installed DLL
+matched the tested build. Opposite-tack weighted skin and triangle-edge checks
+pass with equivalent mirrored rig/wind inputs; they do not reproduce a directional
+cut failure. The prior cloth allowances did exceed the middle panel's shallow
+camber, permitting it to fold across its target plane. That is a plausible
+contributor, not a confirmed simulation-level cause of the screenshot difference.
+
+The revised rest/target profile uses a sampled sine across the span and a
+`(1-v)*(1+0.75*v)` vertical taper. It retains the 12%-width head peak but gives
+rounder shoulders and more middle-panel depth. Interior movement is capped at
+60% of local camber plus small allowances near the foot and leech, retaining
+the existing clew taper. Rest vertices, bind poses and Cloth coefficients are
+initialized together; tacking only moves the existing bones. The native wind
+response, mesh lifecycle and Flying Sail remain unchanged. The stronger 2.5%
+upper-trim cap retains the 85% baseline and existing length constraints.
+
 The installed brig jib (prefab 110, `sharedassets15.assets`) supplies the native
 `reef` clip/controller and `furled__sail_cloth_jib` mesh. An inactive, stripped
 copy of the original animation hierarchy preserves the clip's binding paths.
@@ -210,7 +239,10 @@ follow the moving corners rather than rotating skin bones.
 Automated validation covers all 97 authored stay frames, the nominal cut and
 pin mask, repeated sheeting, edge budgets, reef-channel normalization and
 reversals, partial-reef edge budgets, renderer thresholds, new-sail scaling
-scope, and all 54 statically declared Harmony patch signatures. The optional
+scope, upper-trim span/travel limits, pulley distance, both tacks, load
+reversals, reef fading, constrained-fit fallback, full weighted-skin symmetry,
+triangle lengths and interior travel bounds, and all 54 statically
+declared Harmony patch signatures. The optional
 SailInfo integration has a separate installed-signature check. Installed
 asset inspection confirmed the donor clip, two-bone hierarchy, animated scale
 and rope channels, and furled mesh. These checks do not run Unity animation or
@@ -224,7 +256,10 @@ tighter collision restrictions. SailInfo settings and force readouts are unchang
 
 In-game acceptance: start on the Brig with a vanilla staysail for comparison.
 Check Mk.A menu restrictions, uniform sizing, movement, support protection,
-both tacks and tighter collision limits. Verify new sails start at half width
+both tacks and tighter collision limits. With the upper trim enabled, compare
+weak/full wind and eased/tight sheets: the top-aft corner should curl slightly
+toward the aft pulley without new creases, corner jumps, slack collapse or rope
+detachment. Verify new sails start at half width
 and height and existing saves keep their size. Compare SailInfo's readout to
 physical travel on both sheets, including heel and a steep stay. Release the
 halyard, pause and reverse at several positions, fully furl upward, inspect
@@ -234,7 +269,10 @@ a steeper fallback stay and an offset topmast, then the other supported boats.
 The first in-game pass reported unwanted furling on deck, excessive initial
 size and incorrect SailInfo degrees. These revisions address those observations;
 upward reefing, bundle alignment, default sizing and angle reporting await the
-next in-game pass.
+next in-game pass. The user found the initial Mk.A upper trim generally good, with the port/starboard
+appearance difference described above. The revised rounder profile, cloth bounds
+and 2.5% trim await in-game validation. Passing length constraints and mirrored
+skin tests does not establish stable Unity Cloth.
 
 ## Fisherman's Stay profiles and verification
 

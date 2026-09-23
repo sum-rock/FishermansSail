@@ -133,8 +133,10 @@ namespace FishermansSail.Sails.FishermansStaysail
             if (u >= 1 || v >= 1)
                 return 0;
             float curve = (float)Math.Sin(Math.PI * u);
-            // Reserve head camber while the entire luff remains straight.
-            return width * (0.12f * curve * curve * (1 - v));
+            // Rounded shoulders and a fuller belly, tapering to the foot.
+            // The rest cut and both signed skin targets share this profile;
+            // keep the luff and leech endpoints on their controlled curves.
+            return width * (0.12f * curve * (1 - v) * (1 + 0.75f * v));
         }
 
         // Unity requires influences in descending order, with indices moving

@@ -6,6 +6,7 @@ namespace FishermansSail.Sails.FishermansStaysail.MkA
     internal static class FishermansStaysailMkAGeometry
     {
         internal const float NominalSlope = 20f;
+        internal const float UpperCornerTrim = 0.025f;
 
         internal static FishermansStaysailMeshData Create(
             float width,

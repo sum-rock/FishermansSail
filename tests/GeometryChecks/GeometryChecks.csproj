@@ -95,6 +95,10 @@
       Include="../../Sails/FishermansStaysail/MkA/FishermansStaysailMkAGeometry.cs"
       Link="FishermansStaysail/MkA/FishermansStaysailMkAGeometry.cs"
     />
+    <Compile
+      Include="../../Sails/FishermansStaysail/FishermansStaysailUpperTrim.cs"
+      Link="FishermansStaysail/FishermansStaysailUpperTrim.cs"
+    />
     <Reference Include="UnityEngine.CoreModule">
       <HintPath>$(SailwindDir)/Sailwind_Data/Managed/UnityEngine.CoreModule.dll</HintPath>
     </Reference>
