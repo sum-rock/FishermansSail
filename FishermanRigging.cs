@@ -314,6 +314,14 @@ namespace FishermansSail
             foreach (var control in controls)
                 control.ShowWinch(true);
             connections.colChecker.RegisterBoatWalkCol(mast.walkColMast);
+            // Old saves can restore the wider donor range; keep the checker,
+            // shipyard description and native sail limits in agreement.
+            connections.colChecker.colAngleMin = FishermanTravel.Clamp(
+                connections.colChecker.colAngleMin
+            );
+            connections.colChecker.colAngleMax = FishermanTravel.Clamp(
+                connections.colChecker.colAngleMax
+            );
             sail.minAngle = connections.colChecker.colAngleMin;
             sail.maxAngle = connections.colChecker.colAngleMax;
         }

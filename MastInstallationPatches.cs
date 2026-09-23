@@ -78,6 +78,9 @@ namespace FishermansSail
                 return;
             var mast = __instance.GetCurrentMast();
             var sail = rig.Sail;
+            // Native AddNewSail chooses the shipyard's first palette entry.
+            // Use the existing white swatch for this sail's initial selection.
+            sail.ChangeSailColor(FishermanAppearance.WhiteColorIndex);
             sail.ChangeInstallHeight(mast.mastHeight - sail.GetCurrentInstallHeight());
             sail.UpdateInstallPosition();
             sail.currentUnroll = 1f;

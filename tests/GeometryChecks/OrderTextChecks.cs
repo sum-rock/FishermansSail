@@ -6,14 +6,17 @@ internal static class OrderTextChecks
 {
     internal static void Run()
     {
-        const string large = "Fisherman's Sail Prototype (150% x 115%)";
-        const string small = "Fisherman's Sail Prototype (65%)";
+        const string large = "Fisherman's Sail (150% x 115%)";
+        const string small = "Fisherman's Sail (65%)";
         // Reproduce the installed NANDFixes 1.4.3 non-progressing recursion
         // without actually overflowing the test process's stack.
         string removal = "0: " + large + " -> (no sail)";
-        string recursive = removal.Substring(
+        // The shorter display name fits normally; an error-prefixed order
+        // still exercises the original non-progressing recursion.
+        string errorRemoval = "192: (ERROR): " + large + " -> (no sail)";
+        string recursive = errorRemoval.Substring(
             0,
-            removal.IndexOf("->", StringComparison.Ordinal) + 2
+            errorRemoval.IndexOf("->", StringComparison.Ordinal) + 2
         );
         Check(
             recursive.Length > 45
@@ -25,17 +28,21 @@ internal static class OrderTextChecks
             string line in new[]
             {
                 removal,
+                errorRemoval,
                 "(ERROR): " + large + " -> (no sail)",
                 "192: (no sail) -> " + small,
                 "192: " + small + " -> (no sail)",
                 "192: " + large + " -> " + small,
                 "(ERROR): " + small + " requires: main mast 2",
                 "Fisherman's Sail " + new string('x', 200),
-                "Fisherman's Sail Prototype (REQUIRES AN ACTIVE AFT MAST WITH HALYARD GUIDES)",
+                "Fisherman's Sail (REQUIRES AN ACTIVE AFT MAST WITH HALYARD GUIDES)",
             }
         )
         {
-            Check(FishermanOrderText.NeedsWrapping(line), "Fisherman order escaped the guard.");
+            Check(
+                FishermanOrderText.NeedsWrapping(line) == (line.Length > 45),
+                "Only long fisherman orders should use the wrapping guard."
+            );
             string[] wrapped = FishermanOrderText.Wrap(line).ToArray();
             Check(wrapped.All(s => s.Length <= 45), "An order line exceeds the safe width.");
             Check(

@@ -9,6 +9,7 @@ internal static class Program
         RigChecks.Run();
         OrderTextChecks.Run();
         FlyingSailChecks.Run();
+        TravelChecks.Run();
         MastInstallationChecks.Run();
         BillowChecks.Run();
         ShapingChecks.Run();
@@ -18,22 +19,22 @@ internal static class Program
             CheckSail(width);
         }
         Require(
-            PrototypeGeometry.RenderState(0) == 0 && PrototypeGeometry.RenderState(0.02f) == 0,
+            FishermanGeometry.RenderState(0) == 0 && FishermanGeometry.RenderState(0.02f) == 0,
             "A fully struck sail must select the hidden state."
         );
         Require(
-            PrototypeGeometry.RenderState(0.03f) == 1 && PrototypeGeometry.RenderState(0.5f) == 1,
+            FishermanGeometry.RenderState(0.03f) == 1 && FishermanGeometry.RenderState(0.5f) == 1,
             "Partly furled sails must use the procedural renderer without cloth simulation."
         );
         Require(
-            PrototypeGeometry.RenderState(0.98f) == 2 && PrototypeGeometry.RenderState(1) == 2,
+            FishermanGeometry.RenderState(0.98f) == 2 && FishermanGeometry.RenderState(1) == 2,
             "Only fully set sails should use the cloth renderer."
         );
         foreach (float width in new[] { 0f, -1f, float.NaN, float.PositiveInfinity, 101f })
         {
             try
             {
-                PrototypeGeometry.Create(width);
+                FishermanGeometry.Create(width);
             }
             catch (ArgumentException)
             {
@@ -48,8 +49,8 @@ internal static class Program
 
     private static void CheckSail(float width)
     {
-        var d = PrototypeGeometry.Create(width);
-        var second = PrototypeGeometry.Create(width);
+        var d = FishermanGeometry.Create(width);
+        var second = FishermanGeometry.Create(width);
         Require(
             !ReferenceEquals(d.Vertices, second.Vertices)
                 && !ReferenceEquals(d.Constraints, second.Constraints),
@@ -89,32 +90,32 @@ internal static class Program
             "Wind center must use the revised surface centroid."
         );
         double topLength = 0;
-        for (int col = 1; col <= PrototypeGeometry.Columns; col++)
+        for (int col = 1; col <= FishermanGeometry.Columns; col++)
             topLength += (d.Vertices[col] - d.Vertices[col - 1]).magnitude;
         Require(
             topLength > width * 1.03 && topLength < width * 1.04,
             "The head needs spare cloth between its fixed endpoints."
         );
         Require(
-            Math.Abs(d.Vertices[PrototypeGeometry.Columns / 2].y - width * 0.12f) < width * 1e-5f,
+            Math.Abs(d.Vertices[FishermanGeometry.Columns / 2].y - width * 0.12f) < width * 1e-5f,
             "Top camber must peak at twelve percent of width."
         );
         double luffLength = 0;
-        for (int row = 1; row <= PrototypeGeometry.Rows; row++)
+        for (int row = 1; row <= FishermanGeometry.Rows; row++)
             luffLength += (
-                d.Vertices[row * (PrototypeGeometry.Columns + 1)]
-                - d.Vertices[(row - 1) * (PrototypeGeometry.Columns + 1)]
+                d.Vertices[row * (FishermanGeometry.Columns + 1)]
+                - d.Vertices[(row - 1) * (FishermanGeometry.Columns + 1)]
             ).magnitude;
         double luffChord = (c[2] - c[0]).magnitude;
         Require(
             luffLength > luffChord * 1.002 && luffLength < luffChord * 1.004,
             "Luff needs a small amount of actual extra cloth length, not just movement permission."
         );
-        var boneSeen = new bool[PrototypeGeometry.BoneCount];
-        for (int row = 0; row <= PrototypeGeometry.Rows; row++)
-        for (int col = 0; col <= PrototypeGeometry.ShapeColumns; col++)
+        var boneSeen = new bool[FishermanGeometry.BoneCount];
+        for (int row = 0; row <= FishermanGeometry.Rows; row++)
+        for (int col = 0; col <= FishermanGeometry.ShapeColumns; col++)
         {
-            int bone = PrototypeGeometry.ShapeBone(row, col);
+            int bone = FishermanGeometry.ShapeBone(row, col);
             Require(
                 bone >= 0 && bone < boneSeen.Length && !boneSeen[bone],
                 "Invalid or duplicate shaping bone index."
@@ -123,7 +124,7 @@ internal static class Program
         }
         Require(Array.TrueForAll(boneSeen, b => b), "Uninitialized shaping bone.");
         Require(
-            d.Constraints[PrototypeGeometry.Columns / 2].maxDistance < width * 0.12f,
+            d.Constraints[FishermanGeometry.Columns / 2].maxDistance < width * 0.12f,
             "Top travel must keep the loaded peak on the target side."
         );
         int pins = 0;
@@ -161,23 +162,23 @@ internal static class Program
                 pinned
                     == (
                         i == 0
-                        || i == PrototypeGeometry.Columns
-                        || i == PrototypeGeometry.Rows * (PrototypeGeometry.Columns + 1)
+                        || i == FishermanGeometry.Columns
+                        || i == FishermanGeometry.Rows * (FishermanGeometry.Columns + 1)
                         || i == d.Vertices.Length - 1
                     ),
                 "Wrong cloth attachment."
             );
         }
         Require(pins == 4, "Only the four sail corners should be pinned.");
-        for (int row = 1; row < PrototypeGeometry.Rows; row++)
+        for (int row = 1; row < FishermanGeometry.Rows; row++)
         {
-            int fore = row * (PrototypeGeometry.Columns + 1);
+            int fore = row * (FishermanGeometry.Columns + 1);
             float travel = d.Constraints[fore].maxDistance;
             Require(
                 travel > 0 && travel <= width * 0.04001f,
                 "Intermediate luff vertices must be free with a modest travel limit."
             );
-            int mirrored = (PrototypeGeometry.Rows - row) * (PrototypeGeometry.Columns + 1);
+            int mirrored = (FishermanGeometry.Rows - row) * (FishermanGeometry.Columns + 1);
             Require(
                 Math.Abs(travel - d.Constraints[mirrored].maxDistance) < width * 1e-6f,
                 "Luff travel must taper symmetrically toward its fixed corners."
@@ -186,7 +187,7 @@ internal static class Program
                 travel < d.Vertices[fore].y,
                 "Loaded forward-edge travel must stay within its moving camber target."
             );
-            int i = row * (PrototypeGeometry.Columns + 1) + PrototypeGeometry.Columns;
+            int i = row * (FishermanGeometry.Columns + 1) + FishermanGeometry.Columns;
             Require(
                 d.Constraints[i].maxDistance > 0
                     && d.Constraints[i].maxDistance <= width * 0.06001f,
@@ -196,7 +197,7 @@ internal static class Program
         Require(
             Math.Abs(
                 d.Constraints[
-                    (PrototypeGeometry.Rows / 2) * (PrototypeGeometry.Columns + 1)
+                    (FishermanGeometry.Rows / 2) * (FishermanGeometry.Columns + 1)
                 ].maxDistance
                     - width * 0.04f
             )
@@ -204,16 +205,16 @@ internal static class Program
             "Luff travel must allow flex around the moving six-percent curve."
         );
         float leechMiddle = d.Constraints[
-            (PrototypeGeometry.Rows / 2) * (PrototypeGeometry.Columns + 1)
-                + PrototypeGeometry.Columns
+            (FishermanGeometry.Rows / 2) * (FishermanGeometry.Columns + 1)
+                + FishermanGeometry.Columns
         ].maxDistance;
         Require(
             Math.Abs(leechMiddle - width * 0.06f) < width * 1e-6f,
             "Mid-leech must have six percent of width to flex naturally."
         );
         float nearClew = d.Constraints[
-            (PrototypeGeometry.Rows - 1) * (PrototypeGeometry.Columns + 1)
-                + PrototypeGeometry.Columns
+            (FishermanGeometry.Rows - 1) * (FishermanGeometry.Columns + 1)
+                + FishermanGeometry.Columns
         ].maxDistance;
         Require(
             nearClew > 0 && nearClew < width * 0.002f,

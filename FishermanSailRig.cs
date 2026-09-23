@@ -40,7 +40,7 @@ namespace FishermansSail
         private float camber = 1;
         private int camberSide = 1;
         private bool tensionWarning;
-        private readonly Vector3[] leechPoints = new Vector3[PrototypeGeometry.Rows + 1];
+        private readonly Vector3[] leechPoints = new Vector3[FishermanGeometry.Rows + 1];
         private int lastRenderState = -1;
         private FishermanRigging rigging;
         private Mast lastMount;
@@ -214,6 +214,10 @@ namespace FishermansSail
 
         private static void ConfigureCollision(ShipyardSailColChecker checker, float width)
         {
+            checker.startMinAngle = -FishermanTravel.MaximumAngle;
+            checker.startMaxAngle = FishermanTravel.MaximumAngle;
+            checker.colAngleMin = checker.startMinAngle;
+            checker.colAngleMax = checker.startMaxAngle;
             // Use narrow inscribed strips rather than the old triangular clew box.
             // Keep the checker outside the animated bones: it measures the fully set sail.
             var root = checker.transform;
@@ -223,7 +227,7 @@ namespace FishermansSail
             var old = checker.GetComponentsInChildren<BoxCollider>(true);
             if (old.Length != 1 || old[0].transform.parent != root)
                 throw new InvalidOperationException("Unexpected brig jib collision hierarchy.");
-            for (int i = 0; i < PrototypeGeometry.Columns; i++)
+            for (int i = 0; i < FishermanGeometry.Columns; i++)
             {
                 var box =
                     i == 0
@@ -251,7 +255,7 @@ namespace FishermansSail
                 !Sail
                 || !FlyingFrame
                 || Bones == null
-                || Bones.Length != PrototypeGeometry.BoneCount
+                || Bones.Length != FishermanGeometry.BoneCount
             )
                 return false;
             var mount = Sail.transform.parent ? Sail.transform.parent.GetComponent<Mast>() : null;
@@ -438,14 +442,14 @@ namespace FishermansSail
             );
             camber = FishermanBillow.SmoothLoad(camber, camberSide, Time.deltaTime);
             float deployedCamber = camber * FishermanBillow.Deployment(Sail.currentUnroll);
-            for (int row = 0; row <= PrototypeGeometry.Rows; row++)
+            for (int row = 0; row <= FishermanGeometry.Rows; row++)
             {
-                float v = (float)row / PrototypeGeometry.Rows;
+                float v = (float)row / FishermanGeometry.Rows;
                 var fore = Vector3.Lerp(Bones[0].localPosition, Bones[2].localPosition, v);
-                var aft = Bones[PrototypeGeometry.LeechBone(row)].localPosition;
-                for (int column = 0; column < PrototypeGeometry.ShapeColumns; column++)
+                var aft = Bones[FishermanGeometry.LeechBone(row)].localPosition;
+                for (int column = 0; column < FishermanGeometry.ShapeColumns; column++)
                 {
-                    int bone = PrototypeGeometry.ShapeBone(row, column);
+                    int bone = FishermanGeometry.ShapeBone(row, column);
                     if (bone == 0 || bone == 2)
                         continue;
                     Bones[bone].localPosition = FishermanBillow.ShapePoint(
@@ -453,7 +457,7 @@ namespace FishermansSail
                         aft,
                         normal,
                         -Corners[0].z,
-                        (float)column / PrototypeGeometry.ShapeColumns,
+                        (float)column / FishermanGeometry.ShapeColumns,
                         v,
                         deployedCamber
                     );
@@ -463,7 +467,7 @@ namespace FishermansSail
 
         private void LateUpdate()
         {
-            if (!Sail || Bones == null || Bones.Length != PrototypeGeometry.BoneCount)
+            if (!Sail || Bones == null || Bones.Length != FishermanGeometry.BoneCount)
                 return;
             bool supported = RefreshFlyingFrame();
             if (Shadow)
@@ -490,12 +494,12 @@ namespace FishermansSail
                     Sail.currentUnroll
                 );
 
-            int state = PrototypeGeometry.RenderState(Sail.currentUnroll);
-            for (int row = 1; row < PrototypeGeometry.Rows; row++)
-                Bones[PrototypeGeometry.LeechBone(row)].localPosition = Vector3.Lerp(
+            int state = FishermanGeometry.RenderState(Sail.currentUnroll);
+            for (int row = 1; row < FishermanGeometry.Rows; row++)
+                Bones[FishermanGeometry.LeechBone(row)].localPosition = Vector3.Lerp(
                     Bones[1].localPosition,
                     Bones[3].localPosition,
-                    (float)row / PrototypeGeometry.Rows
+                    (float)row / FishermanGeometry.Rows
                 );
             if (supported)
             {
@@ -561,9 +565,9 @@ namespace FishermansSail
                     );
                     tensionWarning = true;
                 }
-                for (int row = 0; row <= PrototypeGeometry.Rows; row++)
-                    Bones[PrototypeGeometry.LeechBone(row)].localPosition = leechPoints[
-                        PrototypeGeometry.Rows - row
+                for (int row = 0; row <= FishermanGeometry.Rows; row++)
+                    Bones[FishermanGeometry.LeechBone(row)].localPosition = leechPoints[
+                        FishermanGeometry.Rows - row
                     ];
                 HalyardAttachments[0].localPosition = Vector3.zero;
                 SheetAttachment.localPosition = Vector3.zero;

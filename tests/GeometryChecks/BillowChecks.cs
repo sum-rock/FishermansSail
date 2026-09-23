@@ -8,7 +8,7 @@ internal static class BillowChecks
     {
         foreach (float width in new[] { 0.25f, 6f, 13.8f, 40f })
         {
-            var data = PrototypeGeometry.Create(width);
+            var data = FishermanGeometry.Create(width);
             foreach (float angle in new[] { -80f, -50f, -20f, 0f, 20f, 50f, 80f })
             foreach (float unroll in new[] { 0f, 0.02f, 0.5f, 0.75f, 0.9f, 0.98f, 1f })
             foreach (float load in new[] { -1f, 0f, 1f })
@@ -22,7 +22,7 @@ internal static class BillowChecks
             CheckSweep(width);
             CheckFurlSweep(width);
             CheckClewTaper(width);
-            var invalid = new Vector3[PrototypeGeometry.Rows + 1];
+            var invalid = new Vector3[FishermanGeometry.Rows + 1];
             Check(
                 !FishermanTension.Fit(
                     Vector3.zero,
@@ -120,7 +120,7 @@ internal static class BillowChecks
         );
         bow *= FishermanBillow.Deployment(unroll);
         float restLength = width * MastInstallationGeometry.HoistScale(unroll);
-        var points = new Vector3[PrototypeGeometry.Rows + 1];
+        var points = new Vector3[FishermanGeometry.Rows + 1];
         var tack = HoistPose.Corner(rest, 2, unroll);
         float footLength = (HoistPose.Corner(rest, 3, unroll) - tack).magnitude;
         float deployment = FishermanBillow.Deployment(unroll);
@@ -154,7 +154,7 @@ internal static class BillowChecks
             float segment = (points[i] - points[i - 1]).magnitude;
             length += segment;
             Check(
-                segment <= restLength / PrototypeGeometry.Rows * 1.001f,
+                segment <= restLength / FishermanGeometry.Rows * 1.001f,
                 "A leech skin-target segment stretched beyond its available cloth."
             );
         }
@@ -230,22 +230,22 @@ internal static class BillowChecks
         var bones = new Vector3[data.BonePositions.Length];
         bones[0] = HoistPose.Corner(rest, 0, unroll);
         bones[2] = HoistPose.Corner(rest, 2, unroll);
-        for (int row = 0; row <= PrototypeGeometry.Rows; row++)
-            bones[PrototypeGeometry.LeechBone(row)] = points[PrototypeGeometry.Rows - row];
+        for (int row = 0; row <= FishermanGeometry.Rows; row++)
+            bones[FishermanGeometry.LeechBone(row)] = points[FishermanGeometry.Rows - row];
         var camberNormal = FishermanBillow.CamberNormal(bones[0], bones[2], bones[1], bones[3]);
-        for (int row = 0; row <= PrototypeGeometry.Rows; row++)
-        for (int col = 0; col < PrototypeGeometry.ShapeColumns; col++)
+        for (int row = 0; row <= FishermanGeometry.Rows; row++)
+        for (int col = 0; col < FishermanGeometry.ShapeColumns; col++)
         {
-            int bone = PrototypeGeometry.ShapeBone(row, col);
+            int bone = FishermanGeometry.ShapeBone(row, col);
             if (bone == 0 || bone == 2)
                 continue;
-            float v = (float)row / PrototypeGeometry.Rows;
+            float v = (float)row / FishermanGeometry.Rows;
             bones[bone] = FishermanBillow.ShapePoint(
                 Vector3.Lerp(bones[0], bones[2], v),
-                bones[PrototypeGeometry.LeechBone(row)],
+                bones[FishermanGeometry.LeechBone(row)],
                 camberNormal,
                 width,
-                (float)col / PrototypeGeometry.ShapeColumns,
+                (float)col / FishermanGeometry.ShapeColumns,
                 v,
                 camber * deployment
             );
@@ -268,21 +268,21 @@ internal static class BillowChecks
                 "Posed cloth contains a non-finite vertex."
             );
         }
-        for (int row = 0; row <= PrototypeGeometry.Rows; row++)
+        for (int row = 0; row <= FishermanGeometry.Rows; row++)
         {
-            float v = (float)row / PrototypeGeometry.Rows;
+            float v = (float)row / FishermanGeometry.Rows;
             var expectedFore =
                 Vector3.Lerp(bones[0], bones[2], v)
-                + camberNormal * (PrototypeGeometry.RestCamber(width, 0, v) * camber * deployment);
+                + camberNormal * (FishermanGeometry.RestCamber(width, 0, v) * camber * deployment);
             Near(
-                vertices[row * (PrototypeGeometry.Columns + 1)],
+                vertices[row * (FishermanGeometry.Columns + 1)],
                 expectedFore,
                 width,
                 "Forward-edge camber must follow the selected side and gather through furling."
             );
             Near(
-                vertices[row * (PrototypeGeometry.Columns + 1) + PrototypeGeometry.Columns],
-                points[PrototypeGeometry.Rows - row],
+                vertices[row * (FishermanGeometry.Columns + 1) + FishermanGeometry.Columns],
+                points[FishermanGeometry.Rows - row],
                 width,
                 "Leech skin targets separated from the tension-fitted curve."
             );
@@ -314,7 +314,7 @@ internal static class BillowChecks
 
     private static void CheckSweep(float width)
     {
-        var rest = PrototypeGeometry.Create(width).Corners;
+        var rest = FishermanGeometry.Create(width).Corners;
         foreach (float unroll in new[] { 0.5f, 0.75f, 0.8f, 0.9f, 0.98f, 1f })
         foreach (float load in new[] { -1f, 0f, 1f })
         {
@@ -341,7 +341,7 @@ internal static class BillowChecks
                         width,
                         load
                     ) * deployment;
-                var points = new Vector3[PrototypeGeometry.Rows + 1];
+                var points = new Vector3[FishermanGeometry.Rows + 1];
                 Check(
                     FishermanTension.Fit(
                         requested,
@@ -373,7 +373,7 @@ internal static class BillowChecks
 
     private static void CheckFurlSweep(float width)
     {
-        var rest = PrototypeGeometry.Create(width).Corners;
+        var rest = FishermanGeometry.Create(width).Corners;
         foreach (float angle in new[] { -80f, -20f, 20f, 80f })
         {
             Vector3[] previous = null;
@@ -394,7 +394,7 @@ internal static class BillowChecks
                     1
                 );
                 float deployment = FishermanBillow.Deployment(unroll);
-                var points = new Vector3[PrototypeGeometry.Rows + 1];
+                var points = new Vector3[FishermanGeometry.Rows + 1];
                 Check(
                     FishermanTension.Fit(
                         clew,

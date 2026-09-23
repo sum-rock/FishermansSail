@@ -15,7 +15,7 @@ namespace FishermansSail
         internal Vector3 Center;
     }
 
-    internal static class PrototypeGeometry
+    internal static class FishermanGeometry
     {
         internal const int Columns = 24;
         internal const int Rows = 32;

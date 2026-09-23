@@ -8,7 +8,7 @@ internal static class ShapingChecks
     {
         foreach (float width in new[] { 0.25f, 6f, 13.8f, 40f })
         {
-            var data = PrototypeGeometry.Create(width);
+            var data = FishermanGeometry.Create(width);
             // The two signed target surfaces mirror about the same attached
             // outline; this checks the actual weighted skin, not just the bones.
             var positive = Pose(data, width, 1, 1);
@@ -45,8 +45,8 @@ internal static class ShapingChecks
                     "Mirroring camber changed the required fabric length."
                 );
             }
-            int top = PrototypeGeometry.Columns / 2;
-            int luff = PrototypeGeometry.Rows / 2 * (PrototypeGeometry.Columns + 1);
+            int top = FishermanGeometry.Columns / 2;
+            int luff = FishermanGeometry.Rows / 2 * (FishermanGeometry.Columns + 1);
             foreach (int peak in new[] { top, luff })
             {
                 float travel = data.Constraints[peak].maxDistance;
@@ -133,18 +133,18 @@ internal static class ShapingChecks
 
     private static Vector3[] Pose(SailMeshData data, float width, float camber, float unroll)
     {
-        var bones = new Vector3[PrototypeGeometry.BoneCount];
+        var bones = new Vector3[FishermanGeometry.BoneCount];
         var foreHead = HoistPose.Corner(data.Corners, 0, unroll);
         var tack = HoistPose.Corner(data.Corners, 2, unroll);
         var head = HoistPose.Corner(data.Corners, 1, unroll);
         var clew = HoistPose.Corner(data.Corners, 3, unroll);
         float amount = camber * FishermanBillow.Deployment(unroll);
-        for (int row = 0; row <= PrototypeGeometry.Rows; row++)
-        for (int col = 0; col <= PrototypeGeometry.ShapeColumns; col++)
+        for (int row = 0; row <= FishermanGeometry.Rows; row++)
+        for (int col = 0; col <= FishermanGeometry.ShapeColumns; col++)
         {
-            float v = (float)row / PrototypeGeometry.Rows,
-                u = (float)col / PrototypeGeometry.ShapeColumns;
-            bones[PrototypeGeometry.ShapeBone(row, col)] = FishermanBillow.ShapePoint(
+            float v = (float)row / FishermanGeometry.Rows,
+                u = (float)col / FishermanGeometry.ShapeColumns;
+            bones[FishermanGeometry.ShapeBone(row, col)] = FishermanBillow.ShapePoint(
                 Vector3.Lerp(foreHead, tack, v),
                 Vector3.Lerp(head, clew, v),
                 Vector3.up,

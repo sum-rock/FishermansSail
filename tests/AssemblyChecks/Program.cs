@@ -18,6 +18,7 @@ string[] libraryDirs =
 {
     Path.Combine(gameDir, "Sailwind_Data/Managed"),
     Path.Combine(gameDir, "BepInEx/core"),
+    Path.Combine(gameDir, "BepInEx/plugins/ShipyardExpansion"),
 };
 AssemblyLoadContext.Default.Resolving += (context, name) =>
 {
@@ -95,8 +96,75 @@ foreach (var type in assembly.GetTypes())
     }
     count++;
 }
-if (count != 18)
-    throw new Exception($"Expected all 18 patch classes, found {count}.");
+if (count != 21)
+    throw new Exception($"Expected all 21 patch classes, found {count}.");
+
+// The installed SE save loader and texture button both go through this update.
+// Guarding only the selector would allow an old saved pattern to reappear.
+var textureTarget = assembly
+    .GetType("FishermansSail.FishermanPlainTexturePatch")
+    .GetCustomAttribute<HarmonyPatch>()
+    .info;
+foreach (var name in new[] { "SetTexture", "NextTexture" })
+    if (
+        !CalledMethods(textureTarget.declaringType.GetMethod(name))
+            .Any(m =>
+                m.DeclaringType == textureTarget.declaringType && m.Name == textureTarget.methodName
+            )
+    )
+        throw new Exception($"SE {name} no longer passes through the plain-texture guard.");
+var textureButtonPostfix = assembly
+    .GetType("FishermansSail.FishermanTextureButtonPatch")
+    .GetMethod("Postfix", BindingFlags.Static | BindingFlags.NonPublic);
+if (
+    !textureButtonPostfix
+        .GetCustomAttribute<HarmonyAfter>()
+        .info.after.Contains("com.nandbrew.shipyardexpansion")
+)
+    throw new Exception("Hide texture options after SE refreshes its button visibility.");
+Console.WriteLine(
+    "PASS: installed SE saved/cycled texture routes and texture-button patch ordering."
+);
+
+var travelPatch = assembly.GetType("FishermansSail.FishermanTravelPatch");
+var travelTarget = travelPatch.GetCustomAttribute<HarmonyPatch>().info;
+var travelPrefix = travelPatch.GetMethod("Prefix", BindingFlags.Static | BindingFlags.NonPublic);
+var travelPostfix = travelPatch.GetMethod("Postfix", BindingFlags.Static | BindingFlags.NonPublic);
+if (
+    travelTarget.declaringType.Name != "JibAngleMaster"
+    || travelTarget.methodName != "Update"
+    || !travelPrefix.IsDefined(typeof(HarmonyPrefix))
+    || !travelPostfix.IsDefined(typeof(HarmonyPostfix))
+)
+    throw new Exception("Travel protection must surround the native sheet and sway update.");
+var prefixCalls = CalledMethods(travelPrefix).ToArray();
+var postfixCalls = CalledMethods(travelPostfix).ToArray();
+if (
+    !prefixCalls.Any(m =>
+        m.Name == "GetComponent"
+        && m.IsGenericMethod
+        && m.GetGenericArguments().Single().FullName == "FishermansSail.FishermanSailRig"
+    )
+    || !prefixCalls.Any(m =>
+        m.DeclaringType.FullName == "FishermansSail.FishermanTravel" && m.Name == "Clamp"
+    )
+    || !postfixCalls.Any(m =>
+        m.DeclaringType.FullName == "FishermansSail.FishermanTravel" && m.Name == "ConstrainHinge"
+    )
+    || !postfixCalls.Any(m =>
+        m.DeclaringType.FullName == "UnityEngine.HingeJoint" && m.Name == "set_limits"
+    )
+)
+    throw new Exception("Missing fisherman scoping or live hinge travel enforcement.");
+foreach (var called in prefixCalls.Concat(postfixCalls))
+    if (
+        called.DeclaringType.FullName is "UnityEngine.Cloth" or "UnityEngine.Transform"
+        || called.Name == "ResetHingeRestingRot"
+    )
+        throw new Exception("Travel protection must not reset cloth or snap the sail transform.");
+Console.WriteLine(
+    "PASS: fisherman travel wraps native sheet/sway Update and constrains the hinge without resetting cloth or transforms."
+);
 
 // Cloth mesh assignment belongs to inactive prefab construction. Replacing
 // a live Cloth renderer's mesh caused the 0.7.11 detach/reset regression even
@@ -154,7 +222,11 @@ var textPrefix = assembly
 if (!textPrefix.GetCustomAttribute<HarmonyBefore>().info.before.Contains("com.nandbrew.nandfixes"))
     throw new Exception("Fisherman text protection must run before NANDFixes.");
 var orderLines = new System.Collections.Generic.List<string> { "existing order line" };
-object[] textArguments = { "0: Fisherman's Sail Prototype (150% x 115%) -> (no sail)", orderLines };
+object[] textArguments =
+{
+    "192: (ERROR): Fisherman's Sail (150% x 115%) -> (no sail)",
+    orderLines,
+};
 if (
     (bool)textPrefix.Invoke(null, textArguments)
     || (string)textArguments[0] != ""
