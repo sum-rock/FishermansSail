@@ -6,6 +6,7 @@ namespace FishermansSail
 {
     [BepInPlugin(PluginGuid, PluginName, PluginVersion)]
     [BepInDependency("com.nandbrew.shipyardexpansion")]
+    [BepInDependency("pr0skynesis.sailinfo", BepInDependency.DependencyFlags.SoftDependency)]
     public sealed class Plugin : BaseUnityPlugin
     {
         public const string PluginGuid = "com.august.fishermanssail";
@@ -17,7 +18,9 @@ namespace FishermansSail
         private void Awake()
         {
             Log = Logger;
-            new Harmony(PluginGuid).PatchAll(typeof(Plugin).Assembly);
+            var harmony = new Harmony(PluginGuid);
+            harmony.PatchAll(typeof(Plugin).Assembly);
+            Sails.FishermansStaysail.Patches.FishermansStaysailSailInfoPatch.Install(harmony);
             Logger.LogInfo($"{PluginName} {PluginVersion} loaded!");
         }
     }

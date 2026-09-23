@@ -44,5 +44,7 @@ internal static class Program
         HarmonySignatureChecks.Run(assembly);
         FlyingSailChecks.Run(assembly);
         StayChecks.Run(assembly);
+        FishermansStaysail.MkA.PatchChecks.Run(assembly);
+        FishermansStaysail.SailInfoChecks.Run(assembly, gameDir);
     }
 }

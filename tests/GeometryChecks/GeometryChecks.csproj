@@ -55,6 +55,46 @@
       Include="../../BoatRigs/**/*.cs"
       Link="BoatRigs/%(RecursiveDir)%(Filename)%(Extension)"
     />
+    <Compile
+      Include="../../Sails/FishermansStaysail/FishermansStaysailGeometry.cs"
+      Link="FishermansStaysail/FishermansStaysailGeometry.cs"
+    />
+    <Compile
+      Include="../../Sails/FishermansStaysail/FishermansStaysailBillow.cs"
+      Link="FishermansStaysail/FishermansStaysailBillow.cs"
+    />
+    <Compile
+      Include="../../Sails/FishermansStaysail/FishermansStaysailFrameGeometry.cs"
+      Link="FishermansStaysail/FishermansStaysailFrameGeometry.cs"
+    />
+    <Compile
+      Include="../../Sails/FishermansStaysail/FishermansStaysailTravel.cs"
+      Link="FishermansStaysail/FishermansStaysailTravel.cs"
+    />
+    <Compile
+      Include="../../Sails/FishermansStaysail/FishermansStaysailTension.cs"
+      Link="FishermansStaysail/FishermansStaysailTension.cs"
+    />
+    <Compile
+      Include="../../Sails/FishermansStaysail/FishermansStaysailAerodynamics.cs"
+      Link="FishermansStaysail/FishermansStaysailAerodynamics.cs"
+    />
+    <Compile
+      Include="../../Sails/FishermansStaysail/FishermansStaysailInstallationGeometry.cs"
+      Link="FishermansStaysail/FishermansStaysailInstallationGeometry.cs"
+    />
+    <Compile
+      Include="../../Sails/FishermansStaysail/FishermansStaysailReefingGeometry.cs"
+      Link="FishermansStaysail/FishermansStaysailReefingGeometry.cs"
+    />
+    <Compile
+      Include="../../Sails/FishermansStaysail/FishermansStaysailOrderText.cs"
+      Link="FishermansStaysail/FishermansStaysailOrderText.cs"
+    />
+    <Compile
+      Include="../../Sails/FishermansStaysail/MkA/FishermansStaysailMkAGeometry.cs"
+      Link="FishermansStaysail/MkA/FishermansStaysailMkAGeometry.cs"
+    />
     <Reference Include="UnityEngine.CoreModule">
       <HintPath>$(SailwindDir)/Sailwind_Data/Managed/UnityEngine.CoreModule.dll</HintPath>
     </Reference>

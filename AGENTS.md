@@ -53,9 +53,14 @@ The independent Fisherman's Stay feature is in `Stays/FishermansStay/`, with
 patches in its `Patches/` subdirectory. `BoatRigs/Stays/` holds its authored
 mast-local attachment references and fixed mount IDs. See the development guide
 for profile counts, asset provenance and the stay verification checklist.
-The separate custom staysail is not implemented yet. The stay feature and
-renamed flying-sail menu entry remain unverified in game; prior observations
-below apply to the unchanged flying-sail mechanics.
+The custom staysail family is in `Sails/FishermansStaysail/`; `MkA/` contains
+the first cut and registration (prefab **401**). Family patches, controls,
+reefing and rig remain separate from the Flying Sail. Tests mirror the family
+and mark directories. `BoatRigs/FishermansStaysailDefinitions.cs` supplies
+authored mast ancestry for its fore-mast control source.
+The first Mk.A in-game pass reported deckward reefing, excessive starting size
+and incorrect SailInfo angles; see lesson 16. Revised behavior and full stay/save
+acceptance remain pending. Earlier observations apply to the flying-sail mechanics.
 
 ## Build and checks
 
@@ -300,6 +305,24 @@ support-mast removal, deck-up hoisting and parked ropes with invisible struck cl
     registration and roll back the whole boat's new stays if construction fails.
     Automated checks pass; stay installation, controls and saving remain pending
     in-game validation.
+
+16. **Mk.A reefs upward to a visible native bundle at its head.** Keep its entire deployed
+    luff on the fore mast, its head parallel to the actual Fisherman's Stay,
+    and its aft head free to sheet at the established 85% ratio. It saves on
+    the registered stay at prefab 401. Its per-instance cut is initialized before
+    Cloth is enabled and remains fixed during sailing. Releasing the halyard
+    samples the brig jib's native `reef` animation and raises the foot toward
+    the sloping head; winching unfolds it. The user rejected deckward reefing
+    after the first in-game pass. Keep the native furled mesh visible below
+    4% deployment, with matching recoloring. Do not replace this with the Flying
+    Sail's hidden resting state or linear hoist. Animation sampling uses an
+    inactive hierarchy without live donor scripts or colliders; ropes remain
+    leaf attachments. Start new selections at 50% width and height through SE
+    scaling, preserving saved sizes. SailInfo's donor-axis angle was incorrect:
+    its optional integration now reports the actual mast-relative sheet angle,
+    without clamping the label. Preserve the final ±40° hinge cap and tighter
+    collision limits. Revised reefing, bundle appearance, starting size, angle
+    readout, Cloth behavior and save/reload still need in-game validation.
 
 For handoff, report the version, behavioral change, checks actually run, remaining
 in-game uncertainty, and the built DLL path. Update these notes when a later

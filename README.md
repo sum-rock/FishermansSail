@@ -2,7 +2,7 @@
 
 A Sailwind mod that adds a four-corner **Fisherman's Flying Sail** and selectable
 **Fisherman's Stays** between masts. The flying sail mounts on a physical mast;
-the new stays accept native staysails. A separate custom staysail is planned.
+the new stays accept native staysails and **Fisherman's Staysail Mk.A**.
 Version **0.1.0**.
 
 ![Fisherman's Flying Sail hoisted between two masts in Sailwind](references/example0-1-0.png)
@@ -65,7 +65,7 @@ from horizontal on upright masts. If that line would pass above the forward
 mast, the stay connects to its masthead at a steeper angle instead. Attachments
 are authored separately for each boat configuration.
 
-Select the installed stay to fit one native staysail using the normal shipyard
+Select the installed stay to fit one staysail using the normal shipyard
 sail controls. It has independent sheet and halyard winches. Ordinary sail fit,
 collision and support requirements still apply. The Fisherman's Flying Sail
 continues to mount on physical masts under **Other**.
@@ -74,6 +74,33 @@ Remove the fitted staysail before replacing or removing its stay. Changing a
 supporting mast or adding a topmast may require replacing the stay with its
 matching variant in the same order. Canceling an order restores the previous
 selection. Some mast combinations have no authored stay variant.
+
+## Fisherman's Staysail Mk.A
+
+Select a **Fisherman's Stay** in the shipyard and choose **Fisherman's Staysail
+Mk.A** from the staysails. Mk.A cannot be fitted to other stays or physical masts.
+Its deployed luff follows the fore mast; its free aft head sheets like the
+Flying Sail, with the same 40° maximum travel on either side.
+
+The nominal cut has two 110° luff corners, a head rising aft along the stay,
+and a foot falling aft at 20°. The head follows steeper masthead-fallback stays.
+New selections start at 50% scale (about 6.9 m wide with a matching luff).
+Use uniform resizing to fit the mast pair; existing saved sizes are retained.
+The luff must fit the selected forward mast section, and the sail must clear
+the aft mast, deck and other sails. Moving the sail changes its height on the
+fore mast while it remains installed on the stay.
+
+Releasing the halyard gathers the foot upward toward the sloping head by the
+stay. Winching it in unfolds the panel using the native brig jib's sampled
+reef animation, adapted to the four-corner cut. When fully furled, a visible
+native sail bundle rests along the head. White/plain defaults and recoloring
+apply to both.
+
+With SailInfo installed, Mk.A's “degrees out” label measures rotation around
+the fore mast, accounting for stay slope and boat heel. The physical hinge
+remains limited to 40° per side, or less where obstructed. The readout is not
+clipped to that limit, so it can reveal any physical overshoot.
+These revisions still need in-game validation.
 
 ## Saving and uninstalling
 
@@ -86,6 +113,8 @@ New stays use separate native mount slots in the **128–255** range. Existing
 0.1.0 saves start with no new stays installed. Before uninstalling, remove any
 sails fitted to Fisherman's Stays, remove the stays, and save. Development-era
 triatic-stay saves are not migrated.
+Mk.A uses prefab index **401** and saves in its Fisherman's Stay slot. Remove
+Mk.A along with other fitted staysails before removing the stay or uninstalling.
 
 ## Development and testing
 
@@ -95,7 +124,7 @@ See the [development guide](docs/DEVELOPMENT.md) for build commands, local
 installation, verification and implementation notes.
 
 Automated checks do not simulate Unity rendering, Cloth or hinge physics.
-Automated geometry and assembly checks pass for the stay implementation.
+Automated geometry and assembly checks pass for the stay and Mk.A implementations.
 In-game validation remains pending for the new stays, native sail fitting,
-controls, shipyard cancellation and save/reload, as well as the flying sail's
-appearance and menu naming.
+Mk.A's furling, resting appearance and sailing behavior, controls, shipyard
+cancellation and save/reload, as well as the flying sail's appearance and menu naming.

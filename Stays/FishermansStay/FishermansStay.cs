@@ -14,6 +14,7 @@ namespace FishermansSail.Stays.FishermansStay
         internal GameObject WalkObject;
         private readonly BoatRefs boat;
         private readonly FishermansStayReferences references;
+        internal FishermansStayReferences References => references;
         private Mast source => references.Donor;
         private Transform visual,
             walkVisual;

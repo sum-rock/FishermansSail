@@ -15,6 +15,14 @@ namespace FishermansSail.Stays.FishermansStay
         internal bool Registered;
         internal bool PreviewingOrder;
 
+        internal static bool TryFind(Mast mount, out FishermansStay stay)
+        {
+            var boat = mount ? mount.GetComponentInParent<BoatRefs>() : null;
+            var registry = boat ? boat.GetComponent<FishermansStayRegistry>() : null;
+            stay = registry ? registry.Stays.FirstOrDefault(s => s.Mount == mount) : null;
+            return stay != null;
+        }
+
         internal static void Register(SaveableBoatCustomization customization)
         {
             var boat = customization.GetComponent<BoatRefs>();

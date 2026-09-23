@@ -121,7 +121,12 @@ named **Fisherman's Flying Sail** in game.
   mount registration, save handling and patches. The namespace is
   `FishermansSail.Stays.FishermansStay`, with `.Patches` for Harmony patches.
 - `BoatRigs/Stays/` contains authored stay variants. Other sail types belong in
-  sibling directories under `Sails/`; the custom staysail is not implemented yet.
+  sibling directories under `Sails/`.
+- `Sails/FishermansStaysail/` owns the staysail family's rig, reefing adapter,
+  controls and patches. `MkA/` contains the 110° cut, shape component and prefab
+  registration; another mark supplies its own `FishermansStaysailShape`.
+- `BoatRigs/FishermansStaysailDefinitions.cs` holds authored fore-mast ancestry
+  for selecting the fore-mast control source.
 
 The geometry checks link feature sources directly; update their project includes
 when moving files. The assembly checks resolve internal types by full name;
@@ -133,7 +138,8 @@ The new menu name and loading existing sails still need in-game verification.
 ### Test organization
 
 Both `tests/GeometryChecks/` and `tests/AssemblyChecks/` contain
-`FishermansFlyingSail/` and `FishermansStay/` directories. Put each feature's
+`FishermansFlyingSail/`, `FishermansStay/` and `FishermansStaysail/` directories.
+The latter has `MkA/` for variant checks. Put each feature's
 checks and helpers in its directory, using the namespace
 `FishermansSail.Tests.<Suite>.<Feature>`. Flying-sail rig-profile checks belong
 with the flying sail; authored stay-profile checks belong with the stay.
@@ -143,7 +149,7 @@ validation and IL decoding live in `tests/AssemblyChecks/Shared/`, using the
 corresponding `.Shared` namespace. The two project paths and validation commands
 remain unchanged.
 
-## Implementation notes
+## Flying Sail implementation notes
 
 - Registration creates an independent sail from the brig jib after Shipyard
   Expansion initializes its components. The plugin GUID and prefab index 400
@@ -164,6 +170,71 @@ remain unchanged.
 
 See [AGENTS.md](../AGENTS.md) for the code map, installed-assembly inspection
 tools and regression lessons, including approaches that failed in game.
+
+## Mk.A implementation and verification
+
+Mk.A registers as staysail prefab **401** after Shipyard Expansion and before
+All Sails caches its inventory. Registry membership restricts fitting to an
+active Fisherman's Stay. The native stay slot owns the saved sail, while the
+rig places its hinge and full pinned luff on the forward physical mast.
+The saved installation coordinate measures downward displacement from the
+stay's forward endpoint, with 15 cm head and aft-mast clearances.
+Native collision checks remain active; custom fit checks use forward spar
+length and mast separation. The deployed luff must fit its selected section.
+
+Each mark provides a cut through `FishermansStaysailShape`. On first binding,
+Mk.A creates an owned mesh for the actual stay angle before enabling Cloth.
+The mesh and bind poses then remain fixed. Its luff is straight and fully
+pinned; its aft head retains the Flying Sail's 85% angular response and the
+coupled foot/leech solver. Uniform scaling preserves the cut. New shipyard
+selections use `SailScaler.SetScaleAbs(0.5, 0.5)` after SE's initialization;
+existing saves retain their stored dimensions.
+
+The installed brig jib (prefab 110, `sharedassets15.assets`) supplies the native
+`reef` clip/controller and `furled__sail_cloth_jib` mesh. An inactive, stripped
+copy of the original animation hierarchy preserves the clip's binding paths.
+`AnimationClip.SampleAnimation` samples the native fold-bone scale and moving
+rope attachment at `1 - currentUnroll`. The family adapter maps those channels
+to upward gathering: the head retains its span while the foot rises toward it.
+The luff stays on the fitted fore-mast section; the reefed foot progressively
+returns beneath the neutral head as the leech shortens. The original reef component is disabled so it cannot compete with
+custom renderer/material handling. The original Animator remains as SE's
+scaling reference. No extracted game assets are distributed.
+
+Below 4% deployment, the native furled bundle is visible along the neutral
+sloping head, fitted to its length and centered between its endpoints. Above that threshold, the Mk.A panel displays the sampled pose; fully
+deployed cloth uses its initialized solver. Recoloring and the native plain
+texture apply to the panel and bundle. Ropes attach to independent leaves and
+follow the moving corners rather than rotating skin bones.
+
+Automated validation covers all 97 authored stay frames, the nominal cut and
+pin mask, repeated sheeting, edge budgets, reef-channel normalization and
+reversals, partial-reef edge budgets, renderer thresholds, new-sail scaling
+scope, and all 54 statically declared Harmony patch signatures. The optional
+SailInfo integration has a separate installed-signature check. Installed
+asset inspection confirmed the donor clip, two-bone hierarchy, animated scale
+and rope channels, and furled mesh. These checks do not run Unity animation or
+Cloth, so the actual motion and appearance remain unverified.
+
+SailInfo 1.2.1's instance `WinchInfoSail.SailDegree()` uses the donor's transform
+axis. A soft dependency orders optional integration after SailInfo; a narrowly
+scoped prefix uses Mk.A's mast-relative sheet angle instead. The reported angle
+is not clamped. Final hinge limits still clamp native sway to ±40° and preserve
+tighter collision restrictions. SailInfo settings and force readouts are unchanged.
+
+In-game acceptance: start on the Brig with a vanilla staysail for comparison.
+Check Mk.A menu restrictions, uniform sizing, movement, support protection,
+both tacks and tighter collision limits. Verify new sails start at half width
+and height and existing saves keep their size. Compare SailInfo's readout to
+physical travel on both sheets, including heel and a steep stay. Release the
+halyard, pause and reverse at several positions, fully furl upward, inspect
+the bundle at the head and its ropes, then winch in again. Check no masthead jump, floating luff, detached corners or
+stale full-size cloth; test recoloring, cancellation and save/reload. Repeat on
+a steeper fallback stay and an offset topmast, then the other supported boats.
+The first in-game pass reported unwanted furling on deck, excessive initial
+size and incorrect SailInfo degrees. These revisions address those observations;
+upward reefing, bundle alignment, default sizing and angle reporting await the
+next in-game pass.
 
 ## Fisherman's Stay profiles and verification
 
