@@ -3,6 +3,8 @@ using System.Linq;
 using FishermansSail.BoatRigs;
 using FishermansSail.Sails.FishermansFlyingSail;
 
+namespace FishermansSail.Tests.GeometryChecks.FishermansFlyingSail;
+
 internal static class RigChecks
 {
     internal static void Run()

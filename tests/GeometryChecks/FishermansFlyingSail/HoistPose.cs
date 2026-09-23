@@ -1,6 +1,8 @@
 using FishermansSail.Sails.FishermansFlyingSail;
 using UnityEngine;
 
+namespace FishermansSail.Tests.GeometryChecks.FishermansFlyingSail;
+
 internal static class HoistPose
 {
     internal static Vector3 Corner(Vector3[] rest, int index, float unroll) =>

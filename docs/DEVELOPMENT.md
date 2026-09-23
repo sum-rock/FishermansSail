@@ -130,6 +130,19 @@ mesh labels use `FishermansFlyingSail`; donor hierarchy names remain unchanged.
 Prefab index **400**, native mast save slots and version **0.1.0** are unchanged.
 The new menu name and loading existing sails still need in-game verification.
 
+### Test organization
+
+Both `tests/GeometryChecks/` and `tests/AssemblyChecks/` contain
+`FishermansFlyingSail/` and `FishermansStay/` directories. Put each feature's
+checks and helpers in its directory, using the namespace
+`FishermansSail.Tests.<Suite>.<Feature>`. Flying-sail rig-profile checks belong
+with the flying sail; authored stay-profile checks belong with the stay.
+
+Root `Program.cs` files handle setup and run the checks. Shared Harmony signature
+validation and IL decoding live in `tests/AssemblyChecks/Shared/`, using the
+corresponding `.Shared` namespace. The two project paths and validation commands
+remain unchanged.
+
 ## Implementation notes
 
 - Registration creates an independent sail from the brig jib after Shipyard
@@ -180,7 +193,7 @@ do not repeat this calculation at runtime. Exclude higher aft topmasts from
 lower-mast variants. The physical mast axes and guide heights were inspected
 from the installed assets; local coordinates are rounded to five decimals.
 
-`tests/GeometryChecks/StayMeasurements.txt` contains only reference measurements
+`tests/GeometryChecks/FishermansStay/StayMeasurements.txt` contains only reference measurements
 for tests: mast transforms, physical spar extents and guide positions. It
 contains no meshes, textures or assemblies. GeometryChecks independently
 transforms each profile endpoint into this measured frame, checks physical

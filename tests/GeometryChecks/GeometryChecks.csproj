@@ -8,48 +8,48 @@
   <ItemGroup>
     <Compile
       Include="../../Stays/FishermansStay/FishermansStaySaveState.cs"
-      Link="FishermansStaySaveState.cs"
+      Link="FishermansStay/FishermansStaySaveState.cs"
     />
-    <None Update="StayMeasurements.txt" CopyToOutputDirectory="PreserveNewest" />
+    <None Update="FishermansStay/StayMeasurements.txt" CopyToOutputDirectory="PreserveNewest" />
     <Compile
       Include="../../Stays/FishermansStay/FishermansStayGeometry.cs"
-      Link="FishermansStayGeometry.cs"
+      Link="FishermansStay/FishermansStayGeometry.cs"
     />
     <Compile
       Include="../../Stays/FishermansStay/FishermansStayOrderText.cs"
-      Link="FishermansStayOrderText.cs"
+      Link="FishermansStay/FishermansStayOrderText.cs"
     />
     <Compile
       Include="../../Sails/FishermansFlyingSail/FishermansFlyingSailGeometry.cs"
-      Link="FishermansFlyingSailGeometry.cs"
+      Link="FishermansFlyingSail/FishermansFlyingSailGeometry.cs"
     />
     <Compile
       Include="../../Sails/FishermansFlyingSail/FishermansFlyingSailOrderText.cs"
-      Link="FishermansFlyingSailOrderText.cs"
+      Link="FishermansFlyingSail/FishermansFlyingSailOrderText.cs"
     />
     <Compile
       Include="../../Sails/FishermansFlyingSail/FishermansFlyingSailFrameGeometry.cs"
-      Link="FishermansFlyingSailFrameGeometry.cs"
+      Link="FishermansFlyingSail/FishermansFlyingSailFrameGeometry.cs"
     />
     <Compile
       Include="../../Sails/FishermansFlyingSail/FishermansFlyingSailTravel.cs"
-      Link="FishermansFlyingSailTravel.cs"
+      Link="FishermansFlyingSail/FishermansFlyingSailTravel.cs"
     />
     <Compile
       Include="../../Sails/FishermansFlyingSail/FishermansFlyingSailMastInstallationGeometry.cs"
-      Link="FishermansFlyingSailMastInstallationGeometry.cs"
+      Link="FishermansFlyingSail/FishermansFlyingSailMastInstallationGeometry.cs"
     />
     <Compile
       Include="../../Sails/FishermansFlyingSail/FishermansFlyingSailBillow.cs"
-      Link="FishermansFlyingSailBillow.cs"
+      Link="FishermansFlyingSail/FishermansFlyingSailBillow.cs"
     />
     <Compile
       Include="../../Sails/FishermansFlyingSail/FishermansFlyingSailTension.cs"
-      Link="FishermansFlyingSailTension.cs"
+      Link="FishermansFlyingSail/FishermansFlyingSailTension.cs"
     />
     <Compile
       Include="../../Sails/FishermansFlyingSail/FishermansFlyingSailAerodynamics.cs"
-      Link="FishermansFlyingSailAerodynamics.cs"
+      Link="FishermansFlyingSail/FishermansFlyingSailAerodynamics.cs"
     />
     <Compile
       Include="../../BoatRigs/**/*.cs"

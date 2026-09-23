@@ -98,6 +98,13 @@ cloth lifecycle restrictions without starting Unity. Direct IL decoding is used
 for lifecycle checks; asking Harmony to create native patch stubs failed in this
 standalone test environment.
 
+Both suites group feature checks under `FishermansFlyingSail/` and
+`FishermansStay/`, with matching test namespaces. Keep feature assertions and
+helpers in those directories; root `Program.cs` files only set up and run checks.
+Assembly-wide Harmony signature checks and the IL reader live under
+`tests/AssemblyChecks/Shared/`. The stay measurement fixture lives alongside its
+geometry checks and is copied to `FishermansStay/` in the test output.
+
 **Neither suite simulates Unity Cloth.** A passing build and mathematically valid
 mesh do not establish stable cloth motion. Say "automated checks pass; in-game
 validation pending" until the actual behavior has been observed.

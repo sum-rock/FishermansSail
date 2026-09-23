@@ -1,6 +1,8 @@
 using System;
 using FishermansSail.Sails.FishermansFlyingSail;
 
+namespace FishermansSail.Tests.GeometryChecks.FishermansFlyingSail;
+
 internal static class TravelChecks
 {
     internal static void Run()

@@ -7,6 +7,8 @@ using FishermansSail.BoatRigs;
 using FishermansSail.Stays.FishermansStay;
 using UnityEngine;
 
+namespace FishermansSail.Tests.GeometryChecks.FishermansStay;
+
 internal static class StayChecks
 {
     private sealed class Spar
@@ -31,7 +33,7 @@ internal static class StayChecks
         var measurements = new Dictionary<string, Dictionary<int, Spar>>();
         foreach (
             string line in File.ReadLines(
-                Path.Combine(AppContext.BaseDirectory, "StayMeasurements.txt")
+                Path.Combine(AppContext.BaseDirectory, "FishermansStay", "StayMeasurements.txt")
             )
         )
         {

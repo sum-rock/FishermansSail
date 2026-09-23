@@ -2,6 +2,8 @@ using System;
 using System.Linq;
 using FishermansSail.Sails.FishermansFlyingSail;
 
+namespace FishermansSail.Tests.GeometryChecks.FishermansFlyingSail;
+
 internal static class OrderTextChecks
 {
     internal static void Run()

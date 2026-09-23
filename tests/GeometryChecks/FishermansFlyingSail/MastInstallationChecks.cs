@@ -4,6 +4,8 @@ using FishermansSail.BoatRigs;
 using FishermansSail.Sails.FishermansFlyingSail;
 using UnityEngine;
 
+namespace FishermansSail.Tests.GeometryChecks.FishermansFlyingSail;
+
 internal static class MastInstallationChecks
 {
     internal static void Run()
