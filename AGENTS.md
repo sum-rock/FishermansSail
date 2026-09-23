@@ -17,9 +17,11 @@ Follow current user instructions over historical design choices
 - Do not commit, push, change saves, or replace installed game files merely as part
   of a build. Do not include proprietary assemblies or extracted game assets in Git.
 - The sail installs on physical masts under Other and requires an active aft mast.
-  The user committed to this approach after the 0.8.1 in-game result. Preserve
-  normal vertical mast-space rules and native mast save slots. Version 0.8.2
-  simplifies the support profiles and retains only the current installation model.
+  This installation model has received positive in-game feedback. Preserve
+  normal vertical mast-space rules and native mast save slots.
+- The first release version is **0.1.0**. Earlier development version numbers
+  are not the public release sequence. Keep the plugin GUID and prefab index 400
+  stable when changing release metadata.
 
 ## Code map
 
@@ -42,11 +44,15 @@ Follow current user instructions over historical design choices
 
 The environment is defined by `flake.nix` and `flake.lock`. CSharpier is pinned in
 `.config/dotnet-tools.json`; `.pre-commit-config.yaml` defines the formatting hook.
+See [the development guide](docs/DEVELOPMENT.md) for setup, local installation
+and the release verification checklist.
 
 For a fresh checkout:
 
 ```sh
 nix develop -c dotnet tool restore
+nix develop -c dotnet restore tests/GeometryChecks
+nix develop -c dotnet restore tests/AssemblyChecks
 nix develop -c dotnet build -c Release
 ```
 
@@ -64,7 +70,7 @@ git diff --check
 - The game path can be overridden with `-p:SailwindDir="/path/to/Sailwind"`.
 - Output: `bin/Release/netstandard2.0/FishermansSail.dll`. Only the plugin DLL is
   needed for deployment. Keep `PluginVersion`, the project version and README
-  startup example consistent when producing a new test release.
+  startup examples in README and the development guide consistent for releases.
 - Run checks appropriate to a code change. Documentation-only changes normally
   need a diff/link/path review, not another full build.
 
@@ -213,13 +219,13 @@ support-mast removal, deck-up hoisting and parked ropes with invisible struck cl
    wrapping of long order text, not simply the presence of a sail. Keep the
    iterative wrapping guard and its Harmony ordering/input protections. Retain
    native rejection of removing occupied masts. Protect the aft support too.
-8. **Resolve control lines against active mast sections.** The 0.7.14 in-game
+8. **Resolve control lines against active mast sections.** An earlier in-game
    report showed an upper line turning above the Brig's visible mast. Its lookup
    used the donor topmast even when installation required only the lower mainmast.
    Search the profile's connected aft sections and check both mast and guide
    activity when drawing; registration/part refresh can precede activation.
-   The user confirmed the pulley correction and later the 0.8.1 mast-mounted
-   result looked good in game. Keep active-section selection when changing profiles.
+   The user confirmed the pulley correction and mast-mounted result looked good
+   in game. Keep active-section selection when changing profiles.
 9. **Keep fisherman controls independent of mast sail order.** Native binding
    indexes winch arrays by mastOrder and can exceed dual-sheet array capacity.
    Exclude fisherman sails only during that binding call and always restore the
@@ -227,29 +233,28 @@ support-mast removal, deck-up hoisting and parked ropes with invisible struck cl
    the full list. Each sail owns and destroys its extra controls. A hidden, meshless
    renderer remains because native recoloring expects a furled renderer.
 
-10. **Keep shipyard collision checks separate from billow bounds.** In 0.8.0,
+10. **Keep shipyard collision checks separate from billow bounds.** Earlier
     full-height strips filled to maximum camber falsely contacted Brig shrouds.
     Offline installed-mesh checks reproduced this; spreader roots also contacted
-    the intentional mast attachment area. Version 0.8.1 uses a thin neutral panel
+    the intentional mast attachment area. Use a thin neutral panel
     clipped by the supporting mast radius plus 2 cm, retaining other collision
     and overlap rules. Preserve the aligned neutral rotation when the native
-    sweep completes. The user approved the 0.8.1 in-game result; the 0.8.2
-    cleanup was included in the later 0.8.3 result the user said looked great.
+    sweep completes. The user approved this approach in game.
 
-11. **Keep outward travel within 40 degrees per side.** Version 0.8.3 caps the
+11. **Keep outward travel within 40 degrees per side.** Cap the
     fisherman prefab, collision sweep, restored limits and final native hinge
     limits. `JibAngleMaster.Update` adds sway after combining sheets, so reducing
     only `Sail.minAngle/maxAngle` is insufficient. Preserve tighter collision
     restrictions and apply the final cap after sway without resetting Cloth or
-    snapping transforms. The user reported that 0.8.3 looked great in game.
+    snapping transforms. The user reported that this limit looked great in game.
 
-12. **Do not repeat the 0.8.4 upper-corner experiment.** Reducing the upper
+12. **Do not repeat the tighter upper-corner experiment.** Reducing the upper
     corner's angle ratio from 85% to 60% passed automated checks but produced
     creases in game. The user reverted it. Retain the 85% ratio and existing
     geometry; mathematical feasibility did not establish stable Cloth behavior.
 
-13. **Use the existing white/plain appearance options.** Version 0.8.5 defaults
-    new sails to native palette entry 11 and SE texture index 0 (the unpainted
+13. **Use the existing white/plain appearance options.** Default new sails to
+    native palette entry 11 and SE texture index 0 (the unpainted
     stock square sail's texture). Keep recoloring and saved colors, restrict
     texture choices to plain, and hide SE's selector only for fisherman sails.
     Guard SE's material update so saved patterns cannot return. Do not invent
