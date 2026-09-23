@@ -10,7 +10,10 @@ namespace FishermansSail
         internal static bool NeedsWrapping(string line) =>
             line != null
             && line.Length > LineWidth
-            && line.IndexOf("Triatic Stay", StringComparison.Ordinal) >= 0;
+            && (
+                line.IndexOf("Triatic Stay", StringComparison.Ordinal) >= 0
+                || line.IndexOf("Fisherman's Sail", StringComparison.Ordinal) >= 0
+            );
 
         internal static IEnumerable<string> Wrap(string line)
         {

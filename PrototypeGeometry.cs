@@ -167,7 +167,7 @@ namespace FishermansSail
                 boneIndex1 = blend > 0.5f ? left : right,
             };
 
-        // 0 = bundled, 1 = procedural reefing, 2 = fully deployed cloth.
+        // 0 = hidden, 1 = procedural hoisting, 2 = fully deployed cloth.
         internal static int RenderState(float unroll) =>
             unroll <= 0.02f ? 0
             : unroll < 0.98f ? 1

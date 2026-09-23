@@ -8,6 +8,7 @@ internal static class Program
     {
         StayChecks.Run(args.Length == 2 && args[0] == "--stay-fixture" ? args[1] : null);
         FlyingSailChecks.Run();
+        MastInstallationChecks.Run();
         BillowChecks.Run();
         ShapingChecks.Run();
         AerodynamicChecks.Run();
@@ -18,7 +19,7 @@ internal static class Program
         }
         Require(
             PrototypeGeometry.RenderState(0) == 0 && PrototypeGeometry.RenderState(0.02f) == 0,
-            "A fully struck sail must show only the bundle."
+            "A fully struck sail must select the hidden state."
         );
         Require(
             PrototypeGeometry.RenderState(0.03f) == 1 && PrototypeGeometry.RenderState(0.5f) == 1,

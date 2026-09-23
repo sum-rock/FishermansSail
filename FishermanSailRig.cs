@@ -42,11 +42,11 @@ namespace FishermansSail
         private bool tensionWarning;
         private readonly Vector3[] leechPoints = new Vector3[PrototypeGeometry.Rows + 1];
         private int lastRenderState = -1;
-        private FishermanStay stay;
+        private FishermanRigging rigging;
         private Mast lastMount;
         private bool refreshRequested;
         private bool bindingDirty = true;
-        private bool boundToStay;
+        private bool boundToMast;
         private Vector3 pivot;
         private Vector3 pivotAxis;
         private Vector3 lastScale;
@@ -242,33 +242,9 @@ namespace FishermansSail
                 box.transform.localPosition = Vector3.zero;
                 box.transform.localRotation = Quaternion.identity;
                 box.transform.localScale = Vector3.one;
-                float u = (i + 1f) / PrototypeGeometry.Columns;
-                float depth =
-                    width
-                    * (
-                        PrototypeGeometry.ForeDepthRatio
-                        + (PrototypeGeometry.AftDepthRatio - PrototypeGeometry.ForeDepthRatio) * u
-                    );
-                float camber = 0;
-                for (int row = 0; row <= PrototypeGeometry.Rows; row++)
-                    camber = Mathf.Max(
-                        camber,
-                        PrototypeGeometry.RestCamber(
-                            width,
-                            (i + 0.5f) / PrototypeGeometry.Columns,
-                            (float)row / PrototypeGeometry.Rows
-                        )
-                    );
-                box.center = new Vector3(
-                    -depth * 0.5f,
-                    0,
-                    -width + (i + 0.5f) * width / PrototypeGeometry.Columns
-                );
-                box.size = new Vector3(
-                    Math.Max(0.01f, depth - 0.1f),
-                    0.05f + camber * 2,
-                    width / PrototypeGeometry.Columns * 0.9f
-                );
+                MastInstallationGeometry.CollisionStrip(width, i, 0, out var center, out var size);
+                box.center = center;
+                box.size = size;
                 box.isTrigger = true;
                 var visual = box.GetComponent<MeshRenderer>();
                 if (visual)
@@ -288,13 +264,10 @@ namespace FishermansSail
             var mount = Sail.transform.parent ? Sail.transform.parent.GetComponent<Mast>() : null;
             if (mount != lastMount)
             {
-                bool wasBound = boundToStay;
+                bool wasBound = boundToMast;
                 lastMount = mount;
-                stay = null;
-                var registry = mount ? mount.GetComponentInParent<FishermanStayRegistry>() : null;
-                if (registry)
-                    stay = registry.Stays.Find(s => s.Mount == mount);
-                if (wasBound && stay == null)
+                rigging = mount ? FishermanRigging.For(Sail) : null;
+                if (wasBound && !rigging)
                 {
                     FlyingFrame.localPosition = Vector3.zero;
                     FlyingFrame.localRotation = Quaternion.identity;
@@ -304,13 +277,13 @@ namespace FishermansSail
                     originalHinge.autoConfigureConnectedAnchor = OriginalAutoAnchor;
                     refreshRequested = true;
                 }
-                boundToStay = false;
+                boundToMast = false;
                 bindingDirty = true;
             }
-            if (stay == null)
+            if (!rigging || !rigging.Bind(mount))
                 return false;
 
-            stay.ForeSailFrame(out var forePoint, out var foreAxis);
+            rigging.ForeSailFrame(out var forePoint, out var foreAxis);
             var scaleRoot = Sail.cloth.transform.parent;
             // Preserve the native saved installation coordinate. Offset the
             // model so its whole luff sits on the physical forward mast even
@@ -318,10 +291,12 @@ namespace FishermansSail
             var origin = new Vector3(0, 0, Sail.GetCurrentInstallHeight() - mount.mastHeight);
             var nextPivot = mount.transform.InverseTransformPoint(forePoint) - origin;
             var nextAxis = mount.transform.InverseTransformDirection(foreAxis).normalized;
-            var alignment = Quaternion.FromToRotation(
-                scaleRoot.localRotation * Vector3.right,
-                nextAxis
+            var aftDirection = mount.transform.InverseTransformDirection(
+                Vector3.ProjectOnPlane(rigging.AftReference - forePoint, foreAxis).normalized
             );
+            var alignment =
+                Quaternion.LookRotation(aftDirection, Vector3.Cross(aftDirection, nextAxis))
+                * Quaternion.Inverse(scaleRoot.localRotation);
             FlyingFrame.localRotation = alignment;
             FlyingFrame.localPosition = FlyingSailGeometry.ModelOffset(
                 nextPivot,
@@ -333,7 +308,7 @@ namespace FishermansSail
             );
             bool changed =
                 bindingDirty
-                || !boundToStay
+                || !boundToMast
                 || FlyingSailGeometry.PositionChanged(nextPivot, pivot)
                 || FlyingSailGeometry.PositionChanged(nextAxis, pivotAxis)
                 || FlyingSailGeometry.PositionChanged(lastScale, scaleRoot.localScale)
@@ -343,9 +318,20 @@ namespace FishermansSail
             {
                 var body = Sail.GetComponent<Rigidbody>();
                 var hinge = Sail.GetComponent<HingeJoint>();
-                if (!boundToStay || GameState.currentShipyard)
+                if (!boundToMast || GameState.currentShipyard)
                     body.rotation = mount.transform.rotation;
                 body.position = forePoint - body.rotation * nextPivot;
+                RefreshCollisionStrips();
+                // Hoisting can start well below the fully set panel's original
+                // bounds, especially after fitting a smaller sail high on a mast.
+                var clothRenderer = Sail.cloth.GetComponent<SkinnedMeshRenderer>();
+                var bounds = clothRenderer.sharedMesh.bounds;
+                bounds.Encapsulate(Sail.cloth.transform.InverseTransformPoint(rigging.DeckPoint));
+                bounds.Expand(
+                    new Vector3(-Corners[0].z * 0.3f, -Corners[0].z * 2.5f, -Corners[0].z * 0.4f)
+                );
+                clothRenderer.localBounds = bounds;
+                ReefedRenderer.localBounds = bounds;
                 hinge.autoConfigureConnectedAnchor = false;
                 hinge.connectedBody = mount.shipRigidbody;
                 hinge.axis = nextAxis;
@@ -353,22 +339,57 @@ namespace FishermansSail
                 hinge.connectedAnchor = mount.shipRigidbody.transform.InverseTransformPoint(
                     forePoint
                 );
-                if (!boundToStay)
+                if (!boundToMast)
                     Sail.GetComponent<JibAngleMaster>().UpdateInitialAngle();
                 pivot = nextPivot;
                 pivotAxis = nextAxis;
                 lastScale = scaleRoot.localScale;
                 lastFramePosition = FlyingFrame.localPosition;
                 lastFrameRotation = FlyingFrame.localRotation;
-                boundToStay = true;
+                boundToMast = true;
                 bindingDirty = false;
                 refreshRequested = true;
             }
             return true;
         }
 
-        internal bool PositionCollisionChecker(Transform checker, float angle)
+        private void RefreshCollisionStrips()
         {
+            // Cloth attaches to the supporting mast's axis. Its contact with the
+            // mast and the roots of its fittings is intentional, not obstruction.
+            var mastCollider = lastMount.GetComponent<CapsuleCollider>();
+            var mastScale = mastCollider.transform.lossyScale;
+            float radius =
+                mastCollider.radius
+                * Mathf.Max(
+                    mastCollider.direction == 0 ? mastScale.y : mastScale.x,
+                    mastCollider.direction == 2 ? mastScale.y : mastScale.z
+                );
+            float widthScale = Sail.cloth.transform.TransformVector(Vector3.forward).magnitude;
+            float clearance = (radius + 0.02f) / Mathf.Max(0.0001f, widthScale);
+            var boxes = Sail.GetComponent<SailConnections>()
+                .colChecker.GetComponentsInChildren<BoxCollider>(true);
+            for (int i = 0; i < boxes.Length; i++)
+            {
+                boxes[i].enabled = MastInstallationGeometry.CollisionStrip(
+                    -Corners[0].z,
+                    i,
+                    clearance,
+                    out var center,
+                    out var size
+                );
+                boxes[i].center = center;
+                boxes[i].size = size;
+            }
+        }
+
+        internal bool PositionCollisionChecker(
+            Transform checker,
+            float angle,
+            out Quaternion neutralRotation
+        )
+        {
+            neutralRotation = Quaternion.identity;
             var walk = lastMount.walkColMast;
             if (!walk || checker.parent != walk)
                 return false;
@@ -379,9 +400,10 @@ namespace FishermansSail
                 FlyingFrame.localPosition + FlyingFrame.localRotation * scaleRoot.localPosition;
             var position =
                 origin + FlyingSailGeometry.RotateAroundMast(modelOffset, pivot, pivotAxis, angle);
+            neutralRotation = FlyingFrame.localRotation * scaleRoot.localRotation;
             checker.SetPositionAndRotation(
                 walk.TransformPoint(position),
-                walk.rotation * rotation * FlyingFrame.localRotation * scaleRoot.localRotation
+                walk.rotation * rotation * neutralRotation
             );
             checker.localScale = scaleRoot.localScale;
             return true;
@@ -450,7 +472,7 @@ namespace FishermansSail
         {
             if (!Sail || Bones == null || Bones.Length != PrototypeGeometry.BoneCount)
                 return;
-            RefreshFlyingFrame();
+            bool supported = RefreshFlyingFrame();
             if (Shadow)
             {
                 var scale = Sail.cloth.transform.parent;
@@ -458,16 +480,20 @@ namespace FishermansSail
                 Shadow.localRotation = scale.localRotation;
                 Shadow.localScale = scale.localScale;
             }
-            float targetLoad =
-                stay == null
-                    ? 0
-                    : Sail.cloth.transform.InverseTransformDirection(Sail.apparentWind).y
-                        / 8f
-                        * Sail.GetCurrentShadowMult();
+            float targetLoad = !supported
+                ? 0
+                : Sail.cloth.transform.InverseTransformDirection(Sail.apparentWind).y
+                    / 8f
+                    * Sail.GetCurrentShadowMult();
             clothLoad = FishermanBillow.SmoothLoad(clothLoad, targetLoad, Time.deltaTime);
+            var deck = supported
+                ? Sail.cloth.transform.InverseTransformPoint(rigging.DeckPoint)
+                : Corners[2];
             for (int i = 0; i < Corners.Length; i++)
-                Bones[i].localPosition = PrototypeGeometry.ReefCorner(
+                Bones[i].localPosition = MastInstallationGeometry.HoistCorner(
                     Corners[i],
+                    Corners[0],
+                    deck,
                     Sail.currentUnroll
                 );
 
@@ -478,7 +504,7 @@ namespace FishermansSail
                     Bones[3].localPosition,
                     (float)row / PrototypeGeometry.Rows
                 );
-            if (stay != null)
+            if (supported)
             {
                 var scaleRoot = Sail.cloth.transform.parent;
                 var origin = new Vector3(
@@ -493,11 +519,19 @@ namespace FishermansSail
                             * (
                                 scaleRoot.localPosition
                                 + scaleRoot.localRotation
-                                    * Vector3.Scale(Corners[1], scaleRoot.localScale)
+                                    * Vector3.Scale(
+                                        MastInstallationGeometry.HoistCorner(
+                                            Corners[1],
+                                            Corners[0],
+                                            deck,
+                                            Sail.currentUnroll
+                                        ),
+                                        scaleRoot.localScale
+                                    )
                             )
                 );
                 var clothTransform = Sail.cloth.transform;
-                stay.ForeSailFrame(out var forePoint, out var mastAxis);
+                rigging.ForeSailFrame(out var forePoint, out var mastAxis);
                 var head = FlyingSailGeometry.UpperHead(
                     neutralHead,
                     clothTransform.TransformPoint(Corners[1]),
@@ -506,9 +540,7 @@ namespace FishermansSail
                     Sail.currentUnroll
                 );
                 var localHead = clothTransform.InverseTransformPoint(head);
-                // Shaping stays in the triatic frame even when the visual sheet
-                // rises to a pulley above (and offset from) the stay attachment.
-                var normal = Vector3.Cross(mastAxis, stay.AftStayAttachment - forePoint).normalized;
+                var normal = Vector3.Cross(mastAxis, rigging.AftReference - forePoint).normalized;
                 var clew = Bones[3].localPosition;
                 var bow = FishermanBillow.SupportBow(
                     clew,
@@ -524,7 +556,7 @@ namespace FishermansSail
                     localHead,
                     tack,
                     bow * FishermanBillow.Deployment(Sail.currentUnroll),
-                    -Corners[3].x * Mathf.Max(0.015f, Sail.currentUnroll),
+                    -Corners[3].x * MastInstallationGeometry.HoistScale(Sail.currentUnroll),
                     (clew - tack).magnitude,
                     FishermanBillow.Deployment(Sail.currentUnroll),
                     leechPoints
@@ -540,24 +572,22 @@ namespace FishermansSail
                     Bones[PrototypeGeometry.LeechBone(row)].localPosition = leechPoints[
                         PrototypeGeometry.Rows - row
                     ];
-                // The separate bundle follows the same moving upper corners.
-                var bundle = BundleRenderer.transform;
-                var headSpan = Bones[0].localPosition - localHead;
-                bundle.localPosition = localHead;
-                bundle.localRotation = Quaternion.FromToRotation(Vector3.back, headSpan.normalized);
-                bundle.localScale = new Vector3(1, 1, headSpan.magnitude / -Corners[0].z);
-                stay.UpdateHalyard(Sail, HalyardAttachments);
-                if (state != 0 && !GameState.currentlyLoading)
-                    SupportLine.Draw(Bones[1].position, stay.AftSheetGuide);
+                HalyardAttachments[0].localPosition = Vector3.zero;
+                SheetAttachment.localPosition = Vector3.zero;
+                rigging.UpdateHalyard(HalyardAttachments, state == 0);
+                if (state == 0)
+                    SheetAttachment.position = rigging.Pair.ForeGuide.position;
+                if (!GameState.currentlyLoading)
+                    SupportLine.Draw(
+                        state == 0 ? rigging.Pair.AftGuide.position : Bones[1].position,
+                        rigging.Pair.AftGuide.position
+                    );
                 else
                     SupportLine.Hide();
             }
             else
             {
                 SupportLine.Hide();
-                BundleRenderer.transform.localPosition = Vector3.zero;
-                BundleRenderer.transform.localRotation = Quaternion.identity;
-                BundleRenderer.transform.localScale = Vector3.one;
             }
             UpdateShapeBones();
             RefreshAerodynamics();
@@ -569,9 +599,9 @@ namespace FishermansSail
                 Sail.cloth.ClearTransformMotion();
                 refreshRequested = false;
             }
-            Sail.cloth.enabled = state == 2;
+            Sail.cloth.enabled = supported && state == 2;
             var clothRenderer = Sail.cloth.GetComponent<SkinnedMeshRenderer>();
-            bool visible = !GameState.currentlyLoading;
+            bool visible = supported && !GameState.currentlyLoading;
             // WindCloth writes renderer.enabled in Update; select the correct
             // renderer here in LateUpdate so the disabled solver cannot leave
             // stale full-size triangles visible when the sail is struck.
@@ -579,7 +609,8 @@ namespace FishermansSail
             ReefedRenderer.sharedMaterial = clothRenderer.sharedMaterial;
             BundleRenderer.sharedMaterial = clothRenderer.sharedMaterial;
             ReefedRenderer.enabled = visible && state == 1;
-            BundleRenderer.enabled = visible && state == 0;
+            // Kept only as the native ChangeSailColor/SE reference; never display it.
+            BundleRenderer.enabled = false;
             lastRenderState = state;
         }
     }

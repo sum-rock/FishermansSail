@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace FishermansSail
@@ -66,6 +67,14 @@ namespace FishermansSail
     {
         internal readonly string BoatName;
         internal readonly StayGroupDefinition[] Groups;
+
+        // Historical stay donors describe physical mast pairs and supply control
+        // assets. Their rigging options are no longer installation prerequisites.
+        internal IEnumerable<IGrouping<int, StayVariantDefinition>> MastPairs(int foreIndex) =>
+            Groups
+                .SelectMany(g => g.Variants)
+                .Where(v => v.ForeSections.Contains(foreIndex))
+                .GroupBy(v => v.AftSections.Last());
 
         internal BoatRigDefinition(string boatName, params StayGroupDefinition[] groups)
         {

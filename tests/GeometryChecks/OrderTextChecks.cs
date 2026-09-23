@@ -31,6 +31,7 @@ internal static class OrderTextChecks
                 "192: " + mizzen + " -> Mizzenmast Triatic Stay (mizzen top stay 2)",
                 "(ERROR): " + fore + " requires: main mast 2",
                 "Formast Triatic Stay " + new string('x', 200),
+                "Fisherman's Sail Prototype (REQUIRES AN ACTIVE AFT MAST WITH HALYARD GUIDES)",
             }
         )
         {

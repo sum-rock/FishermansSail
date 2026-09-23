@@ -69,6 +69,14 @@ foreach (var type in assembly.GetTypes())
                 actual = info.declaringType;
             else if (parameter.Name == "__result")
                 actual = (target as MethodInfo)?.ReturnType;
+            else if (parameter.Name == "__exception")
+                actual = typeof(Exception);
+            else if (parameter.Name == "__state")
+                actual = type.GetMethods(all)
+                    .Single(m => m.IsDefined(typeof(HarmonyPrefix)))
+                    .GetParameters()
+                    .Single(p => p.Name == "__state")
+                    .ParameterType;
             else
                 actual = target
                     .GetParameters()
@@ -87,8 +95,8 @@ foreach (var type in assembly.GetTypes())
     }
     count++;
 }
-if (count != 16)
-    throw new Exception($"Expected all 16 patch classes, found {count}.");
+if (count != 18)
+    throw new Exception($"Expected all 18 patch classes, found {count}.");
 
 // Cloth mesh assignment belongs to inactive prefab construction. Replacing
 // a live Cloth renderer's mesh caused the 0.7.11 detach/reset regression even
@@ -171,25 +179,23 @@ Console.WriteLine(
     "PASS: actual order-text prefix, NANDFixes ordering, safe input for later HarmonyX prefixes, and native-list preservation."
 );
 
-var dataType = Assembly
-    .LoadFrom(Path.Combine(libraryDirs[0], "Assembly-CSharp.dll"))
-    .GetType("SaveBoatCustomizationData");
-var expand = assembly
-    .GetType("FishermansSail.StaySaveCapacityPatch")
-    .GetMethod("Postfix", BindingFlags.Static | BindingFlags.NonPublic);
-foreach (int length in new[] { 30, 128, 256, 384 })
-{
-    var data = Activator.CreateInstance(dataType);
-    var flags = new bool[length];
-    flags[5] = true;
-    dataType.GetField("masts").SetValue(data, flags);
-    expand.Invoke(null, new[] { data });
-    var result = (bool[])dataType.GetField("masts").GetValue(data);
-    if (result.Length != Math.Max(length, 256) || !result[5])
-        throw new Exception("Save capacity changed existing flags or shrank another mod's array.");
-}
+if (
+    assembly.GetType("FishermansSail.RegisterFishermanStaysPatch") != null
+    || assembly.GetType("FishermansSail.StaySaveCapacityPatch") != null
+    || assembly.GetType("FishermansSail.StayMountButtonsPatch") != null
+)
+    throw new Exception(
+        "Direct mast mounting must not register synthetic stays or extend saved mounts."
+    );
+var controlsPatch = assembly.GetType("FishermansSail.FishermanControlsPatch");
+if (
+    !controlsPatch
+        .GetMethod("Finalizer", BindingFlags.NonPublic | BindingFlags.Static)
+        .IsDefined(typeof(HarmonyFinalizer))
+)
+    throw new Exception("Mast sail-list restoration must run even when native binding throws.");
 Console.WriteLine(
-    $"PASS: {count} Harmony targets and injected argument types; old and extended save-array capacity."
+    $"PASS: {count} Harmony targets and injected argument types; independent-control restoration and no synthetic stay/save registration."
 );
 
 // Decode call operands without asking Harmony to create native patch stubs.

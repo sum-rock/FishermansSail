@@ -1,7 +1,43 @@
 # Fisherman's Sail
 
-A Sailwind mod with an experimental **Fisherman's Sail Prototype**, based on
-an independent clone of the game's **brig jib** (prefab 110, category `staysail`).
+A Sailwind mod providing a four-corner **Fisherman's Sail Prototype**, registered
+at sail prefab index **400** and based on the brig jib's native cloth and controls.
+
+Version **0.8.1** installs directly on a physical mast under **Other**. A supported
+active mast aft of the selected mast is required, with existing halyard fittings
+on both masts. No triatic stay is created or required. The normal mast capacity,
+vertical-space and collision rules apply. Resize the sail to fit between the
+masts, below their pulleys and above other sails.
+
+Version **0.8.1** corrects false shroud obstruction reports from 0.8.0. The
+shipyard checker now measures a thin neutral panel instead of full-height boxes
+filled to maximum billow on both sides. It excludes the supporting mast's radius
+plus 2 cm at the luff, where attachment contact is intentional. Other sail and
+rigging collisions still apply, including the native angular sweep. The sweep
+now also returns to the aligned neutral rotation instead of the donor's axes.
+An offline triangle/box check against the installed Brig assets reproduced the
+old shroud contacts; live Unity collision validation remains pending.
+
+The sail owns independent port/starboard sheets and a hoist winch. It rises from
+a small gathered pose near the forward mast's deck base and opens as it rises.
+The deck datum is estimated from that mast's hoist winch height. Fully lowered
+cloth is invisible; upper control-line ends park at the aft pulley and lower
+sheet ends at the forward pulley, retaining the deck-to-mast runs. The rope ends
+move to their parked positions when the cloth disappears. Fully raised cloth,
+corner twist, tension fitting and propulsion retain the previous behavior.
+
+Before upgrading from 0.7.x, remove the prototype sails and triatic stays and
+save using the previous DLL. Old triatic installations are not migrated. New
+mast installations use the game's native save format and need this mod to reload.
+Remove them and save before uninstalling. The user confirmed the 0.7.15 pulley
+routing looked correct in game; direct mast mounting and deck-up hoisting still
+need in-game validation in 0.8.1. The 0.8.0 test reached the shipyard preview
+but installation was blocked by the reported shroud collisions.
+
+## Earlier prototypes
+
+The following notes describe older releases and their historical stay-based setup.
+
 Version **0.4.0** replaces the triangular prototype with a four-corner trapezoid:
 a horizontal top, two 90° top corners, a 40° lower forward corner, and a 140°
 lower aft corner. The aft depth is half the top width; the forward depth is
@@ -371,224 +407,101 @@ These existing assemblies are not copied into the plugin output or committed her
 
 ## Install and verify
 
-1. Close Sailwind before replacing the plugin.
-2. Run the local installer from this repository to replace the installed DLL
-   with the current Release build:
+1. Remove old prototype sails and triatic stays before upgrading from 0.7.x.
+   Close Sailwind before replacing the plugin.
+2. Build and run the installer from this repository:
 
    ```sh
+   nix develop -c dotnet build -c Release
    ./install-local.sh
    ```
 
-   For another game directory, use `./install-local.sh "/path/to/Sailwind"`.
-   The script copies only `bin/Release/netstandard2.0/FishermansSail.dll`;
-   it does not build the mod. Build first if needed with
-   `nix develop -c dotnet build -c Release`.
+   Use `./install-local.sh "/path/to/Sailwind"` for another installation. The
+   script copies only `bin/Release/netstandard2.0/FishermansSail.dll`; it does not
+   build the mod.
+3. Launch the game and confirm `Fisherman's Sail 0.8.1 loaded!` in
+   `BepInEx/LogOutput.log`. Prefab registration should report source **110**, index
+   **400**, and **825** vertices.
+4. On the Brig, select the physical **foremast**, open **Other**, and select
+   **Fisherman's Sail Prototype**. The active mainmast supplies the aft support;
+   it need not carry another sail. On supported three-masted boats, a mainmast
+   can similarly use a mizzenmast aft. Unsupported profiles and masts without a
+   configured active aft support cannot accept the sail.
+5. Resize and move the preview using normal shipyard controls. The long forward
+   edge must fit the selected mast, both upper corners must stay below their
+   support pulleys, and the top width must leave clearance from the aft mast.
+   Native vertical overlap and actual collision errors must clear before fitting.
+   The base top width is 13.8 m and the forward depth is about 1.692 widths, so
+   reducing the default size will often be necessary.
+6. Confirm independent port/starboard sheets and a hoist winch. They are copies
+   offset 0.35 m from the donor controls (further offsets for additional fisherman
+   sails). Check access and clearance. A gaff or square sail on the same mast must
+   keep its own controls; adding/removing either sail must not steal winches.
+7. Hoist from fully lowered: cloth must rise from near deck level, open smoothly,
+   and reach the normal four-corner cut. Pause and reverse the hoist repeatedly.
+   At full strike no cloth or bundle should remain visible; the upper line ends
+   park at the aft pulley, the lower sheet ends at the forward pulley. Check that
+   the existing halyards still work and that the next hoist reconnects every line.
+8. Test port/starboard tacks, eased/tight sheets and weak wind. Keep useful forward
+   force, attached corners, free leech flex and smooth camber reversal. Repeat
+   with another sail on the mast, on another supported boat, after recoloring,
+   and after save/reload. Check for extra winches after canceling shipyard orders.
+9. Preview removing the aft support or either occupied mast: the order must reject
+   removal while the fisherman depends on it. Remove the sail first; both masts
+   should then be removable normally. Test optional topmasts both present and
+   absent. The `Fisherman mast rig` log identifies the active support and pulley.
 
-3. Launch Sailwind normally through Steam. Open `BepInEx/LogOutput.log` in the
-   game directory and look for the startup message:
-
-   ```text
-   [Info   :Fisherman's Sail] Fisherman's Sail 0.7.15 loaded!
-   ```
-
-4. Load a test save with access to the brig and a shipyard. When the game's prefab
-   directory initializes, the log should also contain:
-
-   ```text
-   Registered Fisherman's Sail Prototype: source=110, index=400, vertices=825, ...
-   ```
-
-   That line reports vertex and corner counts, aft depth, head camber, and sail areas.
-   It confirms registration, not that cloth simulation has been verified.
-
-5. At a shipyard, select the **Formast Triatic Stay**, open **Staysails**, and
-   choose **Fisherman's Sail Prototype**. It is available in each shipyard and
-   also integrates with All Sails in All Shipyards if installed. Check subsequent
-   menu pages if needed. The original **brig jib** remains available wherever it
-   was previously sold.
-6. Unfurl the sail and check the trapezoid orientation: the long edge and lowest
-   corner must be forward. Scale it uniformly to fit the available stay and clear
-   the deck and lower sails. The base top width remains the donor's install height
-   (13.8 m in the inspected game assets); smaller rigs will need scaling down.
-   Keep the default flip setting and align the forward top corner with the foremast.
-7. Sheet on both sides: the upper aft corner must swing away from the stay at
-   slightly less than the clew's angle. The upper sheets must rise to the aft
-   mast's existing upper halyard pulley and descend to the existing sheet controls,
-   with more sag on the slack side. Check that the original halyard still works
-   and repeat after adding/removing the optional topmast: the turn must remain at
-   an existing active pulley, never floating above an absent mast. The log's
-   `Fisherman upper sheet guide changed` entry identifies the chosen attachment.
-   The top and forward edges must billow between
-   their corners. The aft edge must show raw cloth without a rope joining its
-   corners, and should flex in the wind between its two controlled endpoints.
-   Tack repeatedly through the wind: the top/luff curve should pass smoothly to
-   the leeward side while every corner stays attached. Check for detachment,
-   repeated resets or flickering in light wind. Repeat with eased sheets and
-   after save/reload, and check separate fisherman sails on opposite tacks.
-   Ease the sheets and check that cloth beside the clew stays smooth instead
-   of folding over, and confirm the sail still produces forward force. Both forward
-   corners stay on the physical foremast axis. Furl halfway, strike fully,
-   and unfurl again. The lower corners should rise toward the top, leaving a narrow
-   gathered bundle when struck. Check for cloth explosions, detached ropes, or an
-   unexpected triangular remnant. Verify that only one sail visual is displayed
-   at each stage, including after changing color and after save/reload.
-8. Reenter the shipyard and confirm one prototype entry. Resize and recolor it;
-   save/reload and confirm its shape, scale, controls, and attachments return.
-   Confirm the original brig jib and angled stay still work independently.
-
-The prefab index remains **400**, so existing prototype sails load the new shape
-with their saved scale. Their larger outline may need refitting. Foremast anchoring
-is provided on fisherman stays; ordinary stays still accept the sail but cannot
-supply that dedicated mast attachment. Exact proportions assume uniform scaling.
-The native sail physics use the new area, with the force point moved to its centroid;
-aerodynamic tuning and Unity cloth behavior still need in-game validation.
-
-Sailwind saves the prefab index, so fitted prototypes require this mod on reload.
-Remove them at a shipyard and save before uninstalling.
-
-To find the message from a terminal:
-
-```sh
-rg -F "Fisherman's Sail" "$sailwind_dir/BepInEx/LogOutput.log"
-```
-
-If there is no fresh log, check that BepInEx itself starts through your usual Steam
-launch setup. If other plugins load but ours does not, check the DLL location and
-look for dependency or plugin-loading errors. Disk logging must be enabled with
-`Info` included in `BepInEx/config/BepInEx.cfg` under `[Logging.Disk]`.
-
-Rebuild and copy the DLL again after each change, then restart the game. Keep one
-installed copy of `FishermansSail.dll` to avoid duplicate-plugin warnings. After
-removing any fitted prototypes and saving, close the game and uninstall by removing
-`BepInEx/plugins/FishermansSail/FishermansSail.dll`.
-
-### Fit and verify the horizontal stay
-
-1. In shipyard rigging customization, find **(no Formast Triatic Stay)** and,
-   on a supported rear mast pair, **(no Mizzenmast Triatic Stay)**. Select the
-   variants matching the installed masts; each includes the original stay variant
-   for identification. Both groups can be installed together.
-   Saves without these parts start at None; existing selections retain their IDs. Prices and installation
-   costs match the source stay.
-2. Select the new horizontal mount in the sail menu and fit a staysail, including
-   **Fisherman's Sail Prototype**. Each fisherman stay accepts one sail. Resize
-   the sail to fit the available span using the normal shipyard controls.
-3. Install an angled stay and sail at the same time. Check both independently:
-   furl/unfurl and sheet to port/starboard. Sheet controls are beside the source stay's
-   winches; the furl control is beside the appropriate physical mast's furl winch.
-   Copies are offset 0.35 m toward the forward mast. Follow each halyard from its
-   control to that mast's guides and then the upper corner of the sail. Verify they are accessible and
-   clear of surrounding fittings on the vessel being tested.
-4. On a three-masted rig, install both triatic stays. Check that the Formast
-   entry spans foremast–mainmast and the Mizzenmast entry spans mainmast–mizzenmast.
-   Each must meet its shorter end mast at the selected upper mount height.
-   Check that both endpoints of each stay are at the same height relative to the boat,
-   and remain so while the boat heels. Inspect cloth, rope hardware, and collision
-   clearance with both sails deployed.
-5. Reopen the shipyard, cancel an order, and save/reload with both stays fitted.
-   Confirm the selection, sail size, and installation position return and that
-   no duplicate entries or winches appear. Remove the sail before removing its
-   stay or required mast. Repeat on a second vessel layout.
-
-The log reports `Registered Formast Triatic Stay` with the source index,
-new mount index, span, and geometric availability. This proves registration,
-not successful cloth simulation. Fitted fisherman stays and their sails require
-this mod when loading the save. Remove the sails, set the fisherman entries to
-None, and save before uninstalling.
+Automated checks do not simulate Unity Cloth or the live shipyard. In-game
+validation is required for the new installation, controls and hoisting behavior.
+The installed plugin is separate from the build output; install only after
+closing Sailwind. No build or test changes game saves or installed assemblies.
 
 ## How it works
 
-`Plugin.cs` declares the plugin metadata and Shipyard Expansion dependency, then
-installs Harmony patches at startup. `PrototypeSail.cs` clones the brig jib under
-an inactive template container after Shipyard Expansion configures its source
-components. Registration runs before All Sails in All Shipyards caches its sail
-list. Shipyard hooks append the prototype once, without replacing inventory entries.
+`PrototypeSail.cs` clones the brig jib under an inactive template, changes its
+category to `other`, and preserves prefab index 400. Registration runs after
+Shipyard Expansion and before All Sails in All Shipyards caches its list.
+The physical mass and angular damping explicitly retain the former staysail
+values despite the category change.
 
-`PrototypeGeometry.cs` generates a separate 24-by-32 quad grid (825 vertices,
-1,536 triangles), UVs, sorted bone weights, and cloth constraints. Only the four
-corners are pinned. The forward corners stay at the mast, while the aft corners
-follow the sheet-driven pose. The free leech has bounded travel around its
-tension-fitted skin curve. The top and forward edges can billow between their
-corners, and movement tapers through the cloth near the clew. The source brig
-mesh and prefab remain unchanged.
+`FishermanRigging.cs` resolves the selected mast and an active aft support from
+`BoatRigs/`. Profiles still name the existing donor stays as sources for sheet
+winch assets; those stays need not be installed. Connected mast sections share
+one support group, and only active mast/pulley references can be selected.
+Existing fittings are reused without moving or cloning the pulley hardware.
+Each fitted sail owns its cloned controls and cleans them up when removed.
 
-The prototype owns one shared cloth mesh. Installed sails retain that mesh and
-their bind poses throughout trimming and tacking. A grid of shaping bones carries
-the signed camber; the cloth can flex around those targets. Both the cloth and
-reefed renderers use these bones, with shaping offsets fading during furling.
-Wind changes do not replace the mesh or trigger a cloth reset.
+`MastInstallationPatches.cs` adds support/fit checks to the shipyard and protects
+supporting masts during removal previews. The native mast control-binding pass
+sees only ordinary sails; a Harmony finalizer restores the full sail list even
+if native binding throws, then attaches the fisherman's independent controls.
+The complete list remains the source for native mast capacity, overlap and saves.
+No synthetic mast IDs, new rigging parts or save-array expansion are registered.
 
-`FishermanSailRig.cs` replaces the cloned triangle animation with four procedural
-corner bones, intermediate leech bones driven by the tension solver, and shaping
-bones driven by apparent wind and the native reef control. It attaches the native sheets to the lower aft
-corner. A frame around the physical forward mast keeps the forward corners in
-place while the clew swings under wind and sheet control and the upper aft
-corner follows 85% of the native sheet angle, fading back to its neutral position
-with furling. Separate upper sheet visuals rise through the aft mast's existing
-upper halyard pulley to the same controls. This guide is separate from the triatic
-attachment used by the shaping frame. The tension solver
-fits the clew using both the foot and leech lengths, including during furling.
-The triatic mount remains the game's save and installation reference. The disabled donor Animator remains as
-Shipyard Expansion's scaling reference. The shipyard collider uses narrow strips
-inside the trapezoid; the wind-shadow box covers its bounds. Normals, bounds,
-and sail area are recalculated from the new mesh.
+`FishermanSailRig.cs` aligns the model with the physical forward mast and aft
+support, retaining the mast hinge and aerodynamic frame. Corner bones move from
+the deck gathering point to their fully set positions during hoisting. Partial
+hoists use the procedural skinned renderer; only fully raised sails use Cloth.
+The invisible bundle renderer is retained solely for native color/animation
+references. Rope endpoints remain separate leaves so native rope rotation cannot
+rotate skin bones.
 
-See the [BepInEx plugin tutorial](https://docs.bepinex.dev/articles/dev_guide/plugin_tutorial/2_plugin_start.html)
-and [logging guide](https://docs.bepinex.dev/articles/dev_guide/plugin_tutorial/3_logging.html).
+`PrototypeGeometry.cs`, `FishermanBillow.cs` and `FishermanTension.cs` retain the
+fixed cloth mesh, four pinned corners, free leech, bone-driven camber and coupled
+edge constraints. Meshes and bind poses never change on tacks. The order-text
+wrapping guard still protects long fisherman messages from NANDFixes recursion.
 
-To check the development environment:
-
-```sh
-nix flake check
-nix develop -c dotnet --list-sdks
-nix develop -c dotnet run --project tests/GeometryChecks -c Release
-```
-
-The geometry checks verify the revised cut, top camber, triangle winding, area,
-UVs, skin weights, attachment constraints, furl positions, independent arrays,
-and invalid inputs over multiple sizes. They run managed geometry code, not
-Unity's cloth simulation. Game geometry is not included in this repository.
-
-`FishermanStay.cs` creates the separate rigging groups after Shipyard Expansion's
-boat initialization. Static meshes/materials are shared without modification;
-mounts, controls, rope targets, and walking-collision geometry are independent.
-The mount retains the source stay's roll as its axis becomes horizontal,
-preserving the sail's existing orientation. Geometry is refreshed during ordinary
-and preview part changes.
-
-Mount indices use `128 + source mount index` (128–255), independently of sail
-prefab indices. Occupied indices stop that boat's registration. The mod extends
-the native mount buttons and save-array capacity, appends customization parts,
-and registers mounts before saved sails load. Existing entries are not reordered.
-
-Run the stay geometry checks together with the existing cloth checks, and check
-the Harmony targets and save-array capacity against the installed assemblies:
+Run the regression checks:
 
 ```sh
 nix develop -c dotnet run --project tests/GeometryChecks -c Release
 nix develop -c dotnet run --project tests/AssemblyChecks -c Release
+git diff --check
 ```
 
-For another game installation, use `-p:SailwindDir=/path/to/Sailwind` on both
-projects and pass that directory after `--` to AssemblyChecks as well. An optional
-local stay fixture can be supplied to GeometryChecks with
-`-- --stay-fixture /path/to/stays.json`. It is a JSON array containing `foreMount`,
-`foreBottom`, `foreTop`, `aftBottom`, and `aftTop` three-coordinate arrays in a
-common upright boat frame. Proprietary geometry is not committed. The local
-stock-asset fixture covers 15 upper-stay samples across boat instances.
-
-Compilation and geometry checks pass locally. In-game appearance, rigging,
-furling, and save/reload still require the manual checks above.
-
-Boat profile maintenance: edit the corresponding `BoatRigs/<Boat>.cs` file.
-Each group names the original customization part index; each variant names its
-source mount, fore/aft physical masts, stay kind, height reference, furl-control
-mast, and ordered fore/aft spar sections. Additional sections must be explicit
-required continuations and physically adjoin. Donor endpoint prerequisites are
-replaced with the resolved attachment sections; height/control masts and other
-prerequisites and exclusions are retained (excluding angled stays).
-Do not reorder existing groups or variants: saves address these by position.
-The resolver validates the complete profile before construction; construction
-failure rolls back all new groups on that boat to avoid shifting saved slots.
-Add new boat keys using the exact prefab name, without `(Clone)`, and extend the
-profile compatibility checks when adding support.
+Checks cover hoisting/fitting geometry, active guides, tension, skinning,
+aerodynamics, boat profiles, order text, installed Harmony signatures and cloth
+lifecycle restrictions. Historical stay-geometry fixtures remain available through
+`-- --stay-fixture /path/to/stays.json`; they validate shared mast geometry helpers,
+not current shipyard placement. Native mast winch interactions, deck clearance and
+Unity cloth motion still need the manual checks above.

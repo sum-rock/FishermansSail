@@ -71,7 +71,12 @@ namespace FishermansSail
                 var sail = clone.GetComponent<Sail>();
                 sail.prefabIndex = PrototypeIndex;
                 sail.sailName = DisplayName;
+                sail.category = SailCategory.other;
                 sail.obsolete = false;
+                // Changing the menu category must not change the donor's trim dynamics.
+                var body = sail.GetComponent<Rigidbody>();
+                body.mass = 0.1f;
+                body.angularDrag = 1f;
 
                 mesh = new Mesh { name = "FishermansSail Trapezoid Cloth" };
                 mesh.vertices = geometry.Vertices;
