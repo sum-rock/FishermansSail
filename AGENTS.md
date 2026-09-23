@@ -205,6 +205,13 @@ changes also test placement prerequisites and removal with/without an attached s
    wrapping of long order text, not simply the presence of a sail. Keep the
    iterative wrapping guard and its Harmony ordering/input protections. Retain
    native rejection of removing occupied rigging and never shrink extended save arrays.
+8. **Resolve control lines against active mast sections.** The 0.7.14 in-game
+   report showed an upper line turning above the Brig's visible mast. Its lookup
+   used the donor topmast even when installation required only the lower mainmast.
+   Search the profile's connected aft sections and check both mast and guide
+   activity when drawing; registration/part refresh can precede activation.
+   Version 0.7.15 addresses this selection bug, but the corrected pulley alignment
+   still needs in-game confirmation. Preserve the separate triatic shaping frame.
 
 For handoff, report the version, behavioral change, checks actually run, remaining
 in-game uncertainty, and the built DLL path. Update these notes when a later

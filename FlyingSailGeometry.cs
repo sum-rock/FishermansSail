@@ -1,8 +1,23 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace FishermansSail
 {
+    internal readonly struct SheetGuideState
+    {
+        internal readonly Vector3 Position;
+        internal readonly bool MastActive;
+        internal readonly bool AttachmentActive;
+
+        internal SheetGuideState(Vector3 position, bool mastActive, bool attachmentActive)
+        {
+            Position = position;
+            MastActive = mastActive;
+            AttachmentActive = attachmentActive;
+        }
+    }
+
     internal static class FlyingSailGeometry
     {
         internal static Vector3 ModelOffset(Vector3 pivot, Vector3 alignedHead) =>
@@ -10,6 +25,26 @@ namespace FishermansSail
 
         internal static bool PositionChanged(Vector3 a, Vector3 b) =>
             (a - b).sqrMagnitude > 0.000004f;
+
+        // Positions are relative to the boat. Measure height along its up axis,
+        // so heel cannot select a different pulley. Keep the first equal-height guide.
+        internal static int HighestGuideIndex(IReadOnlyList<SheetGuideState> guides, Vector3 boatUp)
+        {
+            int best = -1;
+            float height = float.NegativeInfinity;
+            for (int i = 0; i < guides.Count; i++)
+            {
+                var guide = guides[i];
+                if (!guide.MastActive || !guide.AttachmentActive)
+                    continue;
+                float candidate = Vector3.Dot(guide.Position, boatUp);
+                if (float.IsNaN(candidate) || float.IsInfinity(candidate) || candidate <= height)
+                    continue;
+                best = i;
+                height = candidate;
+            }
+            return best;
+        }
 
         internal static Vector3 UpperHead(
             Vector3 neutralHead,

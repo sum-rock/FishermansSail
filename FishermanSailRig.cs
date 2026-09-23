@@ -506,7 +506,9 @@ namespace FishermansSail
                     Sail.currentUnroll
                 );
                 var localHead = clothTransform.InverseTransformPoint(head);
-                var normal = Vector3.Cross(mastAxis, stay.AftSheetGuide - forePoint).normalized;
+                // Shaping stays in the triatic frame even when the visual sheet
+                // rises to a pulley above (and offset from) the stay attachment.
+                var normal = Vector3.Cross(mastAxis, stay.AftStayAttachment - forePoint).normalized;
                 var clew = Bones[3].localPosition;
                 var bow = FishermanBillow.SupportBow(
                     clew,

@@ -14,6 +14,28 @@ recalculates tangents. The geometry checks now enforce Unity's weight ordering
 as well as matching each weight to the correct corner. The visual artifact fix
 still needs an in-game check after restarting with the rebuilt DLL.
 
+Version **0.7.15** excludes disabled mast sections and pulley attachments from the
+upper control-line route. Version 0.7.14 was observed routing above the Brig's
+visible mast; its lookup could select the absent donor topmast even though the
+lower mainmast legally supported the stay. Guides now come from all configured
+aft sections, and eligibility is checked when drawing. The highest active guide
+is used, with changes logged by mast identity, attachment path and boat-relative
+position. Loading and mast-option changes can therefore select the lower-mast
+pulley without retaining a disabled upper guide. Hardware, halyards, corner motion,
+cloth and propulsion are retained. The correction still needs in-game validation
+on the reported Brig configuration, with and without its optional topmast.
+
+Version **0.7.14** routes the upper aft control lines upward through the existing
+upper halyard pulley on the aft mast, then down to their existing sheet controls.
+The highest valid halyard guide is selected relative to the boat, so heel does
+not change the selection. The pulley and its halyard connections are reused
+without copying or moving hardware. Sheet slack, corner motion, cloth shaping and
+propulsion are retained; the shaping frame still uses the triatic attachment.
+Mast changes refresh the guide reference. Missing guides retain the previous
+triatic route and produce one warning per stay instance. The upward lead is a
+visual routing change, not an added physical pulley constraint. Pulley alignment
+and halyard operation still require in-game validation.
+
 Version **0.7.13** moves billow through an initialized grid of shaping bones.
 Seven control columns across 33 rows give 231 bones, retaining the original
 corner and leech indices. Each vertex blends between two neighboring controls;
@@ -366,7 +388,7 @@ These existing assemblies are not copied into the plugin output or committed her
    game directory and look for the startup message:
 
    ```text
-   [Info   :Fisherman's Sail] Fisherman's Sail 0.7.13 loaded!
+   [Info   :Fisherman's Sail] Fisherman's Sail 0.7.15 loaded!
    ```
 
 4. Load a test save with access to the brig and a shipyard. When the game's prefab
@@ -390,9 +412,13 @@ These existing assemblies are not copied into the plugin output or committed her
    (13.8 m in the inspected game assets); smaller rigs will need scaling down.
    Keep the default flip setting and align the forward top corner with the foremast.
 7. Sheet on both sides: the upper aft corner must swing away from the stay at
-   slightly less than the clew's angle. The new upper sheets must pass through
-   the aft mast's triatic attachment and join the existing sheet controls, with
-   more sag on the slack side. The top and forward edges must billow between
+   slightly less than the clew's angle. The upper sheets must rise to the aft
+   mast's existing upper halyard pulley and descend to the existing sheet controls,
+   with more sag on the slack side. Check that the original halyard still works
+   and repeat after adding/removing the optional topmast: the turn must remain at
+   an existing active pulley, never floating above an absent mast. The log's
+   `Fisherman upper sheet guide changed` entry identifies the chosen attachment.
+   The top and forward edges must billow between
    their corners. The aft edge must show raw cloth without a rope joining its
    corners, and should flex in the wind between its two controlled endpoints.
    Tack repeatedly through the wind: the top/luff curve should pass smoothly to
@@ -498,8 +524,9 @@ bones driven by apparent wind and the native reef control. It attaches the nativ
 corner. A frame around the physical forward mast keeps the forward corners in
 place while the clew swings under wind and sheet control and the upper aft
 corner follows 85% of the native sheet angle, fading back to its neutral position
-with furling. Separate upper sheet visuals route through the aft mast's triatic
-attachment to the same controls. The tension solver
+with furling. Separate upper sheet visuals rise through the aft mast's existing
+upper halyard pulley to the same controls. This guide is separate from the triatic
+attachment used by the shaping frame. The tension solver
 fits the clew using both the foot and leech lengths, including during furling.
 The triatic mount remains the game's save and installation reference. The disabled donor Animator remains as
 Shipyard Expansion's scaling reference. The shipyard collider uses narrow strips

@@ -49,6 +49,10 @@ namespace FishermansSail
         private BoatRefs boat;
         private Transform visual;
         private Transform walkVisual;
+        private Transform aftSheetGuide;
+        private Tuple<Mast, Transform>[] sheetGuideCandidates = new Tuple<Mast, Transform>[0];
+        private SheetGuideState[] sheetGuideStates = new SheetGuideState[0];
+        private bool missingSheetGuideWarning;
         private readonly List<Tuple<Transform, Transform>> anchors =
             new List<Tuple<Transform, Transform>>();
         private readonly List<Tuple<GPButtonRopeWinch, GPButtonRopeWinch>> controls =
@@ -309,12 +313,91 @@ namespace FishermansSail
             axis = boat.transform.TransformDirection((top - bottom).normalized);
         }
 
-        internal Vector3 AftSheetGuide => Mount.transform.position;
+        internal Vector3 AftStayAttachment => Mount.transform.position;
+
+        internal Vector3 AftSheetGuide
+        {
+            get
+            {
+                // RefreshParts can run before the selected mast options become
+                // active. Check eligibility at draw time, including after loading.
+                SelectSheetGuide();
+                if (aftSheetGuide)
+                    return aftSheetGuide.position;
+                if (!missingSheetGuideWarning)
+                {
+                    Plugin.Log.LogWarning(
+                        $"Fisherman stay {source.name} has no active aft mast halyard guide; upper sheets retain the triatic attachment route."
+                    );
+                    missingSheetGuideWarning = true;
+                }
+                return AftStayAttachment;
+            }
+        }
+
+        private void RefreshSheetGuide()
+        {
+            // The donor topmast can be absent while its required lower section
+            // supports this stay. Gather both, retaining their owning sections.
+            sheetGuideCandidates = aftSections
+                .Where(section => section)
+                .SelectMany(section =>
+                    (section.mastReefAtt ?? new Transform[0])
+                        .Concat(section.mastReefAttExtension ?? new Transform[0])
+                        .Where(guide => guide)
+                        .Select(guide => Tuple.Create(section, guide))
+                )
+                .Distinct()
+                .ToArray();
+            sheetGuideStates = new SheetGuideState[sheetGuideCandidates.Length];
+        }
+
+        private void SelectSheetGuide()
+        {
+            var origin = boat.transform.position;
+            for (int i = 0; i < sheetGuideCandidates.Length; i++)
+            {
+                var section = sheetGuideCandidates[i].Item1;
+                var guide = sheetGuideCandidates[i].Item2;
+                sheetGuideStates[i] = new SheetGuideState(
+                    guide ? guide.position - origin : Vector3.zero,
+                    section && section.gameObject.activeInHierarchy,
+                    guide && guide.gameObject.activeInHierarchy
+                );
+            }
+            int index = FlyingSailGeometry.HighestGuideIndex(sheetGuideStates, boat.transform.up);
+            var selected = index >= 0 ? sheetGuideCandidates[index].Item2 : null;
+            if (selected == aftSheetGuide)
+                return;
+            aftSheetGuide = selected;
+            if (!selected)
+            {
+                Plugin.Log.LogInfo(
+                    $"Fisherman upper sheet guide changed: boat={boat.name}, stay={source.orderIndex}, guide=triatic fallback."
+                );
+                return;
+            }
+            var mast = sheetGuideCandidates[index].Item1;
+            var path = new List<string>();
+            for (
+                var current = selected;
+                current && current != boat.transform;
+                current = current.parent
+            )
+                path.Add(current.name);
+            path.Reverse();
+            Plugin.Log.LogInfo(
+                $"Fisherman upper sheet guide changed: boat={boat.name}, stay={source.orderIndex}, "
+                    + $"mast={mast.orderIndex} ({mast.name}), guide={string.Join("/", path)}, "
+                    + $"boatPosition={boat.transform.InverseTransformPoint(selected.position).ToString("F3")}."
+            );
+        }
 
         internal void Refresh()
         {
             try
             {
+                RefreshSheetGuide();
                 float height = boat
                     .transform.InverseTransformPoint(heightReference.transform.position)
                     .y;
