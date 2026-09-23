@@ -72,6 +72,14 @@ namespace FishermansSail
                 sail.sailName = DisplayName;
                 sail.category = SailCategory.other;
                 sail.obsolete = false;
+                sail.minAngle = -FishermanTravel.MaximumAngle;
+                sail.maxAngle = FishermanTravel.MaximumAngle;
+                var hinge = sail.GetComponent<HingeJoint>();
+                var limits = hinge.limits;
+                limits.min = sail.minAngle;
+                limits.max = sail.maxAngle;
+                hinge.limits = limits;
+                hinge.useLimits = true;
                 // Changing the menu category must not change the donor's trim dynamics.
                 var body = sail.GetComponent<Rigidbody>();
                 body.mass = 0.1f;

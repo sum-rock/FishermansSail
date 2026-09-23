@@ -9,6 +9,7 @@
     <Compile Include="../../PrototypeGeometry.cs" Link="PrototypeGeometry.cs" />
     <Compile Include="../../FishermanOrderText.cs" Link="FishermanOrderText.cs" />
     <Compile Include="../../FlyingSailGeometry.cs" Link="FlyingSailGeometry.cs" />
+    <Compile Include="../../FishermanTravel.cs" Link="FishermanTravel.cs" />
     <Compile Include="../../MastInstallationGeometry.cs" Link="MastInstallationGeometry.cs" />
     <Compile Include="../../FishermanBillow.cs" Link="FishermanBillow.cs" />
     <Compile Include="../../FishermanTension.cs" Link="FishermanTension.cs" />

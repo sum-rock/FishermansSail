@@ -31,6 +31,7 @@ Follow current user instructions over historical design choices
 | Camber response, movement limits and edge curves               | `FishermanBillow.cs`                                            |
 | Coupled foot/leech length constraints                          | `FishermanTension.cs`                                           |
 | Mast rotation, upper-corner motion and upper rope routes       | `FlyingSailGeometry.cs`, `FishermanSupportLine.cs`              |
+| Sheet travel and post-sway hinge limits                       | `FishermanTravel.cs`, `FishermanTravelPatch.cs`                |
 | Aerodynamic frame and scoped native force patches              | `FishermanAerodynamics.cs`, `AerodynamicPatches.cs`             |
 | Boat-specific mast pairs, active guides and independent controls | `BoatRigs/`, `FishermanRigging.cs`                              |
 | Mast installation, support protection and deck-up hoisting     | `MastInstallationPatches.cs`, `MastInstallationGeometry.cs`, `FlyingSailPatches.cs` |
@@ -233,6 +234,13 @@ support-mast removal, deck-up hoisting and parked ropes with invisible struck cl
     and overlap rules. Preserve the aligned neutral rotation when the native
     sweep completes. The user approved the 0.8.1 in-game result; the 0.8.2
     cleanup still needs a fresh in-game check.
+
+11. **Keep outward travel within 40 degrees per side.** Version 0.8.3 caps the
+    fisherman prefab, collision sweep, restored limits and final native hinge
+    limits. `JibAngleMaster.Update` adds sway after combining sheets, so reducing
+    only `Sail.minAngle/maxAngle` is insufficient. Preserve tighter collision
+    restrictions and apply the final cap after sway without resetting Cloth or
+    snapping transforms. The 0.8.3 limit still needs in-game validation.
 
 For handoff, report the version, behavioral change, checks actually run, remaining
 in-game uncertainty, and the built DLL path. Update these notes when a later

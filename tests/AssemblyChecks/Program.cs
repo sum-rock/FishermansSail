@@ -95,8 +95,48 @@ foreach (var type in assembly.GetTypes())
     }
     count++;
 }
-if (count != 18)
-    throw new Exception($"Expected all 18 patch classes, found {count}.");
+if (count != 19)
+    throw new Exception($"Expected all 19 patch classes, found {count}.");
+
+var travelPatch = assembly.GetType("FishermansSail.FishermanTravelPatch");
+var travelTarget = travelPatch.GetCustomAttribute<HarmonyPatch>().info;
+var travelPrefix = travelPatch.GetMethod("Prefix", BindingFlags.Static | BindingFlags.NonPublic);
+var travelPostfix = travelPatch.GetMethod("Postfix", BindingFlags.Static | BindingFlags.NonPublic);
+if (
+    travelTarget.declaringType.Name != "JibAngleMaster"
+    || travelTarget.methodName != "Update"
+    || !travelPrefix.IsDefined(typeof(HarmonyPrefix))
+    || !travelPostfix.IsDefined(typeof(HarmonyPostfix))
+)
+    throw new Exception("Travel protection must surround the native sheet and sway update.");
+var prefixCalls = CalledMethods(travelPrefix).ToArray();
+var postfixCalls = CalledMethods(travelPostfix).ToArray();
+if (
+    !prefixCalls.Any(m =>
+        m.Name == "GetComponent"
+        && m.IsGenericMethod
+        && m.GetGenericArguments().Single().FullName == "FishermansSail.FishermanSailRig"
+    )
+    || !prefixCalls.Any(m =>
+        m.DeclaringType.FullName == "FishermansSail.FishermanTravel" && m.Name == "Clamp"
+    )
+    || !postfixCalls.Any(m =>
+        m.DeclaringType.FullName == "FishermansSail.FishermanTravel" && m.Name == "ConstrainHinge"
+    )
+    || !postfixCalls.Any(m =>
+        m.DeclaringType.FullName == "UnityEngine.HingeJoint" && m.Name == "set_limits"
+    )
+)
+    throw new Exception("Missing fisherman scoping or live hinge travel enforcement.");
+foreach (var called in prefixCalls.Concat(postfixCalls))
+    if (
+        called.DeclaringType.FullName is "UnityEngine.Cloth" or "UnityEngine.Transform"
+        || called.Name == "ResetHingeRestingRot"
+    )
+        throw new Exception("Travel protection must not reset cloth or snap the sail transform.");
+Console.WriteLine(
+    "PASS: fisherman travel wraps native sheet/sway Update and constrains the hinge without resetting cloth or transforms."
+);
 
 // Cloth mesh assignment belongs to inactive prefab construction. Replacing
 // a live Cloth renderer's mesh caused the 0.7.11 detach/reset regression even

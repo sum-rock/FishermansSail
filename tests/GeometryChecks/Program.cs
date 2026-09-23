@@ -9,6 +9,7 @@ internal static class Program
         RigChecks.Run();
         OrderTextChecks.Run();
         FlyingSailChecks.Run();
+        TravelChecks.Run();
         MastInstallationChecks.Run();
         BillowChecks.Run();
         ShapingChecks.Run();

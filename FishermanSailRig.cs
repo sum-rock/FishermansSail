@@ -214,6 +214,10 @@ namespace FishermansSail
 
         private static void ConfigureCollision(ShipyardSailColChecker checker, float width)
         {
+            checker.startMinAngle = -FishermanTravel.MaximumAngle;
+            checker.startMaxAngle = FishermanTravel.MaximumAngle;
+            checker.colAngleMin = checker.startMinAngle;
+            checker.colAngleMax = checker.startMaxAngle;
             // Use narrow inscribed strips rather than the old triangular clew box.
             // Keep the checker outside the animated bones: it measures the fully set sail.
             var root = checker.transform;

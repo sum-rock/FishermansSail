@@ -1,7 +1,7 @@
 # Fisherman's Sail
 
 A Sailwind mod providing a four-corner **Fisherman's Sail Prototype**, installed
-on a physical mast under **Other**. Version **0.8.2** targets BepInEx 5 and
+on a physical mast under **Other**. Version **0.8.3** targets BepInEx 5 and
 Shipyard Expansion, using the brig jib's native cloth and control assets.
 
 The selected mast needs a supported active mast aft of it, with halyard fittings
@@ -17,6 +17,11 @@ invisible; upper control-line ends park at the aft pulley and lower sheet ends
 at the forward pulley, retaining the deck-to-mast runs. Existing pulley hardware
 is reused. Only the four corners are pinned, leaving the edges free to billow.
 
+Outward rotation is limited to **40 degrees on each side** of the neutral
+fore-and-aft alignment along the hull. Obstructions can restrict travel further.
+The limit applies to both sheet controls, native sway, the shipyard preview and
+previously saved sails, without resetting the cloth or snapping the sail's pose.
+
 The neutral cut has a horizontal head, a forward depth of approximately 1.692
 times its width, and an aft depth equal to its width. The default width is
 13.8 m, so resizing is often necessary. The upper aft corner follows 85% of the
@@ -28,10 +33,10 @@ supporting mast radius plus 2 cm at the luff, where attachment contact is
 intentional. Other rigging and sail collisions still apply. Its angular sweep
 returns to the panel's aligned neutral position and rotation.
 
-The user confirmed the 0.8.1 result looked good in game. Version 0.8.2 simplifies
-support profiles, removes unused geometry, and updates the regression checks to
-exercise deck-up hoisting. A fresh in-game check of this cleanup remains pending;
-automated checks do not simulate Unity Cloth or the live shipyard.
+The user confirmed the 0.8.1 result looked good in game. Version 0.8.3 adds the
+40-degree travel limit on top of the 0.8.2 support-profile cleanup. In-game
+validation of both changes remains pending; automated checks do not simulate
+Unity Cloth, hinge physics or the live shipyard.
 
 ## Development environment
 
@@ -114,7 +119,7 @@ These existing assemblies are not copied into the plugin output or committed her
    Use `./install-local.sh "/path/to/Sailwind"` for another installation. The
    script copies only `bin/Release/netstandard2.0/FishermansSail.dll`; it does not
    build the mod. Builds and tests do not replace the installed DLL or change saves.
-2. Launch the game and confirm `Fisherman's Sail 0.8.2 loaded!` in
+2. Launch the game and confirm `Fisherman's Sail 0.8.3 loaded!` in
    `BepInEx/LogOutput.log`. Registration reports source **110**, sail prefab index
    **400**, and **825** vertices.
 3. On the Brig, select the physical **foremast**, open **Other**, and choose
@@ -133,7 +138,10 @@ These existing assemblies are not copied into the plugin output or committed her
 7. Test repeated port/starboard tacks, eased/tight sheets, weak wind, another sail
    on the same mast, multiple fisherman sails, resizing, recoloring and save/reload.
    Check useful forward force, attached corners, free leech movement and smooth
-   camber reversal. Repeat on another supported boat.
+   camber reversal. With both sheets fully eased, confirm the sail stops near
+   40 degrees to port and starboard (or sooner where obstructed), including after
+   loading an older save. Tightening should remain smooth. Check that shipyard
+   rotation angles are at most 40 degrees per side. Repeat on another supported boat.
 8. Preview removing either supporting mast or an occupied topmast: removal must
    be rejected until the sail is removed. Test optional topmasts present and absent,
    and check for extra winches after canceling orders. The `Fisherman mast rig`
@@ -162,6 +170,8 @@ Keep this mod installed to load them; remove its sails and save before uninstall
   procedural skinned renderer; fully raised sails use Unity Cloth. A hidden,
   meshless renderer supplies the native furled-color reference. Rope endpoints
   are separate leaves, so native rope rotation cannot rotate skin bones.
+- `FishermanTravel.cs` and its patch bound native sheet limits and the final
+  hinge limits after sway, preserving narrower collision limits on each side.
 - `PrototypeGeometry.cs`, `FishermanBillow.cs` and `FishermanTension.cs` define the
   fixed mesh, camber response and coupled edge constraints. `FishermanAerodynamics.cs`
   and `AerodynamicPatches.cs` align native forces with the posed sail.
@@ -176,5 +186,5 @@ git diff --check
 ```
 
 Checks cover mast support/control mappings, fitting, collision bounds, active
-pulley selection, hoisting, skinning, tension, shaping, aerodynamics, safe order
+pulley selection, hoisting, travel limits, skinning, tension, shaping, aerodynamics, safe order
 text, installed Harmony signatures and cloth lifecycle restrictions.
