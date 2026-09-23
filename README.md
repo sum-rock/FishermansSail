@@ -350,15 +350,17 @@ These existing assemblies are not copied into the plugin output or committed her
 ## Install and verify
 
 1. Close Sailwind before replacing the plugin.
-2. Copy the compiled DLL into its own directory under `BepInEx/plugins`:
+2. Run the local installer from this repository to replace the installed DLL
+   with the current Release build:
 
    ```sh
-   sailwind_dir="$HOME/.local/share/Steam/steamapps/common/Sailwind"
-   install -Dm644 bin/Release/netstandard2.0/FishermansSail.dll \
-     "$sailwind_dir/BepInEx/plugins/FishermansSail/FishermansSail.dll"
+   ./install-local.sh
    ```
 
-   Change `sailwind_dir` if your game is elsewhere. Only the plugin DLL is needed.
+   For another game directory, use `./install-local.sh "/path/to/Sailwind"`.
+   The script copies only `bin/Release/netstandard2.0/FishermansSail.dll`;
+   it does not build the mod. Build first if needed with
+   `nix develop -c dotnet build -c Release`.
 
 3. Launch Sailwind normally through Steam. Open `BepInEx/LogOutput.log` in the
    game directory and look for the startup message:
