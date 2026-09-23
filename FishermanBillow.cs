@@ -8,7 +8,7 @@ namespace FishermansSail
         // The free leech has up to 6% width of travel about its fitted curve.
         // Reduce movement progressively through the cloth near the clew.
         // Moving skin targets carry the top/luff camber across the sail.
-        // Their travel can now stay inside the loaded curve at its peaks,
+        // Their travel can remain inside the loaded curve at its peaks,
         // while the foot, free leech and clew reinforcement retain their limits.
         internal static float ClothTravel(float width, float u, float v) =>
             width
@@ -70,12 +70,12 @@ namespace FishermansSail
             Vector3.Lerp(fore, aft, u)
             + normal * (PrototypeGeometry.RestCamber(width, u, v) * camber);
 
-        internal static Vector3 SupportPoint(Vector3 clew, Vector3 stay, Vector3 bow, float t) =>
-            clew + (stay - clew) * t + bow * (4 * t * (1 - t));
+        internal static Vector3 SupportPoint(Vector3 clew, Vector3 head, Vector3 bow, float t) =>
+            clew + (head - clew) * t + bow * (4 * t * (1 - t));
 
         internal static Vector3 SupportBow(
             Vector3 clew,
-            Vector3 stay,
+            Vector3 head,
             Vector3 normal,
             Vector3 down,
             float width,
@@ -85,7 +85,7 @@ namespace FishermansSail
             float pressure = Math.Min(1, Math.Abs(load));
             // A modest outward arch, bounded by the clew's actual off-center
             // displacement. Its lateral derivative always points back inboard.
-            return normal * (Vector3.Dot(clew - stay, normal) * 0.12f * pressure)
+            return normal * (Vector3.Dot(clew - head, normal) * 0.12f * pressure)
                 + down * (width * 0.02f * pressure);
         }
     }

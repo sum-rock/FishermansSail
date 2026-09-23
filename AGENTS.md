@@ -16,21 +16,25 @@ Follow current user instructions over historical design choices
   Do not repeatedly request confirmation for routine work already authorized.
 - Do not commit, push, change saves, or replace installed game files merely as part
   of a build. Do not include proprietary assemblies or extracted game assets in Git.
+- The sail installs on physical masts under Other and requires an active aft mast.
+  The user committed to this approach after the 0.8.1 in-game result. Preserve
+  normal vertical mast-space rules and native mast save slots. Version 0.8.2
+  simplifies the support profiles and retains only the current installation model.
 
 ## Code map
 
 | Area                                                           | Main files                                                      |
 | -------------------------------------------------------------- | --------------------------------------------------------------- |
 | Plugin metadata, registration and independent assets           | `Plugin.cs`, `PrototypeSail.cs`                                 |
-| Mesh, skin weights, pins, bundle and bone indexing             | `PrototypeGeometry.cs`                                          |
+| Mesh, skin weights, pins and bone indexing             | `PrototypeGeometry.cs`                                          |
 | Live rig, corners, shaping bones, furling and render selection | `FishermanSailRig.cs`                                           |
 | Camber response, movement limits and edge curves               | `FishermanBillow.cs`                                            |
 | Coupled foot/leech length constraints                          | `FishermanTension.cs`                                           |
 | Mast rotation, upper-corner motion and upper rope routes       | `FlyingSailGeometry.cs`, `FishermanSupportLine.cs`              |
 | Aerodynamic frame and scoped native force patches              | `FishermanAerodynamics.cs`, `AerodynamicPatches.cs`             |
-| Boat-specific rig definitions and physical mount resolution    | `BoatRigs/`, `FishermanStay.cs`, `StayGeometry.cs`              |
-| Placement, option prerequisites and save integration           | `StayRequirements.cs`, `StayPatches.cs`, `FlyingSailPatches.cs` |
-| Shipyard order-text freeze protection                          | `StayOrderText.cs`, `StayOrderTextPatch.cs`                     |
+| Boat-specific mast pairs, active guides and independent controls | `BoatRigs/`, `FishermanRigging.cs`                              |
+| Mast installation, support protection and deck-up hoisting     | `MastInstallationPatches.cs`, `MastInstallationGeometry.cs`, `FlyingSailPatches.cs` |
+| Shipyard order-text freeze protection                          | `FishermanOrderText.cs`, `FishermanOrderTextPatch.cs`                     |
 
 ## Build and checks
 
@@ -64,7 +68,7 @@ git diff --check
 
 `tests/GeometryChecks` exercises the pure geometry, skinning, tension, shaping,
 wind-frame, boat-profile and text-wrapping logic. `tests/AssemblyChecks` checks
-actual installed method signatures, Harmony injections, save-array handling and
+actual installed method signatures, Harmony injections, control-list restoration and
 cloth lifecycle restrictions without starting Unity. Direct IL decoding is used
 for lifecycle checks; asking Harmony to create native patch stubs failed in this
 standalone test environment.
@@ -101,7 +105,7 @@ points, **not guaranteed dependencies**; inspect them before running and recreat
 them if `/tmp` has been cleared:
 
 - `/tmp/fisherman-inspect/`: a small `ICSharpCode.Decompiler` console helper,
-  decompiled classes, asset-inspection scripts and a stay fixture.
+  decompiled classes and asset-inspection scripts.
 - `/tmp/fisherman-assets-env/bin/python`: a Python environment with UnityPy for
   reading serialized scene/prefab assets and tracing object/path IDs.
 - `/tmp/fisherman-freeze-20260921-200022/`: captured player/BepInEx logs and thread
@@ -172,8 +176,9 @@ For a runtime sail change, verify on the Brig first when following the current
 test setup, then relevant additional boat profiles. Check repeated port/starboard
 tacks, eased/tight sheets, weak wind, partial furling, full strike, redeployment,
 multiple sails, resizing/recoloring and save/reload. Keep the four corners and
-ropes attached, the free leech flexible, and useful forward force intact. For stay
-changes also test placement prerequisites and removal with/without an attached sail.
+ropes attached, the free leech flexible, and useful forward force intact. Check
+independent controls alongside other mast sails, ordinary vertical overlap,
+support-mast removal, deck-up hoisting and parked ropes with invisible struck cloth.
 
 ## Lessons that must survive future changes
 
@@ -200,11 +205,34 @@ changes also test placement prerequisites and removal with/without an attached s
    create fresh Cloth for the new topology, retain the donor Animator as Shipyard
    Expansion's scaling reference, and preserve `SailShadowCol`'s expected parent
    hierarchy. Shared meshes belong to the template owner, not installed instances.
-7. **Do not regress shipyard/save compatibility.** Preserve option ordering and
-   stable IDs. The shipyard removal freeze was traced to NANDFixes' recursive
+7. **Do not regress shipyard/save compatibility.** Keep sail prefab index 400;
+   use native mast save slots.
+   The shipyard removal freeze was traced to NANDFixes' recursive
    wrapping of long order text, not simply the presence of a sail. Keep the
    iterative wrapping guard and its Harmony ordering/input protections. Retain
-   native rejection of removing occupied rigging and never shrink extended save arrays.
+   native rejection of removing occupied masts. Protect the aft support too.
+8. **Resolve control lines against active mast sections.** The 0.7.14 in-game
+   report showed an upper line turning above the Brig's visible mast. Its lookup
+   used the donor topmast even when installation required only the lower mainmast.
+   Search the profile's connected aft sections and check both mast and guide
+   activity when drawing; registration/part refresh can precede activation.
+   The user confirmed the pulley correction and later the 0.8.1 mast-mounted
+   result looked good in game. Keep active-section selection when changing profiles.
+9. **Keep fisherman controls independent of mast sail order.** Native binding
+   indexes winch arrays by mastOrder and can exceed dual-sheet array capacity.
+   Exclude fisherman sails only during that binding call and always restore the
+   full list in the finalizer. Capacity, collision, overlap and saving still use
+   the full list. Each sail owns and destroys its extra controls. A hidden, meshless
+   renderer remains because native recoloring expects a furled renderer.
+
+10. **Keep shipyard collision checks separate from billow bounds.** In 0.8.0,
+    full-height strips filled to maximum camber falsely contacted Brig shrouds.
+    Offline installed-mesh checks reproduced this; spreader roots also contacted
+    the intentional mast attachment area. Version 0.8.1 uses a thin neutral panel
+    clipped by the supporting mast radius plus 2 cm, retaining other collision
+    and overlap rules. Preserve the aligned neutral rotation when the native
+    sweep completes. The user approved the 0.8.1 in-game result; the 0.8.2
+    cleanup still needs a fresh in-game check.
 
 For handoff, report the version, behavioral change, checks actually run, remaining
 in-game uncertainty, and the built DLL path. Update these notes when a later

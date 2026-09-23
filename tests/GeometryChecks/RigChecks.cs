@@ -6,10 +6,6 @@ internal static class RigChecks
 {
     internal static void Run()
     {
-        CheckAttachmentRequirements();
-        OrderTextChecks.Run();
-        // Recorded v0.5.3 appended group/option sequence. Save files use positions,
-        // so sorting these groups globally or omitting one breaks compatibility.
         string[] names =
         {
             "BOAT medi medium (50)",
@@ -20,15 +16,16 @@ internal static class RigChecks
             "BOAT LEOPARD (207)",
             "BOAT Shroud Large",
         };
+        // Live mast-section and native winch-source mapping, in selection order.
         string[] layouts =
         {
-            "8:15,16,18,20;10:22,24;26:61,62,63,64;27:65,66",
-            "5:16,61;7:5,6;15:65,66",
-            "7:10;9:12,55,58,73;11:71",
-            "19:60,67,71,81,82;21:58,68,79;8:54,61,66",
-            "6:51,58,65",
-            "22:18;21:17;23:19",
-            "21:25",
+            "15:3>5;16:3>4;18:2>5;20:2>4;22:4>7;24:4>6;61:3>56,5;62:3>58,4;63:2>56,5;64:2>58,4;65:4>59,7;66:4>60,6",
+            "16:9>10;61:58>11;5:10>12;6:11>12;65:10>53,12;66:11>53,12",
+            "10:1>2;12:2>3;55:51>52;58:51>3;73:1>52;71:52>4",
+            "60:10>59,55;67:11>59,55;71:10>70,69;81:11>80,12;82:10>80,12;58:51>14,11;68:62>14,11;79:51>14,11;54:10>55;61:10>69;66:11>55",
+            "51:8>5;58:5>57;65:8>6",
+            "18:7>12;17:8>12;19:7>11",
+            "25:7>9",
         };
         for (int i = 0; i < names.Length; i++)
         {
@@ -39,22 +36,26 @@ internal static class RigChecks
             );
             string actual = string.Join(
                 ";",
-                profile.Groups.Select(g =>
-                    g.SourcePart + ":" + string.Join(",", g.Variants.Select(v => v.Donor))
+                profile.Supports.Select(s =>
+                    s.SheetControlSource
+                    + ":"
+                    + string.Join(",", s.ForeSections)
+                    + ">"
+                    + string.Join(",", s.AftSections)
                 )
             );
-            Assert(actual == layouts[i], "Saved part or option ordering changed: " + names[i]);
-            foreach (var v in profile.Groups.SelectMany(g => g.Variants))
+            Assert(actual == layouts[i], "Mast or control mapping changed: " + names[i]);
+            foreach (int fore in profile.Supports.SelectMany(s => s.ForeSections).Distinct())
             {
-                Assert(
-                    StayGeometry.MountIndex(v.Donor) == 128 + v.Donor,
-                    "Saved mount identity changed."
-                );
-                Assert(
-                    v.HeightReference == (v.IsMizzen ? v.Aft : v.Fore),
-                    "Wrong height reference."
-                );
-                Assert(v.FurlControl == v.HeightReference, "Wrong furl control mast.");
+                var pairs = profile.MastPairs(fore).ToArray();
+                Assert(pairs.Length > 0, "Supported foremast lost all aft supports.");
+                foreach (var pair in pairs)
+                    Assert(
+                        pair.All(s =>
+                            s.ForeSections.Contains(fore) && s.AftSections.Last() == pair.Key
+                        ),
+                        "Mast pair mixed unrelated support sections."
+                    );
             }
         }
         Assert(
@@ -62,79 +63,22 @@ internal static class RigChecks
                 && BoatRigCatalog.Find(null) == null,
             "Unknown boats must not use guessed profiles."
         );
-        var brig = BoatRigCatalog.Find(names[0]).Groups.SelectMany(g => g.Variants).ToArray();
+        var brig = BoatRigCatalog.Find(names[0]).Supports;
         Assert(
-            brig.Single(v => v.Donor == 61).AftSections.SequenceEqual(new[] { 56, 5 }),
-            "Brig topmast lost its lower mainmast attachment."
+            brig.Single(s => s.SheetControlSource == 61).AftSections.SequenceEqual(new[] { 56, 5 }),
+            "Brig topmast lost its lower mainmast support."
         );
         Assert(
-            brig.Single(v => v.Donor == 62).AftSections.SequenceEqual(new[] { 58, 4 }),
+            brig.Single(s => s.SheetControlSource == 62).AftSections.SequenceEqual(new[] { 58, 4 }),
             "Alternate Brig topmast uses wrong lower section."
         );
-        var rear = BoatRigCatalog
-            .Find(names[2])
-            .Groups.SelectMany(g => g.Variants)
-            .Single(v => v.Donor == 71);
-        Assert(
-            rear.Fore == 52 && rear.Aft == 4 && rear.IsMizzen,
-            "Jong rear mast pair is reversed."
-        );
-        Reject(() =>
-            new BoatRigDefinition(
-                "duplicate",
-                new StayGroupDefinition(0, brig[0]),
-                new StayGroupDefinition(1, brig[0])
-            )
-        );
-        Reject(() => new StayVariantDefinition(1, 2, 2, false, 2, 2, new[] { 2 }, new[] { 2 }));
+        Reject(() => new BoatRigDefinition("duplicate", brig[0], brig[0]));
+        Reject(() => new BoatRigDefinition("empty"));
+        Reject(() => new MastSupportDefinition(1, new[] { 2 }, new[] { 2 }));
+        Reject(() => new MastSupportDefinition(-1, new[] { 2 }, new[] { 3 }));
+        Reject(() => new MastSupportDefinition(1, Array.Empty<int>(), new[] { 3 }));
         Console.WriteLine(
-            "PASS: seven boat profiles, saved group/option ordering, mount identities, explicit mast sections and unknown-boat handling."
-        );
-    }
-
-    private static void CheckAttachmentRequirements()
-    {
-        var brig = BoatRigCatalog.Find("BOAT medi medium (50)");
-        foreach (var variant in brig.Groups.Single(g => g.SourcePart == 26).Variants)
-        {
-            // Horizontal endpoints touch the lower mainmast, unlike the donors.
-            var donorRequirements = new[] { variant.Fore, variant.Aft, 99 };
-            var required = StayRequirements.ForAttachments(
-                donorRequirements,
-                variant.Fore,
-                variant.Aft,
-                variant.Fore,
-                variant.AftSections[1],
-                variant.HeightReference,
-                variant.FurlControl
-            );
-            var installed = new[] { variant.Fore, variant.AftSections[1], 99 };
-            Assert(
-                required.All(installed.Contains),
-                "Brig stay still requires the unused main topmast."
-            );
-            Assert(
-                !required.All(new[] { variant.Fore, 99 }.Contains),
-                "Missing lower mainmast must block installation."
-            );
-            Assert(required.Contains(99), "Unrelated donor prerequisites were dropped.");
-            Assert(
-                donorRequirements.SequenceEqual(new[] { variant.Fore, variant.Aft, 99 }),
-                "Donor prerequisites were mutated."
-            );
-        }
-        var mizzen = StayRequirements.ForAttachments(new[] { 4, 59 }, 4, 59, 4, 7, 59, 59);
-        Assert(
-            mizzen.OrderBy(i => i).SequenceEqual(new[] { 4, 7, 59 }),
-            "A required height/furl topmast must remain required even when the endpoint touches a lower section."
-        );
-        var upper = StayRequirements.ForAttachments(new[] { 2, 58 }, 2, 58, 2, 58, 2, 2);
-        Assert(
-            upper.OrderBy(i => i).SequenceEqual(new[] { 2, 58 }),
-            "A stay that actually touches the topmast must require it."
-        );
-        Console.WriteLine(
-            "PASS: Brig attachment prerequisites, missing lower masts, retained height/control donors and untouched source requirements."
+            "PASS: seven boat profiles, physical mast sections, control-source selection and unknown-boat handling."
         );
     }
 

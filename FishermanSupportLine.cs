@@ -3,7 +3,7 @@ using UnityEngine;
 namespace FishermansSail
 {
     // Visual running line: the existing sheet winches continue to control the
-    // clew. No extra rigid joint locks the upper corner to the stay.
+    // clew. The upper corner moves freely beneath the aft masthead pulley.
     internal sealed class FishermanSupportLine : MonoBehaviour
     {
         public LineRenderer[] UpperSheets;

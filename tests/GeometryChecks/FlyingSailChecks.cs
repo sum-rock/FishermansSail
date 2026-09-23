@@ -26,7 +26,7 @@ internal static class FlyingSailChecks
                 .ToArray();
             var offset = FlyingSailGeometry.ModelOffset(pivot, rest[0]);
             rest = rest.Select(c => offset + c).ToArray();
-            Near(rest[0], pivot, "Scaled sail head must meet the mast despite a wider stay.");
+            Near(rest[0], pivot, "Scaled sail head must meet the mast at every sail width.");
             foreach (float angle in new[] { -70f, -25f, 0f, 25f, 70f })
             {
                 var posed = rest.Select(c =>
@@ -75,19 +75,23 @@ internal static class FlyingSailChecks
                         Math.Abs((upper - pivot).magnitude - (rest[1] - pivot).magnitude) < 0.001f,
                         "The moving upper corner changed the top span."
                     );
-                    var reefed =
-                        pivot - axis * ((rest[2] - pivot).magnitude * Math.Max(0.015f, unroll));
+                    var reefed = MastInstallationGeometry.HoistCorner(
+                        rest[2],
+                        rest[0],
+                        rest[2] - axis * width,
+                        unroll
+                    );
                     Near(
                         FlyingSailGeometry.RotateAroundMast(reefed, pivot, axis, angle),
                         reefed,
-                        "Furling tack must rise along the mast at every sheet angle."
+                        "Hoisting tack must follow the mast at every sheet angle."
                     );
                 }
             }
             for (int col = 1; col < PrototypeGeometry.Columns; col++)
                 Check(
                     data.Constraints[col].maxDistance > 0,
-                    "Top-edge cloth is still locked to the stay."
+                    "Top-edge cloth must remain free between corners."
                 );
         }
         Check(
@@ -99,15 +103,117 @@ internal static class FlyingSailChecks
             "Actual rig changes must update the hinge."
         );
         CheckUpperSheets();
+        CheckUpperGuideSelection();
         Console.WriteLine(
-            "PASS: mast-fixed luff, moving aft head/clew, raked masts, scaling, furling, unstretched sheeting and free top-edge cloth."
+            "PASS: mast-fixed luff, moving aft head/clew, raked masts, scaling, furling, unstretched sheeting, upper pulley routes and free top-edge cloth."
         );
     }
+
+    private static void CheckUpperGuideSelection()
+    {
+        // Lateral offsets and rake can put a lower fitting higher in world space
+        // when heeled. Selection must still follow the boat's mast height.
+        var guides = new[]
+        {
+            new Vector3(-4, 12, 10),
+            new Vector3(1, 18, 11),
+            new Vector3(1, 18, 11),
+            new Vector3(0, 15, 10.5f),
+        };
+        foreach (float rake in new[] { -12f, 0f, 8f })
+        foreach (float heel in new[] { -75f, 0f, 75f })
+        {
+            var up = FlyingSailGeometry.RotateAroundMast(
+                Vector3.up,
+                Vector3.zero,
+                Vector3.forward,
+                heel
+            );
+            var posed = guides
+                .Select(g =>
+                    FlyingSailGeometry.RotateAroundMast(
+                        FlyingSailGeometry.RotateAroundMast(g, Vector3.zero, Vector3.right, rake),
+                        Vector3.zero,
+                        Vector3.forward,
+                        heel
+                    )
+                )
+                .ToArray();
+            Check(
+                FlyingSailGeometry.HighestGuideIndex(ActiveGuides(posed), up) == 1,
+                "Rake, heel or duplicate guides changed the selected upper pulley."
+            );
+            // The higher guide remains in the profile when the topmast is absent.
+            // Reuse the same candidates as options change, as the live rig does.
+            var candidates = new[]
+            {
+                new SheetGuideState(posed[1], false, false),
+                new SheetGuideState(posed[3], true, true),
+                new SheetGuideState(posed[1], false, false),
+            };
+            Check(
+                FlyingSailGeometry.HighestGuideIndex(candidates, up) == 1,
+                "Absent topmast stole the route from the active lower-mast pulley."
+            );
+            candidates[0] = new SheetGuideState(posed[1], true, true);
+            Check(
+                FlyingSailGeometry.HighestGuideIndex(candidates, up) == 0,
+                "Enabling the topmast did not select its higher pulley."
+            );
+            candidates[0] = new SheetGuideState(posed[1], true, false);
+            Check(
+                FlyingSailGeometry.HighestGuideIndex(candidates, up) == 1,
+                "An inactive pulley child must not receive the control line."
+            );
+            candidates[0] = new SheetGuideState(posed[1], false, true);
+            Check(
+                FlyingSailGeometry.HighestGuideIndex(candidates, up) == 1,
+                "An active referenced guide cannot make an inactive owning mast eligible."
+            );
+            candidates[1] = new SheetGuideState(posed[3], false, false);
+            Check(
+                FlyingSailGeometry.HighestGuideIndex(candidates, up) == -1,
+                "Loading with every mast inactive must leave no pulley selected."
+            );
+            candidates[1] = new SheetGuideState(posed[3], true, true);
+            Check(
+                FlyingSailGeometry.HighestGuideIndex(candidates, up) == 1,
+                "Reactivating the lower mast must recover its pulley without rebuilding candidates."
+            );
+        }
+        Check(
+            FlyingSailGeometry.HighestGuideIndex(Array.Empty<SheetGuideState>(), Vector3.up) == -1,
+            "Missing mast guides must allow the original route fallback."
+        );
+        var invalid = new[]
+        {
+            new Vector3(0, float.NaN, 0),
+            new Vector3(float.PositiveInfinity, 1, 0),
+        };
+        Check(
+            FlyingSailGeometry.HighestGuideIndex(ActiveGuides(invalid), Vector3.up) == -1
+                && FlyingSailGeometry.HighestGuideIndex(
+                    ActiveGuides(invalid.Concat(new[] { guides[1] }).ToArray()),
+                    Vector3.up
+                ) == 2,
+            "Invalid guide positions must not mask a valid pulley or prevent fallback."
+        );
+        Check(
+            FlyingSailGeometry.HighestGuideIndex(
+                ActiveGuides(new[] { guides[0], guides[3] }),
+                Vector3.up
+            ) == 1,
+            "Changing mast guides must refresh the selection."
+        );
+    }
+
+    private static SheetGuideState[] ActiveGuides(Vector3[] positions) =>
+        positions.Select(position => new SheetGuideState(position, true, true)).ToArray();
 
     private static void CheckUpperSheets()
     {
         var head = new Vector3(4, 12, 7);
-        var guide = new Vector3(0, 12, 10);
+        var guide = new Vector3(0, 18, 10);
         var controls = new[] { new Vector3(-2, 1, 12), new Vector3(2, 1, 12) };
         foreach (var control in controls)
         foreach (float slack in new[] { 0f, 0.25f, 1f })
@@ -120,7 +226,7 @@ internal static class FlyingSailChecks
             Near(
                 FlyingSailGeometry.UpperSheetPoint(head, guide, control, slack, 0.5f),
                 guide,
-                "Upper sheet missed the aft mast's triatic guide."
+                "Upper sheet missed the aft mast's existing upper pulley."
             );
             Near(
                 FlyingSailGeometry.UpperSheetPoint(head, guide, control, slack, 1),
@@ -141,6 +247,14 @@ internal static class FlyingSailChecks
                     "Upper sheet generated invalid positions."
                 );
             }
+            for (int i = 1; i <= 16; i++)
+                Check(
+                    FlyingSailGeometry.UpperSheetPoint(head, guide, control, slack, i / 32f).y
+                        > FlyingSailGeometry
+                            .UpperSheetPoint(head, guide, control, slack, (i - 1) / 32f)
+                            .y,
+                    "The upper sheet must rise from the sail corner to the elevated pulley."
+                );
             foreach (float t in new[] { 0.25f, 0.75f })
                 Check(
                     FlyingSailGeometry.UpperSheetPoint(head, guide, control, 1, t).y
