@@ -1,4 +1,4 @@
-namespace FishermansSail
+namespace FishermansSail.BoatRigs
 {
     internal static partial class BoatRigCatalog
     {

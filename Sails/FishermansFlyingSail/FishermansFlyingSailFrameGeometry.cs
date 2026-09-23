@@ -2,15 +2,19 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace FishermansSail
+namespace FishermansSail.Sails.FishermansFlyingSail
 {
-    internal readonly struct SheetGuideState
+    internal readonly struct FishermansFlyingSailSheetGuideState
     {
         internal readonly Vector3 Position;
         internal readonly bool MastActive;
         internal readonly bool AttachmentActive;
 
-        internal SheetGuideState(Vector3 position, bool mastActive, bool attachmentActive)
+        internal FishermansFlyingSailSheetGuideState(
+            Vector3 position,
+            bool mastActive,
+            bool attachmentActive
+        )
         {
             Position = position;
             MastActive = mastActive;
@@ -18,7 +22,7 @@ namespace FishermansSail
         }
     }
 
-    internal static class FlyingSailGeometry
+    internal static class FishermansFlyingSailFrameGeometry
     {
         internal static Vector3 ModelOffset(Vector3 pivot, Vector3 alignedHead) =>
             pivot - alignedHead;
@@ -28,7 +32,10 @@ namespace FishermansSail
 
         // Positions are relative to the boat. Measure height along its up axis,
         // so heel cannot select a different pulley. Keep the first equal-height guide.
-        internal static int HighestGuideIndex(IReadOnlyList<SheetGuideState> guides, Vector3 boatUp)
+        internal static int HighestGuideIndex(
+            IReadOnlyList<FishermansFlyingSailSheetGuideState> guides,
+            Vector3 boatUp
+        )
         {
             int best = -1;
             float height = float.NegativeInfinity;
@@ -71,7 +78,7 @@ namespace FishermansSail
                 neutralHead,
                 foreHead,
                 axis,
-                angle * 0.85f * FishermanBillow.Deployment(unroll)
+                angle * 0.85f * FishermansFlyingSailBillow.Deployment(unroll)
             );
         }
 
@@ -102,7 +109,12 @@ namespace FishermansSail
             var to = t <= 0.5f ? guide : control;
             float along = t <= 0.5f ? t * 2 : (t - 0.5f) * 2;
             float sag = (to - from).magnitude * (0.005f + 0.08f * Math.Max(0, Math.Min(1, slack)));
-            return FishermanBillow.SupportPoint(from, to, new Vector3(0, -sag, 0), along);
+            return FishermansFlyingSailBillow.SupportPoint(
+                from,
+                to,
+                new Vector3(0, -sag, 0),
+                along
+            );
         }
 
         internal static Vector3 RotateAroundMast(

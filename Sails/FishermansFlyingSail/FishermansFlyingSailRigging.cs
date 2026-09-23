@@ -1,13 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using FishermansSail.BoatRigs;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
-namespace FishermansSail
+namespace FishermansSail.Sails.FishermansFlyingSail
 {
     // Runtime support belongs to the sail; no synthetic Mast or shipyard part is created.
-    internal sealed class FishermanRigging : MonoBehaviour
+    internal sealed class FishermansFlyingSailRigging : MonoBehaviour
     {
         internal sealed class MountPair
         {
@@ -46,11 +47,11 @@ namespace FishermansSail
 
         internal void Invalidate() => bindingDirty = true;
 
-        internal static FishermanRigging For(Sail sail)
+        internal static FishermansFlyingSailRigging For(Sail sail)
         {
             var rig =
-                sail.GetComponent<FishermanRigging>()
-                ?? sail.gameObject.AddComponent<FishermanRigging>();
+                sail.GetComponent<FishermansFlyingSailRigging>()
+                ?? sail.gameObject.AddComponent<FishermansFlyingSailRigging>();
             rig.sail = sail;
             return rig;
         }
@@ -143,13 +144,16 @@ namespace FishermansSail
                 .Distinct()
                 .ToArray();
             var states = candidates
-                .Select(c => new SheetGuideState(
+                .Select(c => new FishermansFlyingSailSheetGuideState(
                     c.Item2.position - boat.transform.position,
                     c.Item1.gameObject.activeInHierarchy,
                     c.Item2.gameObject.activeInHierarchy
                 ))
                 .ToArray();
-            int selected = FlyingSailGeometry.HighestGuideIndex(states, boat.transform.up);
+            int selected = FishermansFlyingSailFrameGeometry.HighestGuideIndex(
+                states,
+                boat.transform.up
+            );
             owner = selected >= 0 ? candidates[selected].Item1 : null;
             return selected >= 0 ? candidates[selected].Item2 : null;
         }
@@ -183,18 +187,18 @@ namespace FishermansSail
             bindingDirty = false;
             if (changed)
                 Plugin.Log.LogInfo(
-                    $"Fisherman mast rig: boat={Pair.Boat.name}, fore={Pair.Fore.orderIndex}, aft={Pair.Aft.orderIndex}, upperGuide={Pair.AftGuideMast.name}/{Pair.AftGuide.parent.name}/{Pair.AftGuide.name}."
+                    $"FishermansFlyingSail mast rig: boat={Pair.Boat.name}, fore={Pair.Fore.orderIndex}, aft={Pair.Aft.orderIndex}, upperGuide={Pair.AftGuideMast.name}/{Pair.AftGuide.parent.name}/{Pair.AftGuide.name}."
                 );
             return true;
         }
 
         internal static string InstallError(Sail sail, Mast mast)
         {
-            var pair = sail.GetComponent<FishermanRigging>()?.Pair;
+            var pair = sail.GetComponent<FishermansFlyingSailRigging>()?.Pair;
             if (pair == null || pair.Fore != mast || !pair.Active)
                 if (!TryResolve(mast, out pair))
                     return "(REQUIRES AN ACTIVE AFT MAST WITH HALYARD GUIDES)";
-            var rig = sail.GetComponent<FishermanSailRig>();
+            var rig = sail.GetComponent<FishermansFlyingSailRig>();
             var scale = sail.cloth.transform.parent.localScale;
             var head = mast.transform.TransformPoint(
                 new Vector3(0, 0, sail.GetCurrentInstallHeight() - mast.mastHeight)
@@ -207,7 +211,7 @@ namespace FishermansSail
             float span = Vector3
                 .ProjectOnPlane(pair.AftGuide.position - head, pair.Boat.transform.up)
                 .magnitude;
-            return MastInstallationGeometry.FitError(
+            return FishermansFlyingSailMastInstallationGeometry.FitError(
                 -rig.Corners[0].z * scale.z,
                 foreHeight,
                 maxHeight,
@@ -243,7 +247,7 @@ namespace FishermansSail
                 top = swap;
             }
             point = Pair.Boat.transform.TransformPoint(
-                MastInstallationGeometry.AtHeight(
+                FishermansFlyingSailMastInstallationGeometry.AtHeight(
                     bottom,
                     top,
                     Pair.Boat.transform.InverseTransformPoint(point).y
@@ -268,7 +272,11 @@ namespace FishermansSail
                 var localTop = Pair.Boat.transform.InverseTransformPoint(top);
                 var localAxis = Pair.Boat.transform.InverseTransformDirection(axis);
                 return Pair.Boat.transform.TransformPoint(
-                    MastInstallationGeometry.AtHeight(localTop, localTop + localAxis, y)
+                    FishermansFlyingSailMastInstallationGeometry.AtHeight(
+                        localTop,
+                        localTop + localAxis,
+                        y
+                    )
                 );
             }
         }
@@ -282,14 +290,14 @@ namespace FishermansSail
             {
                 var used = Pair
                     .Fore.sails.Where(s => s)
-                    .Select(s => s.GetComponent<FishermanRigging>())
+                    .Select(s => s.GetComponent<FishermansFlyingSailRigging>())
                     .Where(r => r && r != this && r.controlSlot >= 0)
                     .Select(r => r.controlSlot)
                     .ToArray();
                 controlSlot = 0;
                 while (used.Contains(controlSlot))
                     controlSlot++;
-                controlsRoot = new GameObject("Fisherman's independent controls");
+                controlsRoot = new GameObject("FishermansFlyingSail independent controls");
                 controlsRoot.SetActive(false);
                 controlsRoot.transform.SetParent(Pair.Boat.transform, false);
                 controls = new[]
@@ -301,9 +309,9 @@ namespace FishermansSail
                         "Starboard sheet"
                     ),
                 };
-                mastGuide = new GameObject("Fisherman halyard guide").transform;
+                mastGuide = new GameObject("FishermansFlyingSail halyard guide").transform;
                 mastGuide.SetParent(controlsRoot.transform, false);
-                upperGuide = new GameObject("Fisherman upper halyard guide").transform;
+                upperGuide = new GameObject("FishermansFlyingSail upper halyard guide").transform;
                 upperGuide.SetParent(controlsRoot.transform, false);
                 controlsRoot.SetActive(true);
             }
@@ -316,10 +324,10 @@ namespace FishermansSail
             connections.colChecker.RegisterBoatWalkCol(mast.walkColMast);
             // Old saves can restore the wider donor range; keep the checker,
             // shipyard description and native sail limits in agreement.
-            connections.colChecker.colAngleMin = FishermanTravel.Clamp(
+            connections.colChecker.colAngleMin = FishermansFlyingSailTravel.Clamp(
                 connections.colChecker.colAngleMin
             );
-            connections.colChecker.colAngleMax = FishermanTravel.Clamp(
+            connections.colChecker.colAngleMax = FishermansFlyingSailTravel.Clamp(
                 connections.colChecker.colAngleMax
             );
             sail.minAngle = connections.colChecker.colAngleMin;
@@ -329,7 +337,7 @@ namespace FishermansSail
         private GPButtonRopeWinch CopyWinch(GPButtonRopeWinch source, string label)
         {
             var clone = Object.Instantiate(source.gameObject, controlsRoot.transform, false);
-            clone.name = "Fisherman's " + label;
+            clone.name = "FishermansFlyingSail " + label;
             var towardsFore = Vector3
                 .ProjectOnPlane(
                     Pair.Fore.transform.position - Pair.Aft.transform.position,

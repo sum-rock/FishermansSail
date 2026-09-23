@@ -85,7 +85,7 @@ Start with the Brig, then repeat relevant checks on another supported boat:
 1. Fit the sail under **Other** on the foremast. Check resizing, vertical overlap,
    shroud clearance, ordinary panel obstructions and topmasts present or absent.
 2. Check independent sheet and hoist controls alongside other sails and with
-   multiple Fisherman's Sails. Canceling shipyard orders must not leave extra
+   multiple Fisherman's Flying Sails. Canceling shipyard orders must not leave extra
    winches. Removing either supporting mast must be rejected while occupied.
 3. Hoist, pause, reverse, partially furl, fully lower and redeploy. Keep all four
    corners and ropes attached, with invisible cloth and parked rope ends when
@@ -93,7 +93,7 @@ Start with the Brig, then repeat relevant checks on another supported boat:
 4. Repeat port/starboard tacks, eased/tight sheets and weak-wind conditions.
    Check useful forward force, a flexible leech and smooth camber reversal.
    Fully eased travel should stop near 40° on each side, or sooner if obstructed.
-5. Confirm the name **Fisherman's Sail**, white/plain defaults, consistent color
+5. Confirm the name **Fisherman's Flying Sail**, white/plain defaults, consistent color
    during partial hoists and a hidden texture selector. Switching to another
    sail must restore its texture options. Test recoloring and save/reload;
    existing colors remain while old patterns become plain.
@@ -102,6 +102,30 @@ The mast-mounted rig and 40° travel limit received positive in-game feedback
 during development. A fresh 0.1.0 check, including the appearance and naming
 changes, remains pending. Record observed results separately from automated
 checks.
+
+## Source organization
+
+`Plugin.cs` owns the plugin metadata and assembly-wide Harmony registration.
+The plugin identity and output remain `FishermansSail`; the existing sail is
+named **Fisherman's Flying Sail** in game.
+
+- `Sails/FishermansFlyingSail/` contains the mast-mounted sail's registration,
+  geometry, appearance, cloth rig and controls, using the namespace
+  `FishermansSail.Sails.FishermansFlyingSail` and `FishermansFlyingSail` type prefix.
+- Its `Patches/` subdirectory contains all feature-specific Harmony patches in
+  the corresponding `.Patches` namespace, including registration, appearance
+  and the order-text freeze guard.
+- `BoatRigs/` contains boat definitions in `FishermansSail.BoatRigs`.
+- Future stays belong in `Stays/`, and other sail types in sibling directories
+  under `Sails/`. Add these when implementing them; extract shared behavior only
+  when the implementations establish what they need.
+
+The geometry checks link feature sources directly; update their project includes
+when moving files. The assembly checks resolve internal types by full name;
+update those references when renaming types or namespaces. Runtime object and
+mesh labels use `FishermansFlyingSail`; donor hierarchy names remain unchanged.
+Prefab index **400**, native mast save slots and version **0.1.0** are unchanged.
+The new menu name and loading existing sails still need in-game verification.
 
 ## Implementation notes
 

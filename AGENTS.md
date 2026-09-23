@@ -25,20 +25,35 @@ Follow current user instructions over historical design choices
 
 ## Code map
 
-| Area                                                           | Main files                                                      |
-| -------------------------------------------------------------- | --------------------------------------------------------------- |
-| Plugin metadata, registration and independent assets           | `Plugin.cs`, `FishermanSail.cs`                                 |
-| Native appearance defaults and texture options                 | `FishermanAppearance.cs`                                       |
-| Mesh, skin weights, pins and bone indexing             | `FishermanGeometry.cs`                                          |
-| Live rig, corners, shaping bones, furling and render selection | `FishermanSailRig.cs`                                           |
-| Camber response, movement limits and edge curves               | `FishermanBillow.cs`                                            |
-| Coupled foot/leech length constraints                          | `FishermanTension.cs`                                           |
-| Mast rotation, upper-corner motion and upper rope routes       | `FlyingSailGeometry.cs`, `FishermanSupportLine.cs`              |
-| Sheet travel and post-sway hinge limits                       | `FishermanTravel.cs`, `FishermanTravelPatch.cs`                |
-| Aerodynamic frame and scoped native force patches              | `FishermanAerodynamics.cs`, `AerodynamicPatches.cs`             |
-| Boat-specific mast pairs, active guides and independent controls | `BoatRigs/`, `FishermanRigging.cs`                              |
-| Mast installation, support protection and deck-up hoisting     | `MastInstallationPatches.cs`, `MastInstallationGeometry.cs`, `FlyingSailPatches.cs` |
-| Shipyard order-text freeze protection                          | `FishermanOrderText.cs`, `FishermanOrderTextPatch.cs`                     |
+The mast-mounted sail is **Fisherman's Flying Sail**, with the code identity
+`FishermansFlyingSail`. Feature files below are relative to
+`Sails/FishermansFlyingSail/`, with namespace
+`FishermansSail.Sails.FishermansFlyingSail`; patches use its `.Patches` namespace.
+Boat definitions use `FishermansSail.BoatRigs`. Plugin branding, GUID, DLL name,
+version **0.1.0** and prefab index **400** remain unchanged.
+
+| Area | Main files |
+| --- | --- |
+| Plugin metadata and patch discovery | [Plugin.cs](Plugin.cs) |
+| Sail registration and shipyard inventory | [FishermansFlyingSail.cs](Sails/FishermansFlyingSail/FishermansFlyingSail.cs), [Patches/FishermansFlyingSailRegistrationPatches.cs](Sails/FishermansFlyingSail/Patches/FishermansFlyingSailRegistrationPatches.cs) |
+| Native appearance defaults and texture options | [FishermansFlyingSailAppearance.cs](Sails/FishermansFlyingSail/FishermansFlyingSailAppearance.cs), [Patches/FishermansFlyingSailAppearancePatches.cs](Sails/FishermansFlyingSail/Patches/FishermansFlyingSailAppearancePatches.cs) |
+| Mesh, skin weights, pins and bone indexing | [FishermansFlyingSailGeometry.cs](Sails/FishermansFlyingSail/FishermansFlyingSailGeometry.cs) |
+| Live rig, owned assets, corners, shaping, furling and rendering | [FishermansFlyingSailRig.cs](Sails/FishermansFlyingSail/FishermansFlyingSailRig.cs) |
+| Camber response, movement limits and edge curves | [FishermansFlyingSailBillow.cs](Sails/FishermansFlyingSail/FishermansFlyingSailBillow.cs) |
+| Coupled foot/leech length constraints | [FishermansFlyingSailTension.cs](Sails/FishermansFlyingSail/FishermansFlyingSailTension.cs) |
+| Mast rotation, upper-corner motion and upper rope routes | [FishermansFlyingSailFrameGeometry.cs](Sails/FishermansFlyingSail/FishermansFlyingSailFrameGeometry.cs), [FishermansFlyingSailSupportLine.cs](Sails/FishermansFlyingSail/FishermansFlyingSailSupportLine.cs) |
+| Sheet travel and post-sway hinge limits | [FishermansFlyingSailTravel.cs](Sails/FishermansFlyingSail/FishermansFlyingSailTravel.cs), [Patches/FishermansFlyingSailTravelPatch.cs](Sails/FishermansFlyingSail/Patches/FishermansFlyingSailTravelPatch.cs) |
+| Aerodynamic frame and scoped native force patches | [FishermansFlyingSailAerodynamics.cs](Sails/FishermansFlyingSail/FishermansFlyingSailAerodynamics.cs), [Patches/FishermansFlyingSailAerodynamicPatches.cs](Sails/FishermansFlyingSail/Patches/FishermansFlyingSailAerodynamicPatches.cs) |
+| Active mast guides and independent controls | [FishermansFlyingSailRigging.cs](Sails/FishermansFlyingSail/FishermansFlyingSailRigging.cs) |
+| Mast installation, support protection, hoisting and collision | [FishermansFlyingSailMastInstallationGeometry.cs](Sails/FishermansFlyingSail/FishermansFlyingSailMastInstallationGeometry.cs), [Patches/FishermansFlyingSailMastInstallationPatches.cs](Sails/FishermansFlyingSail/Patches/FishermansFlyingSailMastInstallationPatches.cs), [Patches/FishermansFlyingSailCollisionPatches.cs](Sails/FishermansFlyingSail/Patches/FishermansFlyingSailCollisionPatches.cs) |
+| Shipyard order-text freeze protection | [FishermansFlyingSailOrderText.cs](Sails/FishermansFlyingSail/FishermansFlyingSailOrderText.cs), [Patches/FishermansFlyingSailOrderTextPatch.cs](Sails/FishermansFlyingSail/Patches/FishermansFlyingSailOrderTextPatch.cs) |
+| Boat-specific mast pairs | [BoatRigs/](BoatRigs/) |
+
+Future stays belong in `Stays/`; other sail types belong in sibling directories
+under `Sails/`. The existing flying sail remains a separate feature. No stay or
+new sail implementation is included in this naming and organization change.
+The renamed menu entry and existing-save loading remain unverified in game;
+prior behavior observations below still apply to the unchanged mechanics.
 
 ## Build and checks
 

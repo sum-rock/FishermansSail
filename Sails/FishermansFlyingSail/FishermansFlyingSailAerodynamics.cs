@@ -1,8 +1,8 @@
 using UnityEngine;
 
-namespace FishermansSail
+namespace FishermansSail.Sails.FishermansFlyingSail
 {
-    internal struct FishermanWindFrame
+    internal struct FishermansFlyingSailWindFrame
     {
         internal Vector3 AlongSail;
         internal Vector3 MastAxis;
@@ -10,7 +10,7 @@ namespace FishermansSail
         internal Vector3 Center;
     }
 
-    internal static class FishermanAerodynamics
+    internal static class FishermansFlyingSailAerodynamics
     {
         // Native staysail wind sensors use right=along the sail, forward=up
         // the mast, and up=normal to the sail. The procedural mesh uses a
@@ -20,7 +20,7 @@ namespace FishermansSail
             Vector3 foreTack,
             Vector3 aftHead,
             Vector3 clew,
-            out FishermanWindFrame frame
+            out FishermansFlyingSailWindFrame frame
         )
         {
             frame = default;
@@ -37,7 +37,7 @@ namespace FishermansSail
             float second = Vector3.Cross(foreTack - aftHead, clew - aftHead).magnitude;
             if (first + second < 1e-8f)
                 return false;
-            frame = new FishermanWindFrame
+            frame = new FishermansFlyingSailWindFrame
             {
                 AlongSail = chord,
                 MastAxis = mast,

@@ -1,5 +1,5 @@
 using System;
-using FishermansSail;
+using FishermansSail.Sails.FishermansFlyingSail;
 using UnityEngine;
 
 internal static class ShapingChecks
@@ -8,7 +8,7 @@ internal static class ShapingChecks
     {
         foreach (float width in new[] { 0.25f, 6f, 13.8f, 40f })
         {
-            var data = FishermanGeometry.Create(width);
+            var data = FishermansFlyingSailGeometry.Create(width);
             // The two signed target surfaces mirror about the same attached
             // outline; this checks the actual weighted skin, not just the bones.
             var positive = Pose(data, width, 1, 1);
@@ -45,8 +45,9 @@ internal static class ShapingChecks
                     "Mirroring camber changed the required fabric length."
                 );
             }
-            int top = FishermanGeometry.Columns / 2;
-            int luff = FishermanGeometry.Rows / 2 * (FishermanGeometry.Columns + 1);
+            int top = FishermansFlyingSailGeometry.Columns / 2;
+            int luff =
+                FishermansFlyingSailGeometry.Rows / 2 * (FishermansFlyingSailGeometry.Columns + 1);
             foreach (int peak in new[] { top, luff })
             {
                 float travel = data.Constraints[peak].maxDistance;
@@ -78,11 +79,11 @@ internal static class ShapingChecks
                     int desired = tack % 2 == 0 ? -1 : 1;
                     for (int frame = 0; frame < fps * 3; frame++)
                     {
-                        int next = FishermanBillow.CamberSide(side, desired * 8);
+                        int next = FishermansFlyingSailBillow.CamberSide(side, desired * 8);
                         if (next != side)
                             flips++;
                         side = next;
-                        camber = FishermanBillow.SmoothLoad(camber, side, 1f / fps);
+                        camber = FishermansFlyingSailBillow.SmoothLoad(camber, side, 1f / fps);
                         Check(camber >= -1 && camber <= 1, "Camber interpolation overshot.");
                         var pose = Pose(data, width, camber, 1);
                         for (int i = 0; i < pose.Length; i++)
@@ -103,7 +104,7 @@ internal static class ShapingChecks
         foreach (int side in new[] { -1, 1 })
         foreach (float flow in new[] { -0.6f, -0.1f, 0f, 0.1f, 0.6f, float.NaN })
             Check(
-                FishermanBillow.CamberSide(side, flow) == side,
+                FishermansFlyingSailBillow.CamberSide(side, flow) == side,
                 "Weak wind must retain the previous target side."
             );
         // Apparent flow and the panel normal rotate together on a heeled/raked boat.
@@ -111,11 +112,16 @@ internal static class ShapingChecks
         var fore = Vector3.zero;
         var tackPoint = new Vector3(-10, 0, 0);
         var clew = new Vector3(-6, 0, 6);
-        var normal = FishermanBillow.CamberNormal(fore, tackPoint, head, clew);
+        var normal = FishermansFlyingSailBillow.CamberNormal(fore, tackPoint, head, clew);
         Vector3 Rotate(Vector3 p) =>
-            FlyingSailGeometry.RotateAroundMast(p, Vector3.zero, new Vector3(1, 2, 3), 53);
+            FishermansFlyingSailFrameGeometry.RotateAroundMast(
+                p,
+                Vector3.zero,
+                new Vector3(1, 2, 3),
+                53
+            );
         var offset = new Vector3(13, -8, 25);
-        var moved = FishermanBillow.CamberNormal(
+        var moved = FishermansFlyingSailBillow.CamberNormal(
             Rotate(fore) + offset,
             Rotate(tackPoint) + offset,
             Rotate(head) + offset,
@@ -123,7 +129,7 @@ internal static class ShapingChecks
         );
         Near(moved, Rotate(normal), 1, "Heel/rake changed the camber normal incorrectly.");
         Check(
-            FishermanBillow.CamberSide(1, Vector3.Dot(Rotate(-normal * 8), moved)) == -1,
+            FishermansFlyingSailBillow.CamberSide(1, Vector3.Dot(Rotate(-normal * 8), moved)) == -1,
             "Boat rotation changed which side the apparent wind selects."
         );
         Console.WriteLine(
@@ -131,28 +137,34 @@ internal static class ShapingChecks
         );
     }
 
-    private static Vector3[] Pose(SailMeshData data, float width, float camber, float unroll)
+    private static Vector3[] Pose(
+        FishermansFlyingSailMeshData data,
+        float width,
+        float camber,
+        float unroll
+    )
     {
-        var bones = new Vector3[FishermanGeometry.BoneCount];
+        var bones = new Vector3[FishermansFlyingSailGeometry.BoneCount];
         var foreHead = HoistPose.Corner(data.Corners, 0, unroll);
         var tack = HoistPose.Corner(data.Corners, 2, unroll);
         var head = HoistPose.Corner(data.Corners, 1, unroll);
         var clew = HoistPose.Corner(data.Corners, 3, unroll);
-        float amount = camber * FishermanBillow.Deployment(unroll);
-        for (int row = 0; row <= FishermanGeometry.Rows; row++)
-        for (int col = 0; col <= FishermanGeometry.ShapeColumns; col++)
+        float amount = camber * FishermansFlyingSailBillow.Deployment(unroll);
+        for (int row = 0; row <= FishermansFlyingSailGeometry.Rows; row++)
+        for (int col = 0; col <= FishermansFlyingSailGeometry.ShapeColumns; col++)
         {
-            float v = (float)row / FishermanGeometry.Rows,
-                u = (float)col / FishermanGeometry.ShapeColumns;
-            bones[FishermanGeometry.ShapeBone(row, col)] = FishermanBillow.ShapePoint(
-                Vector3.Lerp(foreHead, tack, v),
-                Vector3.Lerp(head, clew, v),
-                Vector3.up,
-                width,
-                u,
-                v,
-                amount
-            );
+            float v = (float)row / FishermansFlyingSailGeometry.Rows,
+                u = (float)col / FishermansFlyingSailGeometry.ShapeColumns;
+            bones[FishermansFlyingSailGeometry.ShapeBone(row, col)] =
+                FishermansFlyingSailBillow.ShapePoint(
+                    Vector3.Lerp(foreHead, tack, v),
+                    Vector3.Lerp(head, clew, v),
+                    Vector3.up,
+                    width,
+                    u,
+                    v,
+                    amount
+                );
         }
         var result = new Vector3[data.Vertices.Length];
         for (int i = 0; i < result.Length; i++)

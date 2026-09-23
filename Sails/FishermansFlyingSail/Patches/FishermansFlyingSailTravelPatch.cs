@@ -1,20 +1,20 @@
 using HarmonyLib;
 
-namespace FishermansSail
+namespace FishermansSail.Sails.FishermansFlyingSail.Patches
 {
     [HarmonyPatch(typeof(JibAngleMaster), "Update")]
-    internal static class FishermanTravelPatch
+    internal static class FishermansFlyingSailTravelPatch
     {
         [HarmonyPrefix]
         private static void Prefix(Sail ___sail, out bool __state)
         {
-            __state = ___sail && ___sail.GetComponent<FishermanSailRig>();
+            __state = ___sail && ___sail.GetComponent<FishermansFlyingSailRig>();
             if (!__state)
                 return;
             // Native Update caches these for both sheet controllers. Saved
             // limits and later mast refreshes may still contain the old range.
-            ___sail.minAngle = FishermanTravel.Clamp(___sail.minAngle);
-            ___sail.maxAngle = FishermanTravel.Clamp(___sail.maxAngle);
+            ___sail.minAngle = FishermansFlyingSailTravel.Clamp(___sail.minAngle);
+            ___sail.maxAngle = FishermansFlyingSailTravel.Clamp(___sail.maxAngle);
         }
 
         [HarmonyPostfix]
@@ -29,7 +29,12 @@ namespace FishermansSail
             // ApplySway runs inside native Update after the sheet limits are
             // assigned. Bound its final result, including stale sheet values,
             // without changing the sail pose or resetting Cloth.
-            FishermanTravel.ConstrainHinge(ref min, ref max, ___sail.minAngle, ___sail.maxAngle);
+            FishermansFlyingSailTravel.ConstrainHinge(
+                ref min,
+                ref max,
+                ___sail.minAngle,
+                ___sail.maxAngle
+            );
             limits.min = min;
             limits.max = max;
             hinge.limits = limits;

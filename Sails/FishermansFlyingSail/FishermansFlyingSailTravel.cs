@@ -1,8 +1,8 @@
 using System;
 
-namespace FishermansSail
+namespace FishermansSail.Sails.FishermansFlyingSail
 {
-    internal static class FishermanTravel
+    internal static class FishermansFlyingSailTravel
     {
         // Degrees either side of the neutral, fore-and-aft mast frame.
         internal const int MaximumAngle = 40;

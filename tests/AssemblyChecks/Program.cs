@@ -102,7 +102,9 @@ if (count != 21)
 // The installed SE save loader and texture button both go through this update.
 // Guarding only the selector would allow an old saved pattern to reappear.
 var textureTarget = assembly
-    .GetType("FishermansSail.FishermanPlainTexturePatch")
+    .GetType(
+        "FishermansSail.Sails.FishermansFlyingSail.Patches.FishermansFlyingSailPlainTexturePatch"
+    )
     .GetCustomAttribute<HarmonyPatch>()
     .info;
 foreach (var name in new[] { "SetTexture", "NextTexture" })
@@ -114,7 +116,9 @@ foreach (var name in new[] { "SetTexture", "NextTexture" })
     )
         throw new Exception($"SE {name} no longer passes through the plain-texture guard.");
 var textureButtonPostfix = assembly
-    .GetType("FishermansSail.FishermanTextureButtonPatch")
+    .GetType(
+        "FishermansSail.Sails.FishermansFlyingSail.Patches.FishermansFlyingSailTextureButtonPatch"
+    )
     .GetMethod("Postfix", BindingFlags.Static | BindingFlags.NonPublic);
 if (
     !textureButtonPostfix
@@ -126,7 +130,9 @@ Console.WriteLine(
     "PASS: installed SE saved/cycled texture routes and texture-button patch ordering."
 );
 
-var travelPatch = assembly.GetType("FishermansSail.FishermanTravelPatch");
+var travelPatch = assembly.GetType(
+    "FishermansSail.Sails.FishermansFlyingSail.Patches.FishermansFlyingSailTravelPatch"
+);
 var travelTarget = travelPatch.GetCustomAttribute<HarmonyPatch>().info;
 var travelPrefix = travelPatch.GetMethod("Prefix", BindingFlags.Static | BindingFlags.NonPublic);
 var travelPostfix = travelPatch.GetMethod("Postfix", BindingFlags.Static | BindingFlags.NonPublic);
@@ -143,13 +149,18 @@ if (
     !prefixCalls.Any(m =>
         m.Name == "GetComponent"
         && m.IsGenericMethod
-        && m.GetGenericArguments().Single().FullName == "FishermansSail.FishermanSailRig"
+        && m.GetGenericArguments().Single().FullName
+            == "FishermansSail.Sails.FishermansFlyingSail.FishermansFlyingSailRig"
     )
     || !prefixCalls.Any(m =>
-        m.DeclaringType.FullName == "FishermansSail.FishermanTravel" && m.Name == "Clamp"
+        m.DeclaringType.FullName
+            == "FishermansSail.Sails.FishermansFlyingSail.FishermansFlyingSailTravel"
+        && m.Name == "Clamp"
     )
     || !postfixCalls.Any(m =>
-        m.DeclaringType.FullName == "FishermansSail.FishermanTravel" && m.Name == "ConstrainHinge"
+        m.DeclaringType.FullName
+            == "FishermansSail.Sails.FishermansFlyingSail.FishermansFlyingSailTravel"
+        && m.Name == "ConstrainHinge"
     )
     || !postfixCalls.Any(m =>
         m.DeclaringType.FullName == "UnityEngine.HingeJoint" && m.Name == "set_limits"
@@ -169,7 +180,7 @@ Console.WriteLine(
 // Cloth mesh assignment belongs to inactive prefab construction. Replacing
 // a live Cloth renderer's mesh caused the 0.7.11 detach/reset regression even
 // though the two meshes passed all pure geometry checks.
-var rigType = assembly.GetType("FishermansSail.FishermanSailRig");
+var rigType = assembly.GetType("FishermansSail.Sails.FishermansFlyingSail.FishermansFlyingSailRig");
 foreach (
     var method in rigType.GetMethods(
         BindingFlags.Instance
@@ -217,14 +228,14 @@ Console.WriteLine(
 // Run the actual text prefix without Unity objects. HarmonyX runs later
 // prefixes even when this one returns false, so their input must be safe too.
 var textPrefix = assembly
-    .GetType("FishermansSail.FishermanOrderTextPatch")
+    .GetType("FishermansSail.Sails.FishermansFlyingSail.Patches.FishermansFlyingSailOrderTextPatch")
     .GetMethod("Prefix", BindingFlags.Static | BindingFlags.NonPublic);
 if (!textPrefix.GetCustomAttribute<HarmonyBefore>().info.before.Contains("com.nandbrew.nandfixes"))
     throw new Exception("Fisherman text protection must run before NANDFixes.");
 var orderLines = new System.Collections.Generic.List<string> { "existing order line" };
 object[] textArguments =
 {
-    "192: (ERROR): Fisherman's Sail (150% x 115%) -> (no sail)",
+    "192: (ERROR): Fisherman's Flying Sail (150% x 115%) -> (no sail)",
     orderLines,
 };
 if (
@@ -247,7 +258,9 @@ Console.WriteLine(
     "PASS: actual order-text prefix, NANDFixes ordering, safe input for later HarmonyX prefixes, and native-list preservation."
 );
 
-var controlsPatch = assembly.GetType("FishermansSail.FishermanControlsPatch");
+var controlsPatch = assembly.GetType(
+    "FishermansSail.Sails.FishermansFlyingSail.Patches.FishermansFlyingSailControlsPatch"
+);
 if (
     !controlsPatch
         .GetMethod("Finalizer", BindingFlags.NonPublic | BindingFlags.Static)

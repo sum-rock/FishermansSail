@@ -1,17 +1,18 @@
 using System;
-using FishermansSail;
+using FishermansSail.Sails.FishermansFlyingSail;
 
 internal static class TravelChecks
 {
     internal static void Run()
     {
         Check(
-            FishermanTravel.Clamp(-89) == -40 && FishermanTravel.Clamp(89) == 40,
+            FishermansFlyingSailTravel.Clamp(-89) == -40
+                && FishermansFlyingSailTravel.Clamp(89) == 40,
             "Old saved travel limits must become 40 degrees on each side."
         );
         foreach (float angle in new[] { -40f, -25f, 0f, 15f, 40f })
             Check(
-                FishermanTravel.Clamp(angle) == angle,
+                FishermansFlyingSailTravel.Clamp(angle) == angle,
                 "Existing narrower collision limits must remain unchanged."
             );
 
@@ -37,7 +38,7 @@ internal static class TravelChecks
         {
             float min = Math.Max(Lerp(-1, savedMin, left), Lerp(-1, -89, right)) - sway;
             float max = Math.Min(Lerp(1, savedMax, left), Lerp(1, 89, right)) + sway;
-            FishermanTravel.ConstrainHinge(ref min, ref max, savedMin, savedMax);
+            FishermansFlyingSailTravel.ConstrainHinge(ref min, ref max, savedMin, savedMax);
             Check(
                 min >= -40 && max <= 40 && min <= max,
                 "Sheet/sway combinations must produce an ordered range within 40 degrees."
@@ -63,7 +64,7 @@ internal static class TravelChecks
         float expectedMax
     )
     {
-        FishermanTravel.ConstrainHinge(ref min, ref max, allowedMin, allowedMax);
+        FishermansFlyingSailTravel.ConstrainHinge(ref min, ref max, allowedMin, allowedMax);
         Check(
             min == expectedMin && max == expectedMax,
             $"Unexpected constrained hinge range: [{min}, {max}]."

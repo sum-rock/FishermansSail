@@ -1,9 +1,9 @@
 using System;
 using UnityEngine;
 
-namespace FishermansSail
+namespace FishermansSail.Sails.FishermansFlyingSail
 {
-    internal sealed class SailMeshData
+    internal sealed class FishermansFlyingSailMeshData
     {
         internal Vector3[] Vertices;
         internal Vector2[] UV;
@@ -15,7 +15,7 @@ namespace FishermansSail
         internal Vector3 Center;
     }
 
-    internal static class FishermanGeometry
+    internal static class FishermansFlyingSailGeometry
     {
         internal const int Columns = 24;
         internal const int Rows = 32;
@@ -28,13 +28,13 @@ namespace FishermansSail
 
         // Sail mount frame: +X is up, -Z points toward the forward mast.
         // Corner order: top fore, top aft, bottom fore, bottom aft.
-        internal static SailMeshData Create(float width)
+        internal static FishermansFlyingSailMeshData Create(float width)
         {
             if (float.IsNaN(width) || float.IsInfinity(width) || width < 0.25f || width > 100f)
                 throw new ArgumentException(
                     "Expected a finite sail width between 0.25 and 100 metres."
                 );
-            var data = new SailMeshData
+            var data = new FishermansFlyingSailMeshData
             {
                 Vertices = new Vector3[(Columns + 1) * (Rows + 1)],
                 UV = new Vector2[(Columns + 1) * (Rows + 1)],
@@ -85,7 +85,7 @@ namespace FishermansSail
                 bool pinned = (col == 0 || col == Columns) && (row == 0 || row == Rows);
                 data.Constraints[i] = new ClothSkinningCoefficient
                 {
-                    maxDistance = pinned ? 0 : FishermanBillow.ClothTravel(width, u, v),
+                    maxDistance = pinned ? 0 : FishermansFlyingSailBillow.ClothTravel(width, u, v),
                     collisionSphereDistance = 0,
                 };
                 if (row == Rows || col == Columns)

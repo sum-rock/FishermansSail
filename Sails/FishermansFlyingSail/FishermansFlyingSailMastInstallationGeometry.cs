@@ -1,9 +1,9 @@
 using System;
 using UnityEngine;
 
-namespace FishermansSail
+namespace FishermansSail.Sails.FishermansFlyingSail
 {
-    internal static class MastInstallationGeometry
+    internal static class FishermansFlyingSailMastInstallationGeometry
     {
         internal static Vector3 AtHeight(Vector3 bottom, Vector3 top, float height)
         {
@@ -57,15 +57,17 @@ namespace FishermansSail
             out Vector3 size
         )
         {
-            float step = width / FishermanGeometry.Columns;
+            float step = width / FishermansFlyingSailGeometry.Columns;
             float start = Math.Max((column + 0.05f) * step, mastClearance);
             float end = (column + 0.95f) * step;
             float depth =
                 width
                 * (
-                    FishermanGeometry.ForeDepthRatio
-                    + (FishermanGeometry.AftDepthRatio - FishermanGeometry.ForeDepthRatio)
-                        * ((column + 1f) / FishermanGeometry.Columns)
+                    FishermansFlyingSailGeometry.ForeDepthRatio
+                    + (
+                        FishermansFlyingSailGeometry.AftDepthRatio
+                        - FishermansFlyingSailGeometry.ForeDepthRatio
+                    ) * ((column + 1f) / FishermansFlyingSailGeometry.Columns)
                 );
             center = new Vector3(-depth * 0.5f, 0, -width + (start + end) * 0.5f);
             size = new Vector3(Math.Max(0.01f, depth - 0.1f), 0.05f, Math.Max(0.001f, end - start));

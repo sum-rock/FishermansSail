@@ -1,9 +1,10 @@
 # Fisherman's Sail
 
-A Sailwind mod that adds a four-corner **Fisherman's Sail** between two masts.
+A Sailwind mod that adds a four-corner **Fisherman's Flying Sail** between two masts.
+The mast-mounted flying sail is separate from planned stay-mounted sails.
 Version **0.1.0**.
 
-![Fisherman's Sail hoisted between two masts in Sailwind](references/example0-1-0.png)
+![Fisherman's Flying Sail hoisted between two masts in Sailwind](references/example0-1-0.png)
 
 - Supported boats: Brig, Junk, Jong, Sanbuq, Cog, Leopard and Shroud.
 - Independent port and starboard sheets, plus a hoist winch.
@@ -32,7 +33,7 @@ Only the plugin DLL is needed. To build it yourself, see the
 ## Fitting and sailing
 
 At a shipyard, select a physical mast, open **Other**, and choose
-**Fisherman's Sail**. The selected mast needs a supported active mast behind it,
+**Fisherman's Flying Sail**. The selected mast needs a supported active mast behind it,
 with halyard fittings on both masts. The aft mast does not need to carry a sail.
 On the Brig, select the foremast and use the mainmast as aft support. Supported
 three-masted boats can also use a mainmast with a mizzenmast behind it.
@@ -55,7 +56,7 @@ disabled for this sail; saved patterns become plain when loaded.
 
 The sail uses native mast save slots and keeps prefab index **400**, including
 when loading saves from development builds. Remove its sails and save before
-uninstalling the mod. Remove a Fisherman's Sail before removing either mast
+uninstalling the mod. Remove a Fisherman's Flying Sail before removing either mast
 that supports it.
 
 ## Development and testing

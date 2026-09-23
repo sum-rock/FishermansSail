@@ -4,15 +4,15 @@ using System.Linq;
 using HarmonyLib;
 using UnityEngine;
 
-namespace FishermansSail
+namespace FishermansSail.Sails.FishermansFlyingSail.Patches
 {
     [HarmonyPatch(typeof(ReefEffectAnimUniversal), "RefreshCloth")]
-    internal static class FishermanClothRefreshPatch
+    internal static class FishermansFlyingSailClothRefreshPatch
     {
         [HarmonyPrefix]
         private static bool Prefix(ReefEffectAnimUniversal __instance)
         {
-            var rig = __instance.GetComponent<FishermanSailRig>();
+            var rig = __instance.GetComponent<FishermansFlyingSailRig>();
             if (!rig)
                 return true;
             rig.RefreshCloth();
@@ -21,13 +21,13 @@ namespace FishermansSail
     }
 
     [HarmonyPatch(typeof(ShipyardUI), "SailMastCompatible")]
-    internal static class FishermanMastCompatiblePatch
+    internal static class FishermansFlyingSailMastCompatiblePatch
     {
         [HarmonyPostfix]
         private static void Postfix(GameObject sailPrefab, ref bool __result)
         {
-            if (__result && sailPrefab.GetComponent<FishermanSailRig>())
-                __result = FishermanRigging.TryResolve(
+            if (__result && sailPrefab.GetComponent<FishermansFlyingSailRig>())
+                __result = FishermansFlyingSailRigging.TryResolve(
                     GameState.currentShipyard.sailInstaller.GetCurrentMast(),
                     out _
                 );
@@ -35,14 +35,14 @@ namespace FishermansSail
     }
 
     [HarmonyPatch(typeof(ShipyardSailInstaller), "GetInstallError")]
-    internal static class FishermanInstallErrorPatch
+    internal static class FishermansFlyingSailInstallErrorPatch
     {
         [HarmonyPrefix]
         private static bool Prefix(Sail sail, Mast mast, ref bool error, ref string __result)
         {
-            if (!sail.GetComponent<FishermanSailRig>())
+            if (!sail.GetComponent<FishermansFlyingSailRig>())
                 return true;
-            string reason = FishermanRigging.InstallError(sail, mast);
+            string reason = FishermansFlyingSailRigging.InstallError(sail, mast);
             if (reason == null)
                 return true;
             error = true;
@@ -52,35 +52,35 @@ namespace FishermansSail
     }
 
     [HarmonyPatch(typeof(ShipyardSailInstaller), "InstallSail")]
-    internal static class FishermanInstallGuardPatch
+    internal static class FishermansFlyingSailInstallGuardPatch
     {
         [HarmonyPrefix]
         private static bool Prefix(Mast mast, Sail sail)
         {
-            if (!sail.GetComponent<FishermanSailRig>())
+            if (!sail.GetComponent<FishermansFlyingSailRig>())
                 return true;
-            string error = FishermanRigging.InstallError(sail, mast);
+            string error = FishermansFlyingSailRigging.InstallError(sail, mast);
             if (error == null)
                 return true;
-            Plugin.Log.LogWarning("Fisherman installation rejected: " + error);
+            Plugin.Log.LogWarning("FishermansFlyingSail installation rejected: " + error);
             return false;
         }
     }
 
     [HarmonyPatch(typeof(ShipyardSailInstaller), "AddNewSail")]
-    internal static class FishermanNewSailPatch
+    internal static class FishermansFlyingSailNewSailPatch
     {
         [HarmonyPostfix]
         private static void Postfix(ShipyardSailInstaller __instance, GameObject sailObject)
         {
-            var rig = sailObject.GetComponent<FishermanSailRig>();
+            var rig = sailObject.GetComponent<FishermansFlyingSailRig>();
             if (!rig)
                 return;
             var mast = __instance.GetCurrentMast();
             var sail = rig.Sail;
             // Native AddNewSail chooses the shipyard's first palette entry.
             // Use the existing white swatch for this sail's initial selection.
-            sail.ChangeSailColor(FishermanAppearance.WhiteColorIndex);
+            sail.ChangeSailColor(FishermansFlyingSailAppearance.WhiteColorIndex);
             sail.ChangeInstallHeight(mast.mastHeight - sail.GetCurrentInstallHeight());
             sail.UpdateInstallPosition();
             sail.currentUnroll = 1f;
@@ -90,12 +90,12 @@ namespace FishermansSail
     }
 
     [HarmonyPatch(typeof(Sail), "GetScaledHeight")]
-    internal static class FishermanMastHeightPatch
+    internal static class FishermansFlyingSailMastHeightPatch
     {
         [HarmonyPrefix]
         private static bool Prefix(Sail __instance, ref float __result)
         {
-            var rig = __instance.GetComponent<FishermanSailRig>();
+            var rig = __instance.GetComponent<FishermansFlyingSailRig>();
             if (!rig || rig.Corners == null)
                 return true;
             __result = -rig.Corners[2].x * __instance.cloth.transform.parent.localScale.x;
@@ -106,7 +106,7 @@ namespace FishermansSail
     // Let native binding process only native-controlled sails. Restore the actual
     // list even on exceptions; saves, mast capacity and overlap checks see all sails.
     [HarmonyPatch(typeof(Mast), "UpdateControllerAttachments")]
-    internal static class FishermanControlsPatch
+    internal static class FishermansFlyingSailControlsPatch
     {
         [HarmonyPrefix]
         private static void Prefix(Mast __instance, out List<GameObject> __state)
@@ -114,12 +114,12 @@ namespace FishermansSail
             __state = null;
             if (
                 __instance.sails == null
-                || !__instance.sails.Any(s => s && s.GetComponent<FishermanSailRig>())
+                || !__instance.sails.Any(s => s && s.GetComponent<FishermansFlyingSailRig>())
             )
                 return;
             __state = __instance.sails;
             __instance.sails = __state
-                .Where(s => s && !s.GetComponent<FishermanSailRig>())
+                .Where(s => s && !s.GetComponent<FishermansFlyingSailRig>())
                 .ToList();
         }
 
@@ -137,13 +137,13 @@ namespace FishermansSail
             if (__exception != null)
                 return;
             foreach (var item in __state)
-                if (item && item.GetComponent<FishermanSailRig>())
-                    FishermanRigging.For(item.GetComponent<Sail>()).AttachControls();
+                if (item && item.GetComponent<FishermansFlyingSailRig>())
+                    FishermansFlyingSailRigging.For(item.GetComponent<Sail>()).AttachControls();
         }
     }
 
     [HarmonyPatch(typeof(BoatCustomParts), "CanUninstall")]
-    internal static class FishermanSupportRemovalPatch
+    internal static class FishermansFlyingSailSupportRemovalPatch
     {
         [HarmonyPostfix]
         private static void Postfix(
@@ -157,17 +157,17 @@ namespace FishermansSail
             var option = __instance.availableParts[partIndex].partOptions[optionIndex];
             if (
                 !__instance
-                    .GetComponentsInChildren<FishermanRigging>(true)
+                    .GetComponentsInChildren<FishermansFlyingSailRigging>(true)
                     .Any(r => r.DependsOn(option))
             )
                 return;
             __result = false;
-            dependentOptionNames = ": supports a Fisherman's Sail; remove the sail first.";
+            dependentOptionNames = ": supports a Fisherman's Flying Sail; remove the sail first.";
         }
     }
 
     [HarmonyPatch(typeof(BoatPart), "SetOptionEnabled")]
-    internal static class FishermanSupportPreviewPatch
+    internal static class FishermansFlyingSailSupportPreviewPatch
     {
         [HarmonyPrefix]
         private static void Prefix(BoatPart __instance, int i, ref bool state)
@@ -178,7 +178,7 @@ namespace FishermansSail
             var boat = option.GetComponentInParent<BoatRefs>();
             if (
                 boat
-                && boat.GetComponentsInChildren<FishermanRigging>(true)
+                && boat.GetComponentsInChildren<FishermansFlyingSailRigging>(true)
                     .Any(r => r.DependsOn(option))
             )
                 state = true;
@@ -186,21 +186,23 @@ namespace FishermansSail
     }
 
     [HarmonyPatch(typeof(BoatCustomParts), "RefreshParts")]
-    internal static class FishermanPartsRefreshPatch
+    internal static class FishermansFlyingSailPartsRefreshPatch
     {
         [HarmonyPostfix]
         internal static void Postfix(BoatCustomParts __instance)
         {
-            foreach (var rig in __instance.GetComponentsInChildren<FishermanRigging>(true))
+            foreach (
+                var rig in __instance.GetComponentsInChildren<FishermansFlyingSailRigging>(true)
+            )
                 rig.Invalidate();
         }
     }
 
     [HarmonyPatch(typeof(BoatCustomParts), "RefreshPartsWithOrder")]
-    internal static class FishermanOrderRefreshPatch
+    internal static class FishermansFlyingSailOrderRefreshPatch
     {
         [HarmonyPostfix]
         private static void Postfix(BoatCustomParts __instance) =>
-            FishermanPartsRefreshPatch.Postfix(__instance);
+            FishermansFlyingSailPartsRefreshPatch.Postfix(__instance);
     }
 }

@@ -1,31 +1,36 @@
 using UnityEngine;
 
-namespace FishermansSail
+namespace FishermansSail.Sails.FishermansFlyingSail
 {
     // Visual running line: the existing sheet winches continue to control the
     // clew. The upper corner moves freely beneath the aft masthead pulley.
-    internal sealed class FishermanSupportLine : MonoBehaviour
+    internal sealed class FishermansFlyingSailSupportLine : MonoBehaviour
     {
         public LineRenderer[] UpperSheets;
         public RopeEffect[] NativeSheets;
         private readonly Vector3[] upperPoints = new Vector3[33];
 
-        internal static FishermanSupportLine Create(
+        internal static FishermansFlyingSailSupportLine Create(
             Transform parent,
             RopeEffect left,
             RopeEffect right
         )
         {
-            var root = new GameObject("Fisherman upper sheets");
+            var root = new GameObject("FishermansFlyingSail upper sheets");
             root.transform.SetParent(parent, false);
-            var route = root.AddComponent<FishermanSupportLine>();
+            var route = root.AddComponent<FishermansFlyingSailSupportLine>();
             route.NativeSheets = new[] { left, right };
             route.UpperSheets = new[]
             {
-                CreateRenderer(root.transform, "Port upper sheet", left, route.upperPoints.Length),
                 CreateRenderer(
                     root.transform,
-                    "Starboard upper sheet",
+                    "FishermansFlyingSail Port upper sheet",
+                    left,
+                    route.upperPoints.Length
+                ),
+                CreateRenderer(
+                    root.transform,
+                    "FishermansFlyingSail Starboard upper sheet",
                     right,
                     route.upperPoints.Length
                 ),
@@ -71,12 +76,12 @@ namespace FishermansSail
                     rope.enabled = false;
                     continue;
                 }
-                float slack = FlyingSailGeometry.SheetSlack(
+                float slack = FishermansFlyingSailFrameGeometry.SheetSlack(
                     source.currentRopeLength,
                     source.totalRopeLength
                 );
                 for (int i = 0; i < upperPoints.Length; i++)
-                    upperPoints[i] = FlyingSailGeometry.UpperSheetPoint(
+                    upperPoints[i] = FishermansFlyingSailFrameGeometry.UpperSheetPoint(
                         head,
                         aftGuide,
                         source.transform.position,

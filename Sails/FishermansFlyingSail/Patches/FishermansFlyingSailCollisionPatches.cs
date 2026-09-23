@@ -1,9 +1,9 @@
 using HarmonyLib;
 
-namespace FishermansSail
+namespace FishermansSail.Sails.FishermansFlyingSail.Patches
 {
     [HarmonyPatch(typeof(ShipyardSailColChecker), "UpdateRotation")]
-    internal static class FlyingSailCollisionPatch
+    internal static class FishermansFlyingSailCollisionPatch
     {
         [HarmonyPrefix]
         private static bool Prefix(
@@ -13,7 +13,7 @@ namespace FishermansSail
             ref UnityEngine.Quaternion ___initialRot
         )
         {
-            var rig = ___sail ? ___sail.GetComponent<FishermanSailRig>() : null;
+            var rig = ___sail ? ___sail.GetComponent<FishermansFlyingSailRig>() : null;
             if (!rig || !rig.RefreshFlyingFrame())
                 return true;
             // The native checker first waits above the ship for contacts to

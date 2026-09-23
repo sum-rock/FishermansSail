@@ -1,5 +1,5 @@
 using System;
-using FishermansSail;
+using FishermansSail.Sails.FishermansFlyingSail;
 using UnityEngine;
 
 internal static class AerodynamicChecks
@@ -10,10 +10,10 @@ internal static class AerodynamicChecks
         foreach (float trim in new[] { -70f, -40f, -15f, 15f, 40f, 70f })
         {
             var foreHead = Vector3.zero;
-            var foreTack = Vector3.down * (width * FishermanGeometry.ForeDepthRatio);
-            var aftHead = FlyingSailGeometry.UpperHead(
+            var foreTack = Vector3.down * (width * FishermansFlyingSailGeometry.ForeDepthRatio);
+            var aftHead = FishermansFlyingSailFrameGeometry.UpperHead(
                 Vector3.forward * width,
-                FlyingSailGeometry.RotateAroundMast(
+                FishermansFlyingSailFrameGeometry.RotateAroundMast(
                     Vector3.forward * width,
                     foreHead,
                     Vector3.up,
@@ -23,15 +23,15 @@ internal static class AerodynamicChecks
                 Vector3.up,
                 1
             );
-            var requestedClew = FlyingSailGeometry.RotateAroundMast(
+            var requestedClew = FishermansFlyingSailFrameGeometry.RotateAroundMast(
                 new Vector3(0, -width, width),
                 Vector3.zero,
                 Vector3.up,
                 trim
             );
-            var leech = new Vector3[FishermanGeometry.Rows + 1];
+            var leech = new Vector3[FishermansFlyingSailGeometry.Rows + 1];
             Check(
-                FishermanTension.Fit(
+                FishermansFlyingSailTension.Fit(
                     requestedClew,
                     aftHead,
                     foreTack,
@@ -44,7 +44,7 @@ internal static class AerodynamicChecks
                 "Aerodynamic fixture must preserve both cloth edges."
             );
             Check(
-                FishermanAerodynamics.TryFrame(
+                FishermansFlyingSailAerodynamics.TryFrame(
                     foreHead,
                     foreTack,
                     aftHead,
@@ -91,7 +91,7 @@ internal static class AerodynamicChecks
                 "Corrected axes must recognize broadside wind."
             );
             Near(
-                FishermanAerodynamics.ForceDirection(-usefulWind, frame.Normal),
+                FishermansFlyingSailAerodynamics.ForceDirection(-usefulWind, frame.Normal),
                 -usefulWind,
                 "Force direction must switch with the loaded face of the sail."
             );
@@ -101,8 +101,13 @@ internal static class AerodynamicChecks
             );
 
             Vector3 Rotate(Vector3 p) =>
-                FlyingSailGeometry.RotateAroundMast(
-                    FlyingSailGeometry.RotateAroundMast(p, Vector3.zero, Vector3.right, 8),
+                FishermansFlyingSailFrameGeometry.RotateAroundMast(
+                    FishermansFlyingSailFrameGeometry.RotateAroundMast(
+                        p,
+                        Vector3.zero,
+                        Vector3.right,
+                        8
+                    ),
                     Vector3.zero,
                     Vector3.forward,
                     -25
@@ -110,7 +115,7 @@ internal static class AerodynamicChecks
             var offset = new Vector3(13, -5, 9);
             Vector3 Move(Vector3 p) => Rotate(p * 0.55f) + offset;
             Check(
-                FishermanAerodynamics.TryFrame(
+                FishermansFlyingSailAerodynamics.TryFrame(
                     Move(foreHead),
                     Move(foreTack),
                     Move(aftHead),
@@ -124,7 +129,7 @@ internal static class AerodynamicChecks
             Near(moved.Center, Move(frame.Center), "Centroid failed to follow the posed sail.");
         }
         Check(
-            !FishermanAerodynamics.TryFrame(
+            !FishermansFlyingSailAerodynamics.TryFrame(
                 Vector3.zero,
                 Vector3.zero,
                 Vector3.zero,
@@ -133,13 +138,13 @@ internal static class AerodynamicChecks
             ),
             "An uninitialized sail must use the guarded fallback."
         );
-        for (int col = 0; col <= FishermanGeometry.Columns; col++)
-        for (int row = 0; row <= FishermanGeometry.Rows; row++)
+        for (int col = 0; col <= FishermansFlyingSailGeometry.Columns; col++)
+        for (int row = 0; row <= FishermansFlyingSailGeometry.Rows; row++)
         {
-            float travel = FishermanBillow.ClothTravel(
+            float travel = FishermansFlyingSailBillow.ClothTravel(
                 1,
-                (float)col / FishermanGeometry.Columns,
-                (float)row / FishermanGeometry.Rows
+                (float)col / FishermansFlyingSailGeometry.Columns,
+                (float)row / FishermansFlyingSailGeometry.Rows
             );
             Check(
                 travel >= -1e-6f && travel <= 0.28f,
@@ -147,7 +152,7 @@ internal static class AerodynamicChecks
             );
         }
         Check(
-            FishermanBillow.ClothTravel(1, 1, 0.5f) <= 0.061f,
+            FishermansFlyingSailBillow.ClothTravel(1, 1, 0.5f) <= 0.061f,
             "The free leech must have bounded movement around its fitted outline."
         );
         Console.WriteLine(
@@ -171,7 +176,7 @@ internal static class AerodynamicChecks
 
     private static float NativeForwardFraction(
         Vector3 wind,
-        FishermanWindFrame frame,
+        FishermansFlyingSailWindFrame frame,
         float unroll,
         float shadow
     )
@@ -181,7 +186,7 @@ internal static class AerodynamicChecks
         float gate = Math.Max(0, Math.Min(1, (angle - 13) / 3));
         float capture =
             (upwind + (1 - upwind) * Math.Max(0, Math.Min(1, angle / 90))) * gate * unroll * shadow;
-        var normal = FishermanAerodynamics.ForceDirection(wind, frame.Normal);
+        var normal = FishermansFlyingSailAerodynamics.ForceDirection(wind, frame.Normal);
         float forceAngle = Vector3.Angle(normal, Vector3.forward);
         float sign = forceAngle > 90 ? -0.33f : 1;
         if (forceAngle > 90)

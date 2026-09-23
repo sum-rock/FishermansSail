@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace FishermansSail
+namespace FishermansSail.BoatRigs
 {
     internal sealed class MastSupportDefinition
     {

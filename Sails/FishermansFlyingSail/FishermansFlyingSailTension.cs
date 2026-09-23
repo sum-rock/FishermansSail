@@ -1,9 +1,9 @@
 using System;
 using UnityEngine;
 
-namespace FishermansSail
+namespace FishermansSail.Sails.FishermansFlyingSail
 {
-    internal static class FishermanTension
+    internal static class FishermansFlyingSailTension
     {
         // The clew lies on the intersection of two spheres: distance from the
         // tack preserves foot tension, distance from the head budgets leech
@@ -94,7 +94,7 @@ namespace FishermansSail
             var previous = clew;
             for (int i = 1; i <= 64; i++)
             {
-                var point = FishermanBillow.SupportPoint(clew, head, bow, i / 64f);
+                var point = FishermansFlyingSailBillow.SupportPoint(clew, head, bow, i / 64f);
                 length += (point - previous).magnitude;
                 previous = point;
             }
@@ -110,7 +110,7 @@ namespace FishermansSail
             int next = 1;
             for (int step = 1; step <= 64 && next < points.Length - 1; step++)
             {
-                var point = FishermanBillow.SupportPoint(clew, head, bow, step / 64f);
+                var point = FishermansFlyingSailBillow.SupportPoint(clew, head, bow, step / 64f);
                 float segment = (point - previous).magnitude;
                 while (
                     next < points.Length - 1
@@ -121,7 +121,7 @@ namespace FishermansSail
                         segment > 1e-8f
                             ? (length * next / (points.Length - 1) - travelled) / segment
                             : 0;
-                    points[next++] = FishermanBillow.SupportPoint(
+                    points[next++] = FishermansFlyingSailBillow.SupportPoint(
                         clew,
                         head,
                         bow,

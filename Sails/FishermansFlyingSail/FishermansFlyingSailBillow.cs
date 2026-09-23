@@ -1,9 +1,9 @@
 using System;
 using UnityEngine;
 
-namespace FishermansSail
+namespace FishermansSail.Sails.FishermansFlyingSail
 {
-    internal static class FishermanBillow
+    internal static class FishermansFlyingSailBillow
     {
         // The free leech has up to 6% width of travel about its fitted curve.
         // Reduce movement progressively through the cloth near the clew.
@@ -68,7 +68,7 @@ namespace FishermansSail
             float camber
         ) =>
             Vector3.Lerp(fore, aft, u)
-            + normal * (FishermanGeometry.RestCamber(width, u, v) * camber);
+            + normal * (FishermansFlyingSailGeometry.RestCamber(width, u, v) * camber);
 
         internal static Vector3 SupportPoint(Vector3 clew, Vector3 head, Vector3 bow, float t) =>
             clew + (head - clew) * t + bow * (4 * t * (1 - t));

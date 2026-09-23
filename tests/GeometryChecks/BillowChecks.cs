@@ -1,5 +1,5 @@
 using System;
-using FishermansSail;
+using FishermansSail.Sails.FishermansFlyingSail;
 using UnityEngine;
 
 internal static class BillowChecks
@@ -8,23 +8,23 @@ internal static class BillowChecks
     {
         foreach (float width in new[] { 0.25f, 6f, 13.8f, 40f })
         {
-            var data = FishermanGeometry.Create(width);
+            var data = FishermansFlyingSailGeometry.Create(width);
             foreach (float angle in new[] { -80f, -50f, -20f, 0f, 20f, 50f, 80f })
             foreach (float unroll in new[] { 0f, 0.02f, 0.5f, 0.75f, 0.9f, 0.98f, 1f })
             foreach (float load in new[] { -1f, 0f, 1f })
             foreach (float camber in new[] { -1f, -0.5f, 0f, 0.5f, 1f })
                 CheckPose(data, width, angle, unroll, load, camber);
             Check(
-                FishermanBillow.ClothTravel(width, 0.5f, 0) > width * 0.08f
-                    && FishermanBillow.ClothTravel(width, 0.5f, 0) < width * 0.12f,
+                FishermansFlyingSailBillow.ClothTravel(width, 0.5f, 0) > width * 0.08f
+                    && FishermansFlyingSailBillow.ClothTravel(width, 0.5f, 0) < width * 0.12f,
                 "Top cloth must flex within its moving camber peak."
             );
             CheckSweep(width);
             CheckFurlSweep(width);
             CheckClewTaper(width);
-            var invalid = new Vector3[FishermanGeometry.Rows + 1];
+            var invalid = new Vector3[FishermansFlyingSailGeometry.Rows + 1];
             Check(
-                !FishermanTension.Fit(
+                !FishermansFlyingSailTension.Fit(
                     Vector3.zero,
                     Vector3.zero,
                     Vector3.zero,
@@ -39,7 +39,7 @@ internal static class BillowChecks
             foreach (var point in invalid)
                 Near(point, Vector3.zero, width, "A degenerate fit must remain finite.");
             Check(
-                !FishermanTension.Fit(
+                !FishermansFlyingSailTension.Fit(
                     Vector3.zero,
                     Vector3.zero,
                     Vector3.right * (5 * width),
@@ -61,7 +61,7 @@ internal static class BillowChecks
         float previous = 1;
         for (int i = 0; i < 100; i++)
         {
-            float next = FishermanBillow.SmoothLoad(previous, -1, 1f / 60);
+            float next = FishermansFlyingSailBillow.SmoothLoad(previous, -1, 1f / 60);
             Check(
                 next <= previous && next >= -1 && previous - next < 0.1f,
                 "Wind changes must remain smooth without overshooting."
@@ -70,7 +70,7 @@ internal static class BillowChecks
         }
         Check(previous < -0.98f, "Wind response failed to settle on the new tack.");
         Check(
-            FishermanBillow.SmoothLoad(0, float.NaN, 0.016f) == 0,
+            FishermansFlyingSailBillow.SmoothLoad(0, float.NaN, 0.016f) == 0,
             "Invalid wind must not corrupt attachment transforms."
         );
         Console.WriteLine(
@@ -79,7 +79,7 @@ internal static class BillowChecks
     }
 
     private static void CheckPose(
-        SailMeshData data,
+        FishermansFlyingSailMeshData data,
         float width,
         float angle,
         float unroll,
@@ -89,15 +89,20 @@ internal static class BillowChecks
     {
         var rest = data.Corners;
         var requested = HoistPose.Corner(rest, 3, unroll);
-        requested = FlyingSailGeometry.RotateAroundMast(requested, rest[0], Vector3.right, angle);
+        requested = FishermansFlyingSailFrameGeometry.RotateAroundMast(
+            requested,
+            rest[0],
+            Vector3.right,
+            angle
+        );
         var head = MovingHead(rest, angle, unroll);
         Near(
             head,
-            FlyingSailGeometry.RotateAroundMast(
+            FishermansFlyingSailFrameGeometry.RotateAroundMast(
                 HoistPose.Corner(rest, 1, unroll),
                 rest[0],
                 Vector3.right,
-                angle * 0.85f * FishermanBillow.Deployment(unroll)
+                angle * 0.85f * FishermansFlyingSailBillow.Deployment(unroll)
             ),
             width,
             "Upper corner did not follow the specified sheet angle."
@@ -105,12 +110,12 @@ internal static class BillowChecks
         Check(
             Math.Abs(
                 (head - HoistPose.Corner(rest, 0, unroll)).magnitude
-                    - width * MastInstallationGeometry.HoistScale(unroll)
+                    - width * FishermansFlyingSailMastInstallationGeometry.HoistScale(unroll)
             )
                 < width * 1e-5f,
             "Moving the head stretched the top span."
         );
-        var bow = FishermanBillow.SupportBow(
+        var bow = FishermansFlyingSailBillow.SupportBow(
             requested,
             head,
             Vector3.up,
@@ -118,15 +123,15 @@ internal static class BillowChecks
             width,
             load
         );
-        bow *= FishermanBillow.Deployment(unroll);
-        float restLength = width * MastInstallationGeometry.HoistScale(unroll);
-        var points = new Vector3[FishermanGeometry.Rows + 1];
+        bow *= FishermansFlyingSailBillow.Deployment(unroll);
+        float restLength = width * FishermansFlyingSailMastInstallationGeometry.HoistScale(unroll);
+        var points = new Vector3[FishermansFlyingSailGeometry.Rows + 1];
         var tack = HoistPose.Corner(rest, 2, unroll);
         float footLength = (HoistPose.Corner(rest, 3, unroll) - tack).magnitude;
-        float deployment = FishermanBillow.Deployment(unroll);
+        float deployment = FishermansFlyingSailBillow.Deployment(unroll);
         float reserve = 1 - 0.01f * deployment;
         Check(
-            FishermanTension.Fit(
+            FishermansFlyingSailTension.Fit(
                 requested,
                 head,
                 tack,
@@ -154,7 +159,7 @@ internal static class BillowChecks
             float segment = (points[i] - points[i - 1]).magnitude;
             length += segment;
             Check(
-                segment <= restLength / FishermanGeometry.Rows * 1.001f,
+                segment <= restLength / FishermansFlyingSailGeometry.Rows * 1.001f,
                 "A leech skin-target segment stretched beyond its available cloth."
             );
         }
@@ -171,8 +176,13 @@ internal static class BillowChecks
         // The same calculation must work after translation, scaling and mast/boat rotation.
         var transformed = new Vector3[points.Length];
         Vector3 Rotate(Vector3 point) =>
-            FlyingSailGeometry.RotateAroundMast(
-                FlyingSailGeometry.RotateAroundMast(point, Vector3.zero, Vector3.up, 12),
+            FishermansFlyingSailFrameGeometry.RotateAroundMast(
+                FishermansFlyingSailFrameGeometry.RotateAroundMast(
+                    point,
+                    Vector3.zero,
+                    Vector3.up,
+                    12
+                ),
                 Vector3.zero,
                 Vector3.forward,
                 25
@@ -180,7 +190,7 @@ internal static class BillowChecks
         var offset = new Vector3(10, 20, -30);
         const float scale = 0.55f;
         Check(
-            FishermanTension.Fit(
+            FishermansFlyingSailTension.Fit(
                 offset + Rotate(requested * scale),
                 offset + Rotate(head * scale),
                 offset + Rotate(tack * scale),
@@ -202,7 +212,7 @@ internal static class BillowChecks
 
         var mirrored = new Vector3[points.Length];
         Check(
-            FishermanTension.Fit(
+            FishermansFlyingSailTension.Fit(
                 new Vector3(requested.x, -requested.y, requested.z),
                 new Vector3(head.x, -head.y, head.z),
                 tack,
@@ -226,26 +236,33 @@ internal static class BillowChecks
         // Skin rest offsets rotate with the native sail frame before the
         // procedural bones are positioned in world space.
         Vector3 SkinRest(Vector3 p) =>
-            FlyingSailGeometry.RotateAroundMast(p, rest[0], Vector3.right, angle);
+            FishermansFlyingSailFrameGeometry.RotateAroundMast(p, rest[0], Vector3.right, angle);
         var bones = new Vector3[data.BonePositions.Length];
         bones[0] = HoistPose.Corner(rest, 0, unroll);
         bones[2] = HoistPose.Corner(rest, 2, unroll);
-        for (int row = 0; row <= FishermanGeometry.Rows; row++)
-            bones[FishermanGeometry.LeechBone(row)] = points[FishermanGeometry.Rows - row];
-        var camberNormal = FishermanBillow.CamberNormal(bones[0], bones[2], bones[1], bones[3]);
-        for (int row = 0; row <= FishermanGeometry.Rows; row++)
-        for (int col = 0; col < FishermanGeometry.ShapeColumns; col++)
+        for (int row = 0; row <= FishermansFlyingSailGeometry.Rows; row++)
+            bones[FishermansFlyingSailGeometry.LeechBone(row)] = points[
+                FishermansFlyingSailGeometry.Rows - row
+            ];
+        var camberNormal = FishermansFlyingSailBillow.CamberNormal(
+            bones[0],
+            bones[2],
+            bones[1],
+            bones[3]
+        );
+        for (int row = 0; row <= FishermansFlyingSailGeometry.Rows; row++)
+        for (int col = 0; col < FishermansFlyingSailGeometry.ShapeColumns; col++)
         {
-            int bone = FishermanGeometry.ShapeBone(row, col);
+            int bone = FishermansFlyingSailGeometry.ShapeBone(row, col);
             if (bone == 0 || bone == 2)
                 continue;
-            float v = (float)row / FishermanGeometry.Rows;
-            bones[bone] = FishermanBillow.ShapePoint(
+            float v = (float)row / FishermansFlyingSailGeometry.Rows;
+            bones[bone] = FishermansFlyingSailBillow.ShapePoint(
                 Vector3.Lerp(bones[0], bones[2], v),
-                bones[FishermanGeometry.LeechBone(row)],
+                bones[FishermansFlyingSailGeometry.LeechBone(row)],
                 camberNormal,
                 width,
-                (float)col / FishermanGeometry.ShapeColumns,
+                (float)col / FishermansFlyingSailGeometry.ShapeColumns,
                 v,
                 camber * deployment
             );
@@ -268,21 +285,25 @@ internal static class BillowChecks
                 "Posed cloth contains a non-finite vertex."
             );
         }
-        for (int row = 0; row <= FishermanGeometry.Rows; row++)
+        for (int row = 0; row <= FishermansFlyingSailGeometry.Rows; row++)
         {
-            float v = (float)row / FishermanGeometry.Rows;
+            float v = (float)row / FishermansFlyingSailGeometry.Rows;
             var expectedFore =
                 Vector3.Lerp(bones[0], bones[2], v)
-                + camberNormal * (FishermanGeometry.RestCamber(width, 0, v) * camber * deployment);
+                + camberNormal
+                    * (FishermansFlyingSailGeometry.RestCamber(width, 0, v) * camber * deployment);
             Near(
-                vertices[row * (FishermanGeometry.Columns + 1)],
+                vertices[row * (FishermansFlyingSailGeometry.Columns + 1)],
                 expectedFore,
                 width,
                 "Forward-edge camber must follow the selected side and gather through furling."
             );
             Near(
-                vertices[row * (FishermanGeometry.Columns + 1) + FishermanGeometry.Columns],
-                points[FishermanGeometry.Rows - row],
+                vertices[
+                    row * (FishermansFlyingSailGeometry.Columns + 1)
+                        + FishermansFlyingSailGeometry.Columns
+                ],
+                points[FishermansFlyingSailGeometry.Rows - row],
                 width,
                 "Leech skin targets separated from the tension-fitted curve."
             );
@@ -314,7 +335,7 @@ internal static class BillowChecks
 
     private static void CheckSweep(float width)
     {
-        var rest = FishermanGeometry.Create(width).Corners;
+        var rest = FishermansFlyingSailGeometry.Create(width).Corners;
         foreach (float unroll in new[] { 0.5f, 0.75f, 0.8f, 0.9f, 0.98f, 1f })
         foreach (float load in new[] { -1f, 0f, 1f })
         {
@@ -322,10 +343,10 @@ internal static class BillowChecks
             var tack = HoistPose.Corner(rest, 2, unroll);
             var restClew = HoistPose.Corner(rest, 3, unroll);
             float footLength = (restClew - tack).magnitude;
-            float deployment = FishermanBillow.Deployment(unroll);
+            float deployment = FishermansFlyingSailBillow.Deployment(unroll);
             for (int angle = -80; angle <= 80; angle++)
             {
-                var requested = FlyingSailGeometry.RotateAroundMast(
+                var requested = FishermansFlyingSailFrameGeometry.RotateAroundMast(
                     restClew,
                     rest[0],
                     Vector3.right,
@@ -333,7 +354,7 @@ internal static class BillowChecks
                 );
                 var head = MovingHead(rest, angle, unroll);
                 var bow =
-                    FishermanBillow.SupportBow(
+                    FishermansFlyingSailBillow.SupportBow(
                         requested,
                         head,
                         Vector3.up,
@@ -341,14 +362,14 @@ internal static class BillowChecks
                         width,
                         load
                     ) * deployment;
-                var points = new Vector3[FishermanGeometry.Rows + 1];
+                var points = new Vector3[FishermansFlyingSailGeometry.Rows + 1];
                 Check(
-                    FishermanTension.Fit(
+                    FishermansFlyingSailTension.Fit(
                         requested,
                         head,
                         tack,
                         bow,
-                        width * MastInstallationGeometry.HoistScale(unroll),
+                        width * FishermansFlyingSailMastInstallationGeometry.HoistScale(unroll),
                         footLength,
                         deployment,
                         points
@@ -373,7 +394,7 @@ internal static class BillowChecks
 
     private static void CheckFurlSweep(float width)
     {
-        var rest = FishermanGeometry.Create(width).Corners;
+        var rest = FishermansFlyingSailGeometry.Create(width).Corners;
         foreach (float angle in new[] { -80f, -20f, 20f, 80f })
         {
             Vector3[] previous = null;
@@ -384,8 +405,13 @@ internal static class BillowChecks
                 var clew = HoistPose.Corner(rest, 3, unroll);
                 var tack = HoistPose.Corner(rest, 2, unroll);
                 float footLength = (clew - tack).magnitude;
-                clew = FlyingSailGeometry.RotateAroundMast(clew, rest[0], Vector3.right, angle);
-                var bow = FishermanBillow.SupportBow(
+                clew = FishermansFlyingSailFrameGeometry.RotateAroundMast(
+                    clew,
+                    rest[0],
+                    Vector3.right,
+                    angle
+                );
+                var bow = FishermansFlyingSailBillow.SupportBow(
                     clew,
                     head,
                     Vector3.up,
@@ -393,15 +419,15 @@ internal static class BillowChecks
                     width,
                     1
                 );
-                float deployment = FishermanBillow.Deployment(unroll);
-                var points = new Vector3[FishermanGeometry.Rows + 1];
+                float deployment = FishermansFlyingSailBillow.Deployment(unroll);
+                var points = new Vector3[FishermansFlyingSailGeometry.Rows + 1];
                 Check(
-                    FishermanTension.Fit(
+                    FishermansFlyingSailTension.Fit(
                         clew,
                         head,
                         tack,
                         bow * deployment,
-                        width * MastInstallationGeometry.HoistScale(unroll),
+                        width * FishermansFlyingSailMastInstallationGeometry.HoistScale(unroll),
                         footLength,
                         deployment,
                         points
@@ -420,9 +446,9 @@ internal static class BillowChecks
     }
 
     private static Vector3 MovingHead(Vector3[] rest, float angle, float unroll) =>
-        FlyingSailGeometry.UpperHead(
+        FishermansFlyingSailFrameGeometry.UpperHead(
             HoistPose.Corner(rest, 1, unroll),
-            FlyingSailGeometry.RotateAroundMast(
+            FishermansFlyingSailFrameGeometry.RotateAroundMast(
                 HoistPose.Corner(rest, 1, unroll),
                 rest[0],
                 Vector3.right,
@@ -439,7 +465,7 @@ internal static class BillowChecks
         for (int i = 0; i <= 20; i++)
         {
             float distance = i / 100f;
-            float taper = FishermanBillow.ClewTaper(1 - distance, 1);
+            float taper = FishermansFlyingSailBillow.ClewTaper(1 - distance, 1);
             Check(
                 taper >= previous && taper >= 0 && taper <= 1,
                 "Clew reinforcement must transition smoothly out into the foot."
@@ -447,24 +473,25 @@ internal static class BillowChecks
             previous = taper;
         }
         Check(
-            FishermanBillow.ClewTaper(1, 1) == 0 && Math.Abs(previous - 1) < 1e-5f,
+            FishermansFlyingSailBillow.ClewTaper(1, 1) == 0 && Math.Abs(previous - 1) < 1e-5f,
             "Clew taper must span the final twenty percent of the panel."
         );
         for (int i = 0; i <= 32; i++)
         {
             float t = i / 32f;
             Check(
-                FishermanBillow.ClewTaper(t, 0) == 1 && FishermanBillow.ClewTaper(0, t) == 1,
+                FishermansFlyingSailBillow.ClewTaper(t, 0) == 1
+                    && FishermansFlyingSailBillow.ClewTaper(0, t) == 1,
                 "Reinforcing the clew must not reduce top or forward-edge billow."
             );
         }
-        float near = FishermanBillow.ClothTravel(width, 23f / 24, 1);
+        float near = FishermansFlyingSailBillow.ClothTravel(width, 23f / 24, 1);
         Check(
             near > 0 && near < width * 0.005f,
             "The first foot vertex beside the clew needs a small nonzero movement allowance."
         );
-        float boundary = FishermanBillow.ClothTravel(width, 0.8f, 1);
-        float inside = FishermanBillow.ClothTravel(width, 0.80001f, 1);
+        float boundary = FishermansFlyingSailBillow.ClothTravel(width, 0.8f, 1);
+        float inside = FishermansFlyingSailBillow.ClothTravel(width, 0.80001f, 1);
         Check(
             Math.Abs(boundary - inside) < width * 1e-4f,
             "Clew taper introduced a discontinuity at the reinforcement boundary."

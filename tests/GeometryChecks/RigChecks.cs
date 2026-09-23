@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
-using FishermansSail;
+using FishermansSail.BoatRigs;
+using FishermansSail.Sails.FishermansFlyingSail;
 
 internal static class RigChecks
 {

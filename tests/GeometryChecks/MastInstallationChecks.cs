@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
-using FishermansSail;
+using FishermansSail.BoatRigs;
+using FishermansSail.Sails.FishermansFlyingSail;
 using UnityEngine;
 
 internal static class MastInstallationChecks
@@ -33,36 +34,46 @@ internal static class MastInstallationChecks
             "The last mast and unknown mast IDs must not invent an aft support."
         );
         Require(
-            MastInstallationGeometry.FitError(8, 18, 22, 10) == null,
+            FishermansFlyingSailMastInstallationGeometry.FitError(8, 18, 22, 10) == null,
             "A supported mast installation was rejected."
         );
         Require(
-            MastInstallationGeometry.FitError(10, 18, 22, 10) != null,
+            FishermansFlyingSailMastInstallationGeometry.FitError(10, 18, 22, 10) != null,
             "The sail must leave clearance at the aft mast."
         );
         Require(
-            MastInstallationGeometry.FitError(8, 23, 22, 10) != null,
+            FishermansFlyingSailMastInstallationGeometry.FitError(8, 23, 22, 10) != null,
             "A sail above its supporting pulley was accepted."
         );
         foreach (float invalid in new[] { float.NaN, float.PositiveInfinity, -1f, 0f })
             Require(
-                MastInstallationGeometry.FitError(invalid, 18, 22, 10) != null,
+                FishermansFlyingSailMastInstallationGeometry.FitError(invalid, 18, 22, 10) != null,
                 "Invalid fitting geometry was accepted."
             );
 
         foreach (float width in new[] { 0.25f, 6f, 13.8f, 40f })
         foreach (float scale in new[] { 0.3f, 0.6f, 1f, 1.5f })
         {
-            var cut = FishermanGeometry.Create(width).Corners.Select(c => c * scale).ToArray();
+            var cut = FishermansFlyingSailGeometry
+                .Create(width)
+                .Corners.Select(c => c * scale)
+                .ToArray();
             var deck = cut[0] - Vector3.right * (width * scale * 2.2f);
-            var previous = cut.Select(c => MastInstallationGeometry.HoistCorner(c, cut[0], deck, 0))
+            var previous = cut.Select(c =>
+                    FishermansFlyingSailMastInstallationGeometry.HoistCorner(c, cut[0], deck, 0)
+                )
                 .ToArray();
             Near(previous[0], deck, "The head must begin at the deck gathering point.");
             for (int step = 0; step <= 100; step++)
             {
                 float unroll = step / 100f;
                 var posed = cut.Select(c =>
-                        MastInstallationGeometry.HoistCorner(c, cut[0], deck, unroll)
+                        FishermansFlyingSailMastInstallationGeometry.HoistCorner(
+                            c,
+                            cut[0],
+                            deck,
+                            unroll
+                        )
                     )
                     .ToArray();
                 for (int i = 0; i < 4; i++)
@@ -87,19 +98,22 @@ internal static class MastInstallationChecks
                         Require(
                             Math.Abs(
                                 (posed[i] - posed[j]).magnitude / (cut[i] - cut[j]).magnitude
-                                    - MastInstallationGeometry.HoistScale(unroll)
+                                    - FishermansFlyingSailMastInstallationGeometry.HoistScale(
+                                        unroll
+                                    )
                             ) < 1e-4f,
                             "Hoisting stretched one edge differently from the others."
                         );
                 }
                 // The tension solver must accept the new partially raised pose.
-                var leech = new Vector3[FishermanGeometry.Rows + 1];
-                bool fitted = FishermanTension.Fit(
+                var leech = new Vector3[FishermansFlyingSailGeometry.Rows + 1];
+                bool fitted = FishermansFlyingSailTension.Fit(
                     posed[3],
                     posed[1],
                     posed[2],
                     Vector3.zero,
-                    (cut[3] - cut[1]).magnitude * MastInstallationGeometry.HoistScale(unroll),
+                    (cut[3] - cut[1]).magnitude
+                        * FishermansFlyingSailMastInstallationGeometry.HoistScale(unroll),
                     (posed[3] - posed[2]).magnitude,
                     0,
                     leech
@@ -109,16 +123,26 @@ internal static class MastInstallationChecks
             }
             foreach (float heel in new[] { -45f, 45f })
             {
-                var half = MastInstallationGeometry.HoistCorner(cut[0], cut[0], deck, 0.5f);
-                var rotated = FlyingSailGeometry.RotateAroundMast(
+                var half = FishermansFlyingSailMastInstallationGeometry.HoistCorner(
+                    cut[0],
+                    cut[0],
+                    deck,
+                    0.5f
+                );
+                var rotated = FishermansFlyingSailFrameGeometry.RotateAroundMast(
                     half,
                     Vector3.zero,
                     Vector3.forward,
                     heel
                 );
                 var expected = Vector3.Lerp(
-                    FlyingSailGeometry.RotateAroundMast(deck, Vector3.zero, Vector3.forward, heel),
-                    FlyingSailGeometry.RotateAroundMast(
+                    FishermansFlyingSailFrameGeometry.RotateAroundMast(
+                        deck,
+                        Vector3.zero,
+                        Vector3.forward,
+                        heel
+                    ),
+                    FishermansFlyingSailFrameGeometry.RotateAroundMast(
                         cut[0],
                         Vector3.zero,
                         Vector3.forward,
@@ -133,12 +157,12 @@ internal static class MastInstallationChecks
         var pulley = new Vector3(0, 22, 10);
         var control = new Vector3(2, 2, 8);
         Near(
-            FlyingSailGeometry.UpperSheetPoint(pulley, pulley, control, 0, 0),
+            FishermansFlyingSailFrameGeometry.UpperSheetPoint(pulley, pulley, control, 0, 0),
             pulley,
             "Parked upper rope left its pulley."
         );
         Near(
-            FlyingSailGeometry.UpperSheetPoint(pulley, pulley, control, 0, 1),
+            FishermansFlyingSailFrameGeometry.UpperSheetPoint(pulley, pulley, control, 0, 1),
             control,
             "Parked upper rope lost its deck control."
         );
@@ -152,18 +176,18 @@ internal static class MastInstallationChecks
         var bottom = new Vector3(4, 0, 12);
         var top = new Vector3(6, 30, 15);
         Near(
-            MastInstallationGeometry.AtHeight(bottom, top, 15),
+            FishermansFlyingSailMastInstallationGeometry.AtHeight(bottom, top, 15),
             new Vector3(5, 15, 13.5f),
             "Raked mast interpolation left the physical axis."
         );
         var shift = new Vector3(-50, 3, 90);
         Near(
-            MastInstallationGeometry.AtHeight(bottom + shift, top + shift, 18),
+            FishermansFlyingSailMastInstallationGeometry.AtHeight(bottom + shift, top + shift, 18),
             new Vector3(5, 15, 13.5f) + shift,
             "Mast interpolation depends on boat position."
         );
         Near(
-            MastInstallationGeometry.AtHeight(bottom, top, -3),
+            FishermansFlyingSailMastInstallationGeometry.AtHeight(bottom, top, -3),
             new Vector3(3.8f, -3, 11.7f),
             "Deck projection must extend the same mast axis below the mount."
         );
@@ -179,7 +203,7 @@ internal static class MastInstallationChecks
             bool rejected = false;
             try
             {
-                MastInstallationGeometry.AtHeight(Vector3.zero, invalid, 1);
+                FishermansFlyingSailMastInstallationGeometry.AtHeight(Vector3.zero, invalid, 1);
             }
             catch (ArgumentException)
             {
@@ -196,9 +220,9 @@ internal static class MastInstallationChecks
             const float width = 13.8f;
             float clearance = 0.42f / scale; // Brig mast radius + contact allowance.
             int enabled = 0;
-            for (int i = 0; i < FishermanGeometry.Columns; i++)
+            for (int i = 0; i < FishermansFlyingSailGeometry.Columns; i++)
             {
-                bool active = MastInstallationGeometry.CollisionStrip(
+                bool active = FishermansFlyingSailMastInstallationGeometry.CollisionStrip(
                     width,
                     i,
                     clearance,
@@ -234,16 +258,16 @@ internal static class MastInstallationChecks
         // shrouds, while the spreader root only touched the intentional mast rim.
         const float testScale = 0.65f;
         float oldHalfThickness = 0.025f * testScale;
-        for (int row = 0; row <= FishermanGeometry.Rows; row++)
+        for (int row = 0; row <= FishermansFlyingSailGeometry.Rows; row++)
             oldHalfThickness = Math.Max(
                 oldHalfThickness,
                 testScale
                     * (
                         0.025f
-                        + FishermanGeometry.RestCamber(
+                        + FishermansFlyingSailGeometry.RestCamber(
                             13.8f,
-                            0.5f / FishermanGeometry.Columns,
-                            (float)row / FishermanGeometry.Rows
+                            0.5f / FishermansFlyingSailGeometry.Columns,
+                            (float)row / FishermansFlyingSailGeometry.Rows
                         )
                     )
             );
@@ -251,7 +275,7 @@ internal static class MastInstallationChecks
             oldHalfThickness > 0.45f,
             "Old shroud false-positive reproducer no longer reaches the rigging."
         );
-        bool first = MastInstallationGeometry.CollisionStrip(
+        bool first = FishermansFlyingSailMastInstallationGeometry.CollisionStrip(
             13.8f,
             0,
             0.42f / testScale,
@@ -259,7 +283,7 @@ internal static class MastInstallationChecks
             out _
         );
         Require(!first, "The first strip still checks inside the supporting mast.");
-        bool next = MastInstallationGeometry.CollisionStrip(
+        bool next = FishermansFlyingSailMastInstallationGeometry.CollisionStrip(
             13.8f,
             2,
             0.42f / testScale,

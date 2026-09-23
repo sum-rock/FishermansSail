@@ -1,17 +1,16 @@
 using System;
-using HarmonyLib;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
-namespace FishermansSail
+namespace FishermansSail.Sails.FishermansFlyingSail
 {
-    internal static class FishermanSail
+    internal static class FishermansFlyingSail
     {
         internal const int SourceIndex = 110;
 
         // Stable across launches: Sailwind stores this index in boat saves.
         internal const int PrefabIndex = 400;
-        internal const string DisplayName = "Fisherman's Sail";
+        internal const string DisplayName = "Fisherman's Flying Sail";
         private static GameObject prefab;
 
         internal static void Register(PrefabsDirectory directory)
@@ -58,11 +57,11 @@ namespace FishermansSail
                     );
 
                 var sourceMesh = sourceRenderer.sharedMesh;
-                var geometry = FishermanGeometry.Create(sourceSail.installHeight);
+                var geometry = FishermansFlyingSailGeometry.Create(sourceSail.installHeight);
 
                 // An inactive parent prevents Awake/Start from running on our
                 // template. Installed copies retain activeSelf=true and initialize normally.
-                container = new GameObject("FishermansSail Prefabs");
+                container = new GameObject("FishermansFlyingSail Prefabs");
                 container.SetActive(false);
                 container.transform.SetParent(directory.transform, false);
                 var clone = Object.Instantiate(source, container.transform, false);
@@ -72,8 +71,8 @@ namespace FishermansSail
                 sail.sailName = DisplayName;
                 sail.category = SailCategory.other;
                 sail.obsolete = false;
-                sail.minAngle = -FishermanTravel.MaximumAngle;
-                sail.maxAngle = FishermanTravel.MaximumAngle;
+                sail.minAngle = -FishermansFlyingSailTravel.MaximumAngle;
+                sail.maxAngle = FishermansFlyingSailTravel.MaximumAngle;
                 var hinge = sail.GetComponent<HingeJoint>();
                 var limits = hinge.limits;
                 limits.min = sail.minAngle;
@@ -85,7 +84,7 @@ namespace FishermansSail
                 body.mass = 0.1f;
                 body.angularDrag = 1f;
 
-                mesh = new Mesh { name = "FishermansSail Trapezoid Cloth" };
+                mesh = new Mesh { name = "FishermansFlyingSail Trapezoid Cloth" };
                 mesh.vertices = geometry.Vertices;
                 mesh.triangles = geometry.Triangles;
                 mesh.uv = geometry.UV;
@@ -93,7 +92,7 @@ namespace FishermansSail
                 mesh.RecalculateNormals();
                 mesh.RecalculateTangents();
                 mesh.RecalculateBounds();
-                shadowMesh = new Mesh { name = "FishermansSail Shadow Samples" };
+                shadowMesh = new Mesh { name = "FishermansFlyingSail Shadow Samples" };
                 // Native shadow checking casts one ray per vertex per frame.
                 // Use a coarse 3x3 sample grid, not all 825 cloth vertices.
                 var shadowPoints = new Vector3[9];
@@ -101,8 +100,10 @@ namespace FishermansSail
                 for (int col = 0; col < 3; col++)
                 {
                     shadowPoints[row * 3 + col] = geometry.Vertices[
-                        row * (FishermanGeometry.Rows / 2) * (FishermanGeometry.Columns + 1)
-                            + col * (FishermanGeometry.Columns / 2)
+                        row
+                            * (FishermansFlyingSailGeometry.Rows / 2)
+                            * (FishermansFlyingSailGeometry.Columns + 1)
+                            + col * (FishermansFlyingSailGeometry.Columns / 2)
                     ];
                     // Fixed center-plane samples are neutral between tacks.
                     shadowPoints[row * 3 + col].y = 0;
@@ -136,8 +137,8 @@ namespace FishermansSail
                     8,
                 };
                 shadowMesh.RecalculateBounds();
-                FishermanSailRig.Configure(sail, geometry, mesh, shadowMesh);
-                FishermanAppearance.Configure(sail);
+                FishermansFlyingSailRig.Configure(sail, geometry, mesh, shadowMesh);
+                FishermansFlyingSailAppearance.Configure(sail);
                 var renderer = sail.cloth.GetComponent<SkinnedMeshRenderer>();
                 clone.SetActive(true);
                 sail.SetSailArea();
@@ -145,7 +146,7 @@ namespace FishermansSail
                 // Verify that the source still points at its original mesh.
                 if (sourceRenderer.sharedMesh != sourceMesh || renderer.sharedMesh == sourceMesh)
                     throw new InvalidOperationException(
-                        "The fisherman sail must own a separate cloth mesh."
+                        "The Fisherman's Flying Sail must own a separate cloth mesh."
                     );
 
                 string registrationMessage =
@@ -156,7 +157,11 @@ namespace FishermansSail
                 if (directory.sails.Length <= PrefabIndex)
                     Array.Resize(ref directory.sails, PrefabIndex + 1);
                 directory.sails[PrefabIndex] = clone;
-                container.AddComponent<FishermanSailAssets>().Meshes = new[] { mesh, shadowMesh };
+                container.AddComponent<FishermansFlyingSailAssets>().Meshes = new[]
+                {
+                    mesh,
+                    shadowMesh,
+                };
                 prefab = clone;
                 Plugin.Log.LogInfo(registrationMessage);
             }
@@ -186,33 +191,5 @@ namespace FishermansSail
             shipyard.sailPrefabs[index] = prefab;
             Plugin.Log.LogInfo($"Added {DisplayName} to {shipyard.name}.");
         }
-    }
-
-    [HarmonyPatch(typeof(PrefabsDirectory), "Start")]
-    internal static class RegisterFishermanSailPatch
-    {
-        // Clone after SE has configured the source components, but before
-        // All Sails captures the prefab array for its cached menu pages.
-        [HarmonyPostfix]
-        [HarmonyAfter("com.nandbrew.shipyardexpansion")]
-        [HarmonyBefore("NatoriusG.AllSailsAllShipyards")]
-        private static void Postfix(PrefabsDirectory __instance) =>
-            FishermanSail.Register(__instance);
-    }
-
-    [HarmonyPatch(typeof(Shipyard), "Awake")]
-    internal static class ShipyardFishermanSailPatch
-    {
-        [HarmonyPostfix]
-        [HarmonyPriority(Priority.Last)]
-        private static void Postfix(Shipyard __instance) => FishermanSail.AddToShipyard(__instance);
-    }
-
-    [HarmonyPatch(typeof(Shipyard), "ActivateDocuments")]
-    internal static class ShipyardFishermanSailFallbackPatch
-    {
-        // Covers shipyards that awakened before PrefabsDirectory.Start.
-        [HarmonyPrefix]
-        private static void Prefix(Shipyard __instance) => FishermanSail.AddToShipyard(__instance);
     }
 }

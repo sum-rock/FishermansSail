@@ -6,14 +6,38 @@
       >$(HOME)/.local/share/Steam/steamapps/common/Sailwind</SailwindDir>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="../../FishermanGeometry.cs" Link="FishermanGeometry.cs" />
-    <Compile Include="../../FishermanOrderText.cs" Link="FishermanOrderText.cs" />
-    <Compile Include="../../FlyingSailGeometry.cs" Link="FlyingSailGeometry.cs" />
-    <Compile Include="../../FishermanTravel.cs" Link="FishermanTravel.cs" />
-    <Compile Include="../../MastInstallationGeometry.cs" Link="MastInstallationGeometry.cs" />
-    <Compile Include="../../FishermanBillow.cs" Link="FishermanBillow.cs" />
-    <Compile Include="../../FishermanTension.cs" Link="FishermanTension.cs" />
-    <Compile Include="../../FishermanAerodynamics.cs" Link="FishermanAerodynamics.cs" />
+    <Compile
+      Include="../../Sails/FishermansFlyingSail/FishermansFlyingSailGeometry.cs"
+      Link="FishermansFlyingSailGeometry.cs"
+    />
+    <Compile
+      Include="../../Sails/FishermansFlyingSail/FishermansFlyingSailOrderText.cs"
+      Link="FishermansFlyingSailOrderText.cs"
+    />
+    <Compile
+      Include="../../Sails/FishermansFlyingSail/FishermansFlyingSailFrameGeometry.cs"
+      Link="FishermansFlyingSailFrameGeometry.cs"
+    />
+    <Compile
+      Include="../../Sails/FishermansFlyingSail/FishermansFlyingSailTravel.cs"
+      Link="FishermansFlyingSailTravel.cs"
+    />
+    <Compile
+      Include="../../Sails/FishermansFlyingSail/FishermansFlyingSailMastInstallationGeometry.cs"
+      Link="FishermansFlyingSailMastInstallationGeometry.cs"
+    />
+    <Compile
+      Include="../../Sails/FishermansFlyingSail/FishermansFlyingSailBillow.cs"
+      Link="FishermansFlyingSailBillow.cs"
+    />
+    <Compile
+      Include="../../Sails/FishermansFlyingSail/FishermansFlyingSailTension.cs"
+      Link="FishermansFlyingSailTension.cs"
+    />
+    <Compile
+      Include="../../Sails/FishermansFlyingSail/FishermansFlyingSailAerodynamics.cs"
+      Link="FishermansFlyingSailAerodynamics.cs"
+    />
     <Compile Include="../../BoatRigs/*.cs" Link="BoatRigs/%(Filename)%(Extension)" />
     <Reference Include="UnityEngine.CoreModule">
       <HintPath>$(SailwindDir)/Sailwind_Data/Managed/UnityEngine.CoreModule.dll</HintPath>
