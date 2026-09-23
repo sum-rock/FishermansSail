@@ -3,6 +3,8 @@
 A Sailwind mod that adds a four-corner **Fisherman's Sail** between two masts.
 Version **0.1.0**.
 
+![Fisherman's Sail hoisted between two masts in Sailwind](references/example0-1-0.png)
+
 - Supported boats: Brig, Junk, Jong, Sanbuq, Cog, Leopard and Shroud.
 - Independent port and starboard sheets, plus a hoist winch.
 - Outward travel limited to 40° on each side, with tighter limits where obstructed.

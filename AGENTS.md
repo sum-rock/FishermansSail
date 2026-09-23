@@ -176,9 +176,8 @@ was not the Sailwind log. Capture relevant logs before a restart when investigat
 a freeze. Separate exceptions from other installed mods from evidence involving
 this sail, and distinguish a suspected cause from a confirmed one.
 
-The real-sail reference is
-`./references/IssumaFisherman4843.jpg`
-`./references/OrbitWithSailNames.jpg`
+The current in-game screenshot is
+[references/example0-1-0.png](references/example0-1-0.png), also shown in the README.
 
 For a runtime sail change, verify on the Brig first when following the current
 test setup, then relevant additional boat profiles. Check repeated port/starboard
