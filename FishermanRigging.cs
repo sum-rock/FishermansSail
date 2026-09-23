@@ -14,7 +14,7 @@ namespace FishermansSail
             internal BoatRefs Boat;
             internal Mast Fore,
                 Aft,
-                Donor;
+                SheetControlSource;
             internal Transform ForeGuide,
                 AftGuide;
             internal Mast ForeGuideMast,
@@ -77,8 +77,8 @@ namespace FishermansSail
             foreach (var group in groups)
             {
                 var donor = group
-                    .Where(v => masts.ContainsKey(v.Donor))
-                    .Select(v => masts[v.Donor])
+                    .Where(v => masts.ContainsKey(v.SheetControlSource))
+                    .Select(v => masts[v.SheetControlSource])
                     .FirstOrDefault(m =>
                         FirstControl(m.leftAngleWinch) && FirstControl(m.rightAngleWinch)
                     );
@@ -121,7 +121,7 @@ namespace FishermansSail
                     Boat = boat,
                     Fore = fore,
                     Aft = aft,
-                    Donor = donor,
+                    SheetControlSource = donor,
                     ForeGuide = fg,
                     AftGuide = ag,
                     ForeGuideMast = foreGuideMast,
@@ -243,7 +243,7 @@ namespace FishermansSail
                 top = swap;
             }
             point = Pair.Boat.transform.TransformPoint(
-                StayGeometry.AtHeight(
+                MastInstallationGeometry.AtHeight(
                     bottom,
                     top,
                     Pair.Boat.transform.InverseTransformPoint(point).y
@@ -268,7 +268,7 @@ namespace FishermansSail
                 var localTop = Pair.Boat.transform.InverseTransformPoint(top);
                 var localAxis = Pair.Boat.transform.InverseTransformDirection(axis);
                 return Pair.Boat.transform.TransformPoint(
-                    StayGeometry.AtHeight(localTop, localTop + localAxis, y)
+                    MastInstallationGeometry.AtHeight(localTop, localTop + localAxis, y)
                 );
             }
         }
@@ -295,8 +295,11 @@ namespace FishermansSail
                 controls = new[]
                 {
                     CopyWinch(FirstControl(Pair.Fore.reefWinch), "Hoist"),
-                    CopyWinch(FirstControl(Pair.Donor.leftAngleWinch), "Port sheet"),
-                    CopyWinch(FirstControl(Pair.Donor.rightAngleWinch), "Starboard sheet"),
+                    CopyWinch(FirstControl(Pair.SheetControlSource.leftAngleWinch), "Port sheet"),
+                    CopyWinch(
+                        FirstControl(Pair.SheetControlSource.rightAngleWinch),
+                        "Starboard sheet"
+                    ),
                 };
                 mastGuide = new GameObject("Fisherman halyard guide").transform;
                 mastGuide.SetParent(controlsRoot.transform, false);

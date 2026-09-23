@@ -26,7 +26,7 @@ internal static class FlyingSailChecks
                 .ToArray();
             var offset = FlyingSailGeometry.ModelOffset(pivot, rest[0]);
             rest = rest.Select(c => offset + c).ToArray();
-            Near(rest[0], pivot, "Scaled sail head must meet the mast despite a wider stay.");
+            Near(rest[0], pivot, "Scaled sail head must meet the mast at every sail width.");
             foreach (float angle in new[] { -70f, -25f, 0f, 25f, 70f })
             {
                 var posed = rest.Select(c =>
@@ -75,19 +75,23 @@ internal static class FlyingSailChecks
                         Math.Abs((upper - pivot).magnitude - (rest[1] - pivot).magnitude) < 0.001f,
                         "The moving upper corner changed the top span."
                     );
-                    var reefed =
-                        pivot - axis * ((rest[2] - pivot).magnitude * Math.Max(0.015f, unroll));
+                    var reefed = MastInstallationGeometry.HoistCorner(
+                        rest[2],
+                        rest[0],
+                        rest[2] - axis * width,
+                        unroll
+                    );
                     Near(
                         FlyingSailGeometry.RotateAroundMast(reefed, pivot, axis, angle),
                         reefed,
-                        "Furling tack must rise along the mast at every sheet angle."
+                        "Hoisting tack must follow the mast at every sheet angle."
                     );
                 }
             }
             for (int col = 1; col < PrototypeGeometry.Columns; col++)
                 Check(
                     data.Constraints[col].maxDistance > 0,
-                    "Top-edge cloth is still locked to the stay."
+                    "Top-edge cloth must remain free between corners."
                 );
         }
         Check(

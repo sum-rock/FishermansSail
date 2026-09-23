@@ -19,7 +19,6 @@ namespace FishermansSail
             GameObject container = null;
             Mesh mesh = null;
             Mesh shadowMesh = null;
-            Mesh bundleMesh = null;
             try
             {
                 if (
@@ -129,14 +128,7 @@ namespace FishermansSail
                     8,
                 };
                 shadowMesh.RecalculateBounds();
-                var bundle = PrototypeGeometry.CreateBundle(sourceSail.installHeight);
-                bundleMesh = new Mesh { name = "FishermansSail Furled Bundle" };
-                bundleMesh.vertices = bundle.Vertices;
-                bundleMesh.triangles = bundle.Triangles;
-                bundleMesh.uv = bundle.UV;
-                bundleMesh.RecalculateNormals();
-                bundleMesh.RecalculateBounds();
-                FishermanSailRig.Configure(sail, geometry, mesh, shadowMesh, bundleMesh);
+                FishermanSailRig.Configure(sail, geometry, mesh, shadowMesh);
                 var renderer = sail.cloth.GetComponent<SkinnedMeshRenderer>();
                 clone.SetActive(true);
                 sail.SetSailArea();
@@ -155,12 +147,7 @@ namespace FishermansSail
                 if (directory.sails.Length <= PrototypeIndex)
                     Array.Resize(ref directory.sails, PrototypeIndex + 1);
                 directory.sails[PrototypeIndex] = clone;
-                container.AddComponent<FishermanSailAssets>().Meshes = new[]
-                {
-                    mesh,
-                    shadowMesh,
-                    bundleMesh,
-                };
+                container.AddComponent<FishermanSailAssets>().Meshes = new[] { mesh, shadowMesh };
                 prefab = clone;
                 Plugin.Log.LogInfo(registrationMessage);
             }
@@ -172,8 +159,6 @@ namespace FishermansSail
                     Object.Destroy(mesh);
                 if (shadowMesh)
                     Object.Destroy(shadowMesh);
-                if (bundleMesh)
-                    Object.Destroy(bundleMesh);
                 Plugin.Log.LogError($"Could not register {DisplayName}: {exception}");
             }
         }

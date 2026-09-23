@@ -7,12 +7,13 @@ internal static class MastInstallationChecks
 {
     internal static void Run()
     {
+        CheckMastAxis();
         CheckCollisionEnvelope();
         var brig = BoatRigCatalog.Find("BOAT medi medium (50)");
         var forwardPairs = brig.MastPairs(2).ToArray();
         Require(
             forwardPairs.Select(g => g.Key).OrderBy(i => i).SequenceEqual(new[] { 4, 5 }),
-            "Selecting the physical foremast must find both supported mainmast options without installing a stay."
+            "Selecting the physical foremast must find both supported mainmast options from its physical mast selection."
         );
         Require(
             forwardPairs
@@ -144,6 +145,48 @@ internal static class MastInstallationChecks
         Console.WriteLine(
             "PASS: mast-pair clearance, pulley height, deck-up hoisting, finite scaled poses, coupled tension, heel and parked ropes."
         );
+    }
+
+    private static void CheckMastAxis()
+    {
+        var bottom = new Vector3(4, 0, 12);
+        var top = new Vector3(6, 30, 15);
+        Near(
+            MastInstallationGeometry.AtHeight(bottom, top, 15),
+            new Vector3(5, 15, 13.5f),
+            "Raked mast interpolation left the physical axis."
+        );
+        var shift = new Vector3(-50, 3, 90);
+        Near(
+            MastInstallationGeometry.AtHeight(bottom + shift, top + shift, 18),
+            new Vector3(5, 15, 13.5f) + shift,
+            "Mast interpolation depends on boat position."
+        );
+        Near(
+            MastInstallationGeometry.AtHeight(bottom, top, -3),
+            new Vector3(3.8f, -3, 11.7f),
+            "Deck projection must extend the same mast axis below the mount."
+        );
+        foreach (
+            var invalid in new[]
+            {
+                Vector3.right,
+                new Vector3(0, -1, 0),
+                new Vector3(float.NaN, 3, 0),
+            }
+        )
+        {
+            bool rejected = false;
+            try
+            {
+                MastInstallationGeometry.AtHeight(Vector3.zero, invalid, 1);
+            }
+            catch (ArgumentException)
+            {
+                rejected = true;
+            }
+            Require(rejected, "Invalid mast axis was accepted.");
+        }
     }
 
     private static void CheckCollisionEnvelope()

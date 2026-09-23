@@ -134,10 +134,10 @@ internal static class ShapingChecks
     private static Vector3[] Pose(SailMeshData data, float width, float camber, float unroll)
     {
         var bones = new Vector3[PrototypeGeometry.BoneCount];
-        var foreHead = data.Corners[0];
-        var tack = PrototypeGeometry.ReefCorner(data.Corners[2], unroll);
-        var head = data.Corners[1];
-        var clew = PrototypeGeometry.ReefCorner(data.Corners[3], unroll);
+        var foreHead = HoistPose.Corner(data.Corners, 0, unroll);
+        var tack = HoistPose.Corner(data.Corners, 2, unroll);
+        var head = HoistPose.Corner(data.Corners, 1, unroll);
+        var clew = HoistPose.Corner(data.Corners, 3, unroll);
         float amount = camber * FishermanBillow.Deployment(unroll);
         for (int row = 0; row <= PrototypeGeometry.Rows; row++)
         for (int col = 0; col <= PrototypeGeometry.ShapeColumns; col++)

@@ -4,88 +4,55 @@ using System.Linq;
 
 namespace FishermansSail
 {
-    internal sealed class StayVariantDefinition
+    internal sealed class MastSupportDefinition
     {
-        internal readonly int Donor,
-            Fore,
-            Aft,
-            HeightReference,
-            FurlControl;
-        internal readonly bool IsMizzen;
+        // Native rig ID supplying sheet winch assets; it need not be installed.
+        internal readonly int SheetControlSource;
+
+        // Sections are ordered from upper to lower. The last aft section
+        // identifies the physical support when optional upper sections are absent.
         internal readonly int[] ForeSections,
             AftSections;
 
-        internal StayVariantDefinition(
-            int donor,
-            int fore,
-            int aft,
-            bool isMizzen,
-            int heightReference,
-            int furlControl,
+        internal MastSupportDefinition(
+            int sheetControlSource,
             int[] foreSections,
             int[] aftSections
         )
         {
-            StayGeometry.MountIndex(donor);
             if (
-                fore == aft
+                sheetControlSource < 0
                 || foreSections.Length == 0
                 || aftSections.Length == 0
-                || foreSections[0] != fore
-                || aftSections[0] != aft
+                || foreSections.Concat(aftSections).Any(id => id < 0)
                 || foreSections.Intersect(aftSections).Any()
-                || (heightReference != fore && heightReference != aft)
-                || (furlControl != fore && furlControl != aft)
             )
-                throw new ArgumentException("Invalid mast pair or attachment sections.");
-            Donor = donor;
-            Fore = fore;
-            Aft = aft;
-            IsMizzen = isMizzen;
-            HeightReference = heightReference;
-            FurlControl = furlControl;
+                throw new ArgumentException("Invalid mast support or control source.");
+            SheetControlSource = sheetControlSource;
             ForeSections = foreSections;
             AftSections = aftSections;
-        }
-    }
-
-    internal sealed class StayGroupDefinition
-    {
-        internal readonly int SourcePart;
-        internal readonly StayVariantDefinition[] Variants;
-
-        internal StayGroupDefinition(int sourcePart, params StayVariantDefinition[] variants)
-        {
-            if (sourcePart < 0 || variants.Length == 0)
-                throw new ArgumentException("Empty stay group.");
-            SourcePart = sourcePart;
-            Variants = variants;
         }
     }
 
     internal sealed class BoatRigDefinition
     {
         internal readonly string BoatName;
-        internal readonly StayGroupDefinition[] Groups;
+        internal readonly MastSupportDefinition[] Supports;
 
-        // Historical stay donors describe physical mast pairs and supply control
-        // assets. Their rigging options are no longer installation prerequisites.
-        internal IEnumerable<IGrouping<int, StayVariantDefinition>> MastPairs(int foreIndex) =>
-            Groups
-                .SelectMany(g => g.Variants)
-                .Where(v => v.ForeSections.Contains(foreIndex))
-                .GroupBy(v => v.AftSections.Last());
+        internal IEnumerable<IGrouping<int, MastSupportDefinition>> MastPairs(int foreIndex) =>
+            Supports
+                .Where(s => s.ForeSections.Contains(foreIndex))
+                .GroupBy(s => s.AftSections.Last());
 
-        internal BoatRigDefinition(string boatName, params StayGroupDefinition[] groups)
+        internal BoatRigDefinition(string boatName, params MastSupportDefinition[] supports)
         {
-            var donors = groups.SelectMany(g => g.Variants).Select(v => v.Donor).ToArray();
             if (
-                groups.Select(g => g.SourcePart).Distinct().Count() != groups.Length
-                || donors.Distinct().Count() != donors.Length
+                supports.Length == 0
+                || supports.Select(s => s.SheetControlSource).Distinct().Count() != supports.Length
             )
-                throw new ArgumentException("Duplicate stay group or donor.");
+                throw new ArgumentException("Empty mast supports or duplicate control source.");
             BoatName = boatName;
-            Groups = groups;
+            Supports = supports;
         }
     }
 

@@ -149,16 +149,12 @@ Console.WriteLine(
 // Run the actual text prefix without Unity objects. HarmonyX runs later
 // prefixes even when this one returns false, so their input must be safe too.
 var textPrefix = assembly
-    .GetType("FishermansSail.StayOrderTextPatch")
+    .GetType("FishermansSail.FishermanOrderTextPatch")
     .GetMethod("Prefix", BindingFlags.Static | BindingFlags.NonPublic);
 if (!textPrefix.GetCustomAttribute<HarmonyBefore>().info.before.Contains("com.nandbrew.nandfixes"))
-    throw new Exception("Triatic text protection must run before NANDFixes.");
+    throw new Exception("Fisherman text protection must run before NANDFixes.");
 var orderLines = new System.Collections.Generic.List<string> { "existing order line" };
-object[] textArguments =
-{
-    "0: Mizzenmast Triatic Stay (mizzen top stay 1) -> (no Mizzenmast Triatic Stay)",
-    orderLines,
-};
+object[] textArguments = { "0: Fisherman's Sail Prototype (150% x 115%) -> (no sail)", orderLines };
 if (
     (bool)textPrefix.Invoke(null, textArguments)
     || (string)textArguments[0] != ""
@@ -179,14 +175,6 @@ Console.WriteLine(
     "PASS: actual order-text prefix, NANDFixes ordering, safe input for later HarmonyX prefixes, and native-list preservation."
 );
 
-if (
-    assembly.GetType("FishermansSail.RegisterFishermanStaysPatch") != null
-    || assembly.GetType("FishermansSail.StaySaveCapacityPatch") != null
-    || assembly.GetType("FishermansSail.StayMountButtonsPatch") != null
-)
-    throw new Exception(
-        "Direct mast mounting must not register synthetic stays or extend saved mounts."
-    );
 var controlsPatch = assembly.GetType("FishermansSail.FishermanControlsPatch");
 if (
     !controlsPatch
@@ -195,7 +183,7 @@ if (
 )
     throw new Exception("Mast sail-list restoration must run even when native binding throws.");
 Console.WriteLine(
-    $"PASS: {count} Harmony targets and injected argument types; independent-control restoration and no synthetic stay/save registration."
+    $"PASS: {count} Harmony targets and injected argument types; independent-control restoration and native mast integration."
 );
 
 // Decode call operands without asking Harmony to create native patch stubs.

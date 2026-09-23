@@ -5,6 +5,25 @@ namespace FishermansSail
 {
     internal static class MastInstallationGeometry
     {
+        internal static Vector3 AtHeight(Vector3 bottom, Vector3 top, float height)
+        {
+            if (
+                !Finite(bottom.x)
+                || !Finite(bottom.y)
+                || !Finite(bottom.z)
+                || !Finite(top.x)
+                || !Finite(top.y)
+                || !Finite(top.z)
+                || !Finite(height)
+                || top.y - bottom.y < 0.01f
+            )
+                throw new ArgumentException("Expected a finite, upward mast segment.");
+            float t = (height - bottom.y) / (top.y - bottom.y);
+            var point = bottom + (top - bottom) * t;
+            point.y = height;
+            return point;
+        }
+
         internal static string FitError(
             float width,
             float headHeight,

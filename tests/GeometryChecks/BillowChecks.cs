@@ -88,13 +88,13 @@ internal static class BillowChecks
     )
     {
         var rest = data.Corners;
-        var requested = PrototypeGeometry.ReefCorner(rest[3], unroll);
+        var requested = HoistPose.Corner(rest, 3, unroll);
         requested = FlyingSailGeometry.RotateAroundMast(requested, rest[0], Vector3.right, angle);
         var head = MovingHead(rest, angle, unroll);
         Near(
             head,
             FlyingSailGeometry.RotateAroundMast(
-                rest[1],
+                HoistPose.Corner(rest, 1, unroll),
                 rest[0],
                 Vector3.right,
                 angle * 0.85f * FishermanBillow.Deployment(unroll)
@@ -103,7 +103,11 @@ internal static class BillowChecks
             "Upper corner did not follow the specified sheet angle."
         );
         Check(
-            Math.Abs((head - rest[0]).magnitude - width) < width * 1e-5f,
+            Math.Abs(
+                (head - HoistPose.Corner(rest, 0, unroll)).magnitude
+                    - width * MastInstallationGeometry.HoistScale(unroll)
+            )
+                < width * 1e-5f,
             "Moving the head stretched the top span."
         );
         var bow = FishermanBillow.SupportBow(
@@ -115,10 +119,10 @@ internal static class BillowChecks
             load
         );
         bow *= FishermanBillow.Deployment(unroll);
-        float restLength = width * Math.Max(0.015f, unroll);
+        float restLength = width * MastInstallationGeometry.HoistScale(unroll);
         var points = new Vector3[PrototypeGeometry.Rows + 1];
-        var tack = PrototypeGeometry.ReefCorner(rest[2], unroll);
-        float footLength = (PrototypeGeometry.ReefCorner(rest[3], unroll) - tack).magnitude;
+        var tack = HoistPose.Corner(rest, 2, unroll);
+        float footLength = (HoistPose.Corner(rest, 3, unroll) - tack).magnitude;
         float deployment = FishermanBillow.Deployment(unroll);
         float reserve = 1 - 0.01f * deployment;
         Check(
@@ -224,8 +228,8 @@ internal static class BillowChecks
         Vector3 SkinRest(Vector3 p) =>
             FlyingSailGeometry.RotateAroundMast(p, rest[0], Vector3.right, angle);
         var bones = new Vector3[data.BonePositions.Length];
-        bones[0] = rest[0];
-        bones[2] = PrototypeGeometry.ReefCorner(rest[2], unroll);
+        bones[0] = HoistPose.Corner(rest, 0, unroll);
+        bones[2] = HoistPose.Corner(rest, 2, unroll);
         for (int row = 0; row <= PrototypeGeometry.Rows; row++)
             bones[PrototypeGeometry.LeechBone(row)] = points[PrototypeGeometry.Rows - row];
         var camberNormal = FishermanBillow.CamberNormal(bones[0], bones[2], bones[1], bones[3]);
@@ -315,8 +319,8 @@ internal static class BillowChecks
         foreach (float load in new[] { -1f, 0f, 1f })
         {
             Vector3[] previous = null;
-            var tack = PrototypeGeometry.ReefCorner(rest[2], unroll);
-            var restClew = PrototypeGeometry.ReefCorner(rest[3], unroll);
+            var tack = HoistPose.Corner(rest, 2, unroll);
+            var restClew = HoistPose.Corner(rest, 3, unroll);
             float footLength = (restClew - tack).magnitude;
             float deployment = FishermanBillow.Deployment(unroll);
             for (int angle = -80; angle <= 80; angle++)
@@ -344,7 +348,7 @@ internal static class BillowChecks
                         head,
                         tack,
                         bow,
-                        width * unroll,
+                        width * MastInstallationGeometry.HoistScale(unroll),
                         footLength,
                         deployment,
                         points
@@ -377,8 +381,8 @@ internal static class BillowChecks
             {
                 float unroll = step / 1000f;
                 var head = MovingHead(rest, angle, unroll);
-                var clew = PrototypeGeometry.ReefCorner(rest[3], unroll);
-                var tack = PrototypeGeometry.ReefCorner(rest[2], unroll);
+                var clew = HoistPose.Corner(rest, 3, unroll);
+                var tack = HoistPose.Corner(rest, 2, unroll);
                 float footLength = (clew - tack).magnitude;
                 clew = FlyingSailGeometry.RotateAroundMast(clew, rest[0], Vector3.right, angle);
                 var bow = FishermanBillow.SupportBow(
@@ -397,7 +401,7 @@ internal static class BillowChecks
                         head,
                         tack,
                         bow * deployment,
-                        width * Math.Max(0.015f, unroll),
+                        width * MastInstallationGeometry.HoistScale(unroll),
                         footLength,
                         deployment,
                         points
@@ -417,8 +421,13 @@ internal static class BillowChecks
 
     private static Vector3 MovingHead(Vector3[] rest, float angle, float unroll) =>
         FlyingSailGeometry.UpperHead(
-            rest[1],
-            FlyingSailGeometry.RotateAroundMast(rest[1], rest[0], Vector3.right, angle),
+            HoistPose.Corner(rest, 1, unroll),
+            FlyingSailGeometry.RotateAroundMast(
+                HoistPose.Corner(rest, 1, unroll),
+                rest[0],
+                Vector3.right,
+                angle
+            ),
             rest[0],
             Vector3.right,
             unroll

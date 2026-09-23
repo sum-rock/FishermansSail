@@ -16,17 +16,17 @@ Follow current user instructions over historical design choices
   Do not repeatedly request confirmation for routine work already authorized.
 - Do not commit, push, change saves, or replace installed game files merely as part
   of a build. Do not include proprietary assemblies or extracted game assets in Git.
-- Version 0.8.0 installs on physical masts under Other, with an active aft mast
-  required. The user explicitly waived migration of old triatic installations and
-  will remove the old sails/stays before upgrading. Do not reintroduce synthetic
-  stay mounts or bypass normal vertical mast-space rules.
+- The sail installs on physical masts under Other and requires an active aft mast.
+  The user committed to this approach after the 0.8.1 in-game result. Preserve
+  normal vertical mast-space rules and native mast save slots. Version 0.8.2
+  simplifies the support profiles and retains only the current installation model.
 
 ## Code map
 
 | Area                                                           | Main files                                                      |
 | -------------------------------------------------------------- | --------------------------------------------------------------- |
 | Plugin metadata, registration and independent assets           | `Plugin.cs`, `PrototypeSail.cs`                                 |
-| Mesh, skin weights, pins, bundle and bone indexing             | `PrototypeGeometry.cs`                                          |
+| Mesh, skin weights, pins and bone indexing             | `PrototypeGeometry.cs`                                          |
 | Live rig, corners, shaping bones, furling and render selection | `FishermanSailRig.cs`                                           |
 | Camber response, movement limits and edge curves               | `FishermanBillow.cs`                                            |
 | Coupled foot/leech length constraints                          | `FishermanTension.cs`                                           |
@@ -34,7 +34,7 @@ Follow current user instructions over historical design choices
 | Aerodynamic frame and scoped native force patches              | `FishermanAerodynamics.cs`, `AerodynamicPatches.cs`             |
 | Boat-specific mast pairs, active guides and independent controls | `BoatRigs/`, `FishermanRigging.cs`                              |
 | Mast installation, support protection and deck-up hoisting     | `MastInstallationPatches.cs`, `MastInstallationGeometry.cs`, `FlyingSailPatches.cs` |
-| Shipyard order-text freeze protection                          | `StayOrderText.cs`, `StayOrderTextPatch.cs`                     |
+| Shipyard order-text freeze protection                          | `FishermanOrderText.cs`, `FishermanOrderTextPatch.cs`                     |
 
 ## Build and checks
 
@@ -105,7 +105,7 @@ points, **not guaranteed dependencies**; inspect them before running and recreat
 them if `/tmp` has been cleared:
 
 - `/tmp/fisherman-inspect/`: a small `ICSharpCode.Decompiler` console helper,
-  decompiled classes, asset-inspection scripts and a stay fixture.
+  decompiled classes and asset-inspection scripts.
 - `/tmp/fisherman-assets-env/bin/python`: a Python environment with UnityPy for
   reading serialized scene/prefab assets and tracing object/path IDs.
 - `/tmp/fisherman-freeze-20260921-200022/`: captured player/BepInEx logs and thread
@@ -206,7 +206,7 @@ support-mast removal, deck-up hoisting and parked ropes with invisible struck cl
    Expansion's scaling reference, and preserve `SailShadowCol`'s expected parent
    hierarchy. Shared meshes belong to the template owner, not installed instances.
 7. **Do not regress shipyard/save compatibility.** Keep sail prefab index 400;
-   0.8.0 uses native mast save slots and deliberately removes old triatic registration.
+   use native mast save slots.
    The shipyard removal freeze was traced to NANDFixes' recursive
    wrapping of long order text, not simply the presence of a sail. Keep the
    iterative wrapping guard and its Harmony ordering/input protections. Retain
@@ -216,15 +216,14 @@ support-mast removal, deck-up hoisting and parked ropes with invisible struck cl
    used the donor topmast even when installation required only the lower mainmast.
    Search the profile's connected aft sections and check both mast and guide
    activity when drawing; registration/part refresh can precede activation.
-   The user confirmed the 0.7.15 result looked correct in game. Version 0.8.0
-   retains active-section selection but needs fresh in-game validation for direct
-   mast mounting and deck-up hoisting.
+   The user confirmed the pulley correction and later the 0.8.1 mast-mounted
+   result looked good in game. Keep active-section selection when changing profiles.
 9. **Keep fisherman controls independent of mast sail order.** Native binding
    indexes winch arrays by mastOrder and can exceed dual-sheet array capacity.
    Exclude fisherman sails only during that binding call and always restore the
    full list in the finalizer. Capacity, collision, overlap and saving still use
-   the full list. Each sail owns and destroys its extra controls. A hidden bundle
-   renderer remains only because native recoloring expects a furled renderer.
+   the full list. Each sail owns and destroys its extra controls. A hidden, meshless
+   renderer remains because native recoloring expects a furled renderer.
 
 10. **Keep shipyard collision checks separate from billow bounds.** In 0.8.0,
     full-height strips filled to maximum camber falsely contacted Brig shrouds.
@@ -232,7 +231,8 @@ support-mast removal, deck-up hoisting and parked ropes with invisible struck cl
     the intentional mast attachment area. Version 0.8.1 uses a thin neutral panel
     clipped by the supporting mast radius plus 2 cm, retaining other collision
     and overlap rules. Preserve the aligned neutral rotation when the native
-    sweep completes. Live collision validation of this fix remains pending.
+    sweep completes. The user approved the 0.8.1 in-game result; the 0.8.2
+    cleanup still needs a fresh in-game check.
 
 For handoff, report the version, behavioral change, checks actually run, remaining
 in-game uncertainty, and the built DLL path. Update these notes when a later

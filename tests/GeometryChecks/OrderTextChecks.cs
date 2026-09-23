@@ -6,11 +6,11 @@ internal static class OrderTextChecks
 {
     internal static void Run()
     {
-        const string mizzen = "Mizzenmast Triatic Stay (mizzen top stay 1)";
-        const string fore = "Formast Triatic Stay (middle topmast stay 2-2)";
+        const string large = "Fisherman's Sail Prototype (150% x 115%)";
+        const string small = "Fisherman's Sail Prototype (65%)";
         // Reproduce the installed NANDFixes 1.4.3 non-progressing recursion
         // without actually overflowing the test process's stack.
-        string removal = "0: " + mizzen + " -> (no Mizzenmast Triatic Stay)";
+        string removal = "0: " + large + " -> (no sail)";
         string recursive = removal.Substring(
             0,
             removal.IndexOf("->", StringComparison.Ordinal) + 2
@@ -25,18 +25,18 @@ internal static class OrderTextChecks
             string line in new[]
             {
                 removal,
-                "(ERROR): " + mizzen + " -> (no Mizzenmast Triatic Stay)",
-                "192: (no Formast Triatic Stay) -> " + fore,
-                "192: " + fore + " -> (no Formast Triatic Stay)",
-                "192: " + mizzen + " -> Mizzenmast Triatic Stay (mizzen top stay 2)",
-                "(ERROR): " + fore + " requires: main mast 2",
-                "Formast Triatic Stay " + new string('x', 200),
+                "(ERROR): " + large + " -> (no sail)",
+                "192: (no sail) -> " + small,
+                "192: " + small + " -> (no sail)",
+                "192: " + large + " -> " + small,
+                "(ERROR): " + small + " requires: main mast 2",
+                "Fisherman's Sail " + new string('x', 200),
                 "Fisherman's Sail Prototype (REQUIRES AN ACTIVE AFT MAST WITH HALYARD GUIDES)",
             }
         )
         {
-            Check(StayOrderText.NeedsWrapping(line), "Triatic order escaped the guard.");
-            string[] wrapped = StayOrderText.Wrap(line).ToArray();
+            Check(FishermanOrderText.NeedsWrapping(line), "Fisherman order escaped the guard.");
+            string[] wrapped = FishermanOrderText.Wrap(line).ToArray();
             Check(wrapped.All(s => s.Length <= 45), "An order line exceeds the safe width.");
             Check(
                 string.Concat(wrapped).Replace(" ", "") == line.Replace(" ", ""),
@@ -44,20 +44,14 @@ internal static class OrderTextChecks
             );
         }
         foreach (
-            string line in new[]
-            {
-                null,
-                "192: shipyard fee",
-                "(no Formast Triatic Stay)",
-                new string('x', 100),
-            }
+            string line in new[] { null, "192: shipyard fee", "(no sail)", new string('x', 100) }
         )
             Check(
-                !StayOrderText.NeedsWrapping(line),
+                !FishermanOrderText.NeedsWrapping(line),
                 "Short or unrelated lines must keep native handling."
             );
         Check(
-            StayOrderText.Wrap("first\nsecond").SequenceEqual(new[] { "first", "second" }),
+            FishermanOrderText.Wrap("first\nsecond").SequenceEqual(new[] { "first", "second" }),
             "Explicit line breaks were lost."
         );
         Console.WriteLine(

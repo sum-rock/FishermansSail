@@ -29,7 +29,7 @@ namespace FishermansSail
         public Transform SheetAttachment;
         public Transform[] HalyardAttachments;
         public SkinnedMeshRenderer ReefedRenderer;
-        public MeshRenderer BundleRenderer;
+        public MeshRenderer FurledColorReference;
         public Transform FlyingFrame;
         public Vector3 OriginalHingeAxis;
         public Vector3 OriginalHingeAnchor;
@@ -59,13 +59,7 @@ namespace FishermansSail
 
         internal void RefreshCloth() => refreshRequested = true;
 
-        internal static void Configure(
-            Sail sail,
-            SailMeshData data,
-            Mesh mesh,
-            Mesh shadowMesh,
-            Mesh bundleMesh
-        )
+        internal static void Configure(Sail sail, SailMeshData data, Mesh mesh, Mesh shadowMesh)
         {
             var cloth = sail.cloth;
             var renderer = cloth.GetComponent<SkinnedMeshRenderer>();
@@ -210,13 +204,12 @@ namespace FishermansSail
             rig.ReefedRenderer.localBounds = renderer.localBounds;
             rig.ReefedRenderer.sharedMaterials = renderer.sharedMaterials;
             rig.ReefedRenderer.enabled = false;
-            var bundle = new GameObject("Fisherman furled bundle");
-            bundle.transform.SetParent(scaleRoot, false);
-            bundle.AddComponent<MeshFilter>().sharedMesh = bundleMesh;
-            rig.BundleRenderer = bundle.AddComponent<MeshRenderer>();
-            rig.BundleRenderer.sharedMaterials = renderer.sharedMaterials;
-            rig.BundleRenderer.enabled = false;
-            reef.furledSail = rig.BundleRenderer;
+            var furled = new GameObject("Fisherman furled color reference");
+            furled.transform.SetParent(scaleRoot, false);
+            rig.FurledColorReference = furled.AddComponent<MeshRenderer>();
+            rig.FurledColorReference.sharedMaterials = renderer.sharedMaterials;
+            rig.FurledColorReference.enabled = false;
+            reef.furledSail = rig.FurledColorReference;
         }
 
         private static void ConfigureCollision(ShipyardSailColChecker checker, float width)
@@ -607,10 +600,10 @@ namespace FishermansSail
             // stale full-size triangles visible when the sail is struck.
             clothRenderer.enabled = visible && state == 2;
             ReefedRenderer.sharedMaterial = clothRenderer.sharedMaterial;
-            BundleRenderer.sharedMaterial = clothRenderer.sharedMaterial;
+            FurledColorReference.sharedMaterial = clothRenderer.sharedMaterial;
             ReefedRenderer.enabled = visible && state == 1;
             // Kept only as the native ChangeSailColor/SE reference; never display it.
-            BundleRenderer.enabled = false;
+            FurledColorReference.enabled = false;
             lastRenderState = state;
         }
     }
