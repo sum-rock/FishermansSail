@@ -350,6 +350,7 @@ namespace FishermansSail.Sails.FishermansFlyingSail
             );
             clone.transform.localScale = source.transform.lossyScale;
             var winch = clone.GetComponent<GPButtonRopeWinch>();
+            FishermanWinchVisuals.ResetClonedOutline(winch);
             winch.rope = null;
             if (winch.rotHandle && !winch.rotHandle.transform.IsChildOf(clone.transform))
             {

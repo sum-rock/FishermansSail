@@ -300,6 +300,7 @@ namespace FishermansSail.Sails.FishermansStaysail
             clone.name = "FishermansStaysail " + label;
             PositionControl(clone.transform, source);
             var winch = clone.GetComponent<GPButtonRopeWinch>();
+            FishermanWinchVisuals.ResetClonedOutline(winch);
             winch.rope = null;
             if (winch.rotHandle && !winch.rotHandle.transform.IsChildOf(clone.transform))
             {
