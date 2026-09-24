@@ -55,18 +55,21 @@ version **0.1.0** and prefab index **400** remain unchanged.
 | Active mast guides and independent controls | [FishermansFlyingSailRigging.cs](Sails/FishermansFlyingSail/FishermansFlyingSailRigging.cs) |
 | Mast installation, support protection, hoisting and collision | [FishermansFlyingSailMastInstallationGeometry.cs](Sails/FishermansFlyingSail/FishermansFlyingSailMastInstallationGeometry.cs), [Patches/FishermansFlyingSailMastInstallationPatches.cs](Sails/FishermansFlyingSail/Patches/FishermansFlyingSailMastInstallationPatches.cs), [Patches/FishermansFlyingSailCollisionPatches.cs](Sails/FishermansFlyingSail/Patches/FishermansFlyingSailCollisionPatches.cs) |
 | Shipyard order-text freeze protection | [FishermansFlyingSailOrderText.cs](Sails/FishermansFlyingSail/FishermansFlyingSailOrderText.cs), [Patches/FishermansFlyingSailOrderTextPatch.cs](Sails/FishermansFlyingSail/Patches/FishermansFlyingSailOrderTextPatch.cs) |
-| Boat-specific mast pairs | [BoatRigs/](BoatRigs/) |
+| Complete boat profiles and shared definition types | [BoatRigs/](BoatRigs/) |
 
 The independent Fisherman's Stay feature is in `Stays/FishermansStay/`, with
-patches in its `Patches/` subdirectory. `BoatRigs/Stays/` holds its authored
-mast-local attachment references and fixed mount IDs. See the development guide
+patches in its `Patches/` subdirectory. Each boat class in `BoatRigs/` holds its
+authored mast-local attachment references and fixed mount IDs, alongside Flying
+Sail supports, mast ancestry and winch mounts. `BoatRigs/Definitions.cs` contains
+shared types and the catalog; `Controls/WinchPlacementGeometry.cs` contains the
+shared placement calculations. See the development guide
 for profile counts, asset provenance and the stay verification checklist.
 The custom staysail family is in `Sails/FishermansStaysail/`; `MkA/` contains
 the first cut and registration (prefab **401**); `MkB/` has the 90° foot cut
 and registration (prefab **402**). Family patches, controls,
 reefing and rig remain separate from the Flying Sail. Tests mirror the family
-and mark directories. `BoatRigs/FishermansStaysailDefinitions.cs` supplies
-authored mast ancestry for both supports and the aft-base halyard source.
+and mark directories. Each boat profile supplies authored mast ancestry for
+both supports and the aft-base halyard source.
 The first Mk.A in-game pass reported deckward reefing, excessive starting size
 and incorrect SailInfo angles; see lesson 16. Revised behavior and full stay/save
 acceptance remain pending. Earlier observations apply to the flying-sail mechanics.
@@ -394,7 +397,9 @@ support-mast removal, deck-up hoisting and parked ropes with invisible struck cl
     and initialize clones inactive with owned handles and fresh outlines. Native
     input measures the wheel's local rotation; reposition its parent mounting frame
     instead. Authored directions and mast axes cover 151 donor/role mappings across
-    seven boats. Mast positions prefer vertical stacks, then other faces with the
+    seven boats. Keep these authored values in the corresponding boat class,
+    with shared types in `BoatRigs/Definitions.cs` and placement calculations in
+    `Controls/WinchPlacementGeometry.cs`. Mast positions prefer vertical stacks, then other faces with the
     position and facing rotated together; deck/rail fittings follow their native
     surface tangent. Do not restore universal foreward offsets: the user reported
     floating and inward-facing winches. Measured-size spacing, allocation and

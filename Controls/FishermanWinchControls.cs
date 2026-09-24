@@ -31,7 +31,11 @@ namespace FishermansSail.Controls
             var source = Source(donorMast, role);
             if (!source)
                 throw new InvalidOperationException("No usable source winch: " + label);
-            var definition = WinchMountDefinitions.Find(boat.name, donorMast.orderIndex, role);
+            var definition =
+                BoatRigCatalog.Find(boat.name)?.WinchMount(donorMast.orderIndex, role)
+                ?? throw new InvalidOperationException(
+                    $"No authored winch mounting direction: {boat.name}/{donorMast.orderIndex}/{role}."
+                );
             var control = new OwnedWinch(manager, owner, parent, source, definition, label);
             manager.controls.Add(control);
             return control;
@@ -297,7 +301,12 @@ namespace FishermansSail.Controls
                             support.transform.TransformPoint(support.center)
                         );
                     }
-                    var placements = definition.Candidates(origin, radius, axisPoint);
+                    var placements = WinchPlacementGeometry.Candidates(
+                        definition,
+                        origin,
+                        radius,
+                        axisPoint
+                    );
                     var positions = placements.Select(p => p.Position).ToArray();
                     reservation = manager.reservations.Acquire(
                         Source,

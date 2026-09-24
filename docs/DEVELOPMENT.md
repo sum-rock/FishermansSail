@@ -116,18 +116,22 @@ named **Fisherman's Flying Sail** in game.
 - Its `Patches/` subdirectory contains all feature-specific Harmony patches in
   the corresponding `.Patches` namespace, including registration, appearance
   and the order-text freeze guard.
-- `BoatRigs/` contains boat definitions in `FishermansSail.BoatRigs`.
+- `BoatRigs/` contains one static class/file per boat in `FishermansSail.BoatRigs`.
+  Each exposes a complete `BoatRigDefinition` through `Definition`, with private
+  factories for Flying Sail supports, stay variants, mast ancestry and winch mounts.
+  `Definitions.cs` holds the shared data types, validation and `BoatRigCatalog`.
+  Resolve ancestry and winches through the selected profile (`Sections`, `Base`,
+  `WinchMount`); individual winch records inherit boat identity from that profile.
+- `Controls/` owns shared winch allocation, cloning and placement calculations.
+  `WinchPlacementGeometry.cs` uses the authored mounting data without owning any
+  boat tables.
 - `Stays/FishermansStay/` owns the new stays, their independent controls, native
   mount registration, save handling and patches. The namespace is
   `FishermansSail.Stays.FishermansStay`, with `.Patches` for Harmony patches.
-- `BoatRigs/Stays/` contains authored stay variants. Other sail types belong in
-  sibling directories under `Sails/`.
 - `Sails/FishermansStaysail/` owns the staysail family's rig, reefing adapter,
   controls, prefab builder and patches. `MkA/` contains the original 110° cut;
   `MkB/` keeps its head and has a 90° foot. Each mark supplies its own
   `FishermansStaysailShape` and save identity.
-- `BoatRigs/FishermansStaysailDefinitions.cs` holds authored fore-mast ancestry
-  for selecting both physical mast chains and the aft-base halyard source.
 
 The geometry checks link feature sources directly; update their project includes
 when moving files. The assembly checks resolve internal types by full name;
@@ -401,8 +405,10 @@ reservations without destroying the sail-owned rope controller. Native wheel
 rotation is a child of the mounting transform, so placement refreshes cannot
 be interpreted as player winch input.
 
-`BoatRigs/WinchMountDefinitions.cs` records 151 donor/role mounting directions
-and physical mast references measured on 2026-09-24. Sources are the installed
+The seven boat classes in `BoatRigs/` record 151 donor/role mounting directions
+and physical mast references measured on 2026-09-24. Their shared record type is
+in `BoatRigs/Definitions.cs`; candidate positions are calculated in
+`Controls/WinchPlacementGeometry.cs`. Sources are the installed
 `level24`, `shipyard_expansion.assets`, `Leopard/leopard` and
 `ShatteredSeasExpansion/veil piercer`. Expansion transforms were converted through
 the corresponding boat model frame before comparison. Mast collider axes identify
@@ -429,3 +435,12 @@ of mast attachment radius/facing. Assembly checks verify structural clone and
 teardown wiring; they do not simulate Unity Awake/Start, previews, handles or
 outlines. All seven boats still require the CLEANUP-1 in-game matrix. No game
 assets or DLLs are included in the fixture.
+
+
+The 2026-09-24 organizational follow-up consolidated the boat tables without
+changing their authored values or ordering. Before/after canonical snapshots
+matched exactly for seven boats, 97 stay variants, 151 winch mappings, 69 mast
+section chains and 453 placement cases. The full Release build, formatting,
+geometry and assembly checks passed. Profile checks also cover missing entries,
+Leopard's three-section chain and rejection of cyclic ancestry. This refactor
+adds no new in-game validation; the outstanding CLEANUP-1 matrix still applies.

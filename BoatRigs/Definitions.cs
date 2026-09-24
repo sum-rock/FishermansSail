@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
+using UnityEngine;
 
 namespace FishermansSail.BoatRigs
 {
@@ -34,24 +36,137 @@ namespace FishermansSail.BoatRigs
         }
     }
 
+    internal sealed class FishermansStayVariantDefinition
+    {
+        internal readonly int MountIndex,
+            Donor,
+            Fore,
+            Aft,
+            GuideIndex;
+        internal readonly string Label;
+        internal readonly Vector3 ForePoint,
+            AftPoint;
+        internal readonly bool ExtendedGuide;
+        internal readonly int[] Required,
+            Forbidden;
+
+        internal FishermansStayVariantDefinition(
+            int mountIndex,
+            int donor,
+            string label,
+            int fore,
+            Vector3 forePoint,
+            int aft,
+            Vector3 aftPoint,
+            bool extendedGuide,
+            int guideIndex,
+            int[] required,
+            int[] forbidden
+        )
+        {
+            if (
+                mountIndex < 128
+                || mountIndex >= 256
+                || donor < 0
+                || donor >= 128
+                || fore == aft
+                || guideIndex < 0
+                || string.IsNullOrEmpty(label)
+                || !Finite(forePoint)
+                || !Finite(aftPoint)
+                || !required.Contains(fore)
+                || !required.Contains(aft)
+                || required.Concat(forbidden).Any(i => i < 0 || i >= 128)
+                || required.Distinct().Count() != required.Length
+                || forbidden.Distinct().Count() != forbidden.Length
+                || required.Intersect(forbidden).Any()
+            )
+                throw new ArgumentException("Invalid Fisherman's Stay reference or mount ID.");
+            MountIndex = mountIndex;
+            Donor = donor;
+            Label = label;
+            Fore = fore;
+            Aft = aft;
+            ForePoint = forePoint;
+            AftPoint = aftPoint;
+            ExtendedGuide = extendedGuide;
+            GuideIndex = guideIndex;
+            Required = required;
+            Forbidden = forbidden;
+        }
+
+        private static bool Finite(Vector3 point) =>
+            !float.IsNaN(point.x)
+            && !float.IsInfinity(point.x)
+            && !float.IsNaN(point.y)
+            && !float.IsInfinity(point.y)
+            && !float.IsNaN(point.z)
+            && !float.IsInfinity(point.z);
+    }
+
+    internal sealed class FishermansStayGroupDefinition
+    {
+        internal readonly string Label;
+        internal readonly FishermansStayVariantDefinition[] Variants;
+
+        internal FishermansStayGroupDefinition(
+            string label,
+            FishermansStayVariantDefinition[] variants
+        )
+        {
+            if (string.IsNullOrEmpty(label) || variants.Length == 0)
+                throw new ArgumentException("Empty Fisherman's Stay group.");
+            Label = label;
+            Variants = variants;
+        }
+    }
+
+    internal enum WinchRole
+    {
+        Reef,
+        Left,
+        Right,
+        Mid,
+    }
+
+    internal sealed class WinchMountDefinition
+    {
+        internal readonly int Mast;
+        internal readonly WinchRole Role;
+        internal readonly Vector3 Direction;
+        internal readonly bool OnMast;
+        internal readonly int Support;
+
+        internal WinchMountDefinition(
+            int mast,
+            WinchRole role,
+            Vector3 direction,
+            bool onMast,
+            int support
+        )
+        {
+            Mast = mast;
+            Role = role;
+            Direction = direction.normalized;
+            OnMast = onMast;
+            Support = support;
+        }
+    }
+
     internal sealed class BoatRigDefinition
     {
         internal readonly string BoatName;
         internal readonly MastSupportDefinition[] Supports;
         internal readonly FishermansStayGroupDefinition[] Stays;
-
-        internal IEnumerable<IGrouping<int, MastSupportDefinition>> MastPairs(int foreIndex) =>
-            Supports
-                .Where(s => s.ForeSections.Contains(foreIndex))
-                .GroupBy(s => s.AftSections.Last());
-
-        internal BoatRigDefinition(string boatName, params MastSupportDefinition[] supports)
-            : this(boatName, new FishermansStayGroupDefinition[0], supports) { }
+        internal readonly IReadOnlyDictionary<int, int> MastParents;
+        internal readonly WinchMountDefinition[] WinchMounts;
 
         internal BoatRigDefinition(
             string boatName,
+            MastSupportDefinition[] supports,
             FishermansStayGroupDefinition[] stays,
-            params MastSupportDefinition[] supports
+            IReadOnlyDictionary<int, int> mastParents,
+            WinchMountDefinition[] winchMounts
         )
         {
             if (
@@ -62,16 +177,67 @@ namespace FishermansSail.BoatRigs
             var mounts = stays.SelectMany(g => g.Variants).Select(v => v.MountIndex).ToArray();
             if (mounts.Distinct().Count() != mounts.Length)
                 throw new ArgumentException("Duplicate Fisherman's Stay mount ID.");
-            Stays = stays;
+            if (winchMounts.GroupBy(w => new { w.Mast, w.Role }).Any(g => g.Count() != 1))
+                throw new ArgumentException("Duplicate winch mount definition.");
+            if (
+                mastParents.Any(p =>
+                    p.Key < 0 || p.Value < -1 || (p.Value >= 0 && !mastParents.ContainsKey(p.Value))
+                )
+            )
+                throw new ArgumentException("Invalid authored mast ancestry.");
             BoatName = boatName;
             Supports = supports;
+            Stays = stays;
+            MastParents = new ReadOnlyDictionary<int, int>(
+                mastParents.ToDictionary(p => p.Key, p => p.Value)
+            );
+            WinchMounts = winchMounts;
+            foreach (int section in MastParents.Keys)
+                Sections(section); // Reject cycles before any runtime lookup can hang.
         }
+
+        internal IEnumerable<IGrouping<int, MastSupportDefinition>> MastPairs(int foreIndex) =>
+            Supports
+                .Where(s => s.ForeSections.Contains(foreIndex))
+                .GroupBy(s => s.AftSections.Last());
+
+        internal int Base(int section) => Sections(section).Last();
+
+        internal int[] Sections(int section)
+        {
+            var sections = new List<int>();
+            var visited = new HashSet<int>();
+            while (section >= 0)
+            {
+                if (!visited.Add(section))
+                    throw new ArgumentException("Cyclic authored mast ancestry.");
+                sections.Add(section);
+                if (!MastParents.TryGetValue(section, out section))
+                    throw new ArgumentException("No authored staysail mast reference.");
+            }
+            return sections.ToArray();
+        }
+
+        internal WinchMountDefinition WinchMount(int mast, WinchRole role) =>
+            WinchMounts.FirstOrDefault(w => w.Mast == mast && w.Role == role)
+            ?? throw new InvalidOperationException(
+                $"No authored winch mounting direction: {BoatName}/{mast}/{role}."
+            );
     }
 
-    internal static partial class BoatRigCatalog
+    internal static class BoatRigCatalog
     {
         internal static BoatRigDefinition[] All =>
-            new[] { Brig, Junk, Jong, Sanbuq, Cog, Leopard, Shroud };
+            new[]
+            {
+                Brig.Definition,
+                Junk.Definition,
+                Jong.Definition,
+                Sanbuq.Definition,
+                Cog.Definition,
+                Leopard.Definition,
+                Shroud.Definition,
+            };
 
         internal static BoatRigDefinition Find(string boatName)
         {

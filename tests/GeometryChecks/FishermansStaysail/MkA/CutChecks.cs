@@ -175,14 +175,14 @@ internal static class CutChecks
             int baseId = stay.Fore;
             while (masts[baseId].Parents.Length != 0)
                 baseId = masts[baseId].Parents[0];
-            if (FishermansStaysailDefinitions.Base(boat.BoatName, stay.Fore) != baseId)
+            if (boat.Base(stay.Fore) != baseId)
                 throw new Exception("Wrong authored Mk.A fore-mast base.");
             int aftBase = stay.Aft;
             while (masts[aftBase].Parents.Length != 0)
                 aftBase = masts[aftBase].Parents[0];
-            if (FishermansStaysailDefinitions.Base(boat.BoatName, stay.Aft) != aftBase)
+            if (boat.Base(stay.Aft) != aftBase)
                 throw new Exception("Wrong authored Mk.A aft halyard source.");
-            var chain = FishermansStaysailDefinitions.Sections(boat.BoatName, stay.Aft);
+            var chain = boat.Sections(stay.Aft);
             if (
                 chain[0] != stay.Aft
                 || chain[chain.Length - 1] != aftBase

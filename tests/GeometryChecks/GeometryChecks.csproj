@@ -7,6 +7,10 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile
+      Include="../../Controls/WinchPlacementGeometry.cs"
+      Link="FishermansStay/WinchPlacementGeometry.cs"
+    />
+    <Compile
       Include="../../Controls/WinchReservations.cs"
       Link="FishermansStay/WinchReservations.cs"
     />

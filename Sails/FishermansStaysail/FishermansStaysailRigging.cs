@@ -65,13 +65,13 @@ namespace FishermansSail.Sails.FishermansStaysail
             var refs = stay.References;
             var boat = mount.GetComponentInParent<BoatRefs>();
             var profile = BoatRigCatalog.Find(boat.name);
-            int baseId = FishermansStaysailDefinitions.Base(profile.BoatName, refs.Aft.orderIndex);
-            var foreSections = FishermansStaysailDefinitions
-                .Sections(profile.BoatName, refs.Fore.orderIndex)
+            int baseId = profile.Base(refs.Aft.orderIndex);
+            var foreSections = profile
+                .Sections(refs.Fore.orderIndex)
                 .Select(id => boat.masts[id])
                 .ToArray();
-            var aftSections = FishermansStaysailDefinitions
-                .Sections(profile.BoatName, refs.Aft.orderIndex)
+            var aftSections = profile
+                .Sections(refs.Aft.orderIndex)
                 .Select(id => boat.masts[id])
                 .ToArray();
             var aftBase = boat.masts[baseId];

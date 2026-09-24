@@ -97,6 +97,19 @@ clearance from other boat geometry and the reported placement corrections need
 visual confirmation; the fixture checks do not establish those outcomes.
 Implementation completed: **2026-09-24**.
 
+**Organizational follow-up (2026-09-24):** Consolidated authored supports, stay
+variants, mast ancestry and winch mounts into one static class/file per boat in
+[`BoatRigs/`](../BoatRigs/). Shared types and the small catalog now live in
+[`Definitions.cs`](../BoatRigs/Definitions.cs); placement calculations live in
+[`WinchPlacementGeometry.cs`](../Controls/WinchPlacementGeometry.cs). Runtime
+consumers use the selected complete boat profile. Removed the scattered tables
+and redundant lookup wrappers. Before/after snapshots match exactly for all
+seven boats, 97 stays, 151 winch mappings, 69 mast section chains and 453 placement
+cases, preserving registration order and numeric values. CSharpier, the Release
+build, GeometryChecks, AssemblyChecks and `git diff --check` pass. Added profile
+lookup and malformed-ancestry checks. Version remains **0.1.0**; the in-game
+validation above remains pending.
+
 ### CLEANUP-2 — Extend behavior checks to both staysail marks
 
 - [ ] Implementation and applicable automated checks complete.

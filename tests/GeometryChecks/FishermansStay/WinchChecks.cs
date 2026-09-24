@@ -100,34 +100,24 @@ internal static class WinchChecks
         {
             foreach (var support in boat.Supports)
             {
-                WinchMountDefinitions.Find(
-                    boat.BoatName,
-                    support.SheetControlSource,
-                    WinchRole.Left
-                );
-                WinchMountDefinitions.Find(
-                    boat.BoatName,
-                    support.SheetControlSource,
-                    WinchRole.Right
-                );
+                boat.WinchMount(support.SheetControlSource, WinchRole.Left);
+                boat.WinchMount(support.SheetControlSource, WinchRole.Right);
                 foreach (int fore in support.ForeSections)
-                    WinchMountDefinitions.Find(boat.BoatName, fore, WinchRole.Reef);
+                    boat.WinchMount(fore, WinchRole.Reef);
             }
             foreach (var stay in boat.Stays.SelectMany(g => g.Variants))
             {
-                WinchMountDefinitions.Find(boat.BoatName, stay.Donor, WinchRole.Left);
-                WinchMountDefinitions.Find(boat.BoatName, stay.Donor, WinchRole.Right);
-                WinchMountDefinitions.Find(boat.BoatName, stay.Aft, WinchRole.Reef);
-                WinchMountDefinitions.Find(
-                    boat.BoatName,
-                    FishermansStaysailDefinitions.Base(boat.BoatName, stay.Aft),
-                    WinchRole.Reef
-                );
+                boat.WinchMount(stay.Donor, WinchRole.Left);
+                boat.WinchMount(stay.Donor, WinchRole.Right);
+                boat.WinchMount(stay.Aft, WinchRole.Reef);
+                boat.WinchMount(boat.Base(stay.Aft), WinchRole.Reef);
             }
         }
         Check(
-            WinchMountDefinitions.All.Select(d => (d.Boat, d.Mast, d.Role)).Distinct().Count()
-                == WinchMountDefinitions.All.Length,
+            BoatRigCatalog
+                .All.SelectMany(b => b.WinchMounts.Select(d => (b.BoatName, d.Mast, d.Role)))
+                .Distinct()
+                .Count() == BoatRigCatalog.All.Sum(b => b.WinchMounts.Length),
             "Duplicate mounting definitions."
         );
         int measured = 0;
@@ -148,7 +138,7 @@ internal static class WinchChecks
                 continue;
             var fields = line.Split('|');
             var role = (WinchRole)Enum.Parse(typeof(WinchRole), fields[2], true);
-            var definition = WinchMountDefinitions.Find(fields[0], int.Parse(fields[1]), role);
+            var definition = BoatRigCatalog.Find(fields[0]).WinchMount(int.Parse(fields[1]), role);
             var origin = Parse(fields[3]);
             var normal = Parse(fields[4]).normalized;
             Check(
@@ -157,7 +147,12 @@ internal static class WinchChecks
             );
             var axisPoint = Parse(fields[5]);
             float radius = float.Parse(fields[6], CultureInfo.InvariantCulture);
-            var candidates = definition.Candidates(origin, radius, axisPoint);
+            var candidates = WinchPlacementGeometry.Candidates(
+                definition,
+                origin,
+                radius,
+                axisPoint
+            );
             Check(
                 candidates.Length >= 4,
                 "A measured winch has too few mounting candidates: " + line
@@ -224,7 +219,7 @@ internal static class WinchChecks
             measured++;
         }
         Check(
-            measured == WinchMountDefinitions.All.Length,
+            measured == BoatRigCatalog.All.Sum(b => b.WinchMounts.Length),
             "A mounting profile has no installed-asset measurement."
         );
         Console.WriteLine(

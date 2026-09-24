@@ -209,8 +209,10 @@ internal static class StayChecks
         Reject(() =>
             new BoatRigDefinition(
                 "duplicate",
+                Brig.Definition.Supports,
                 new[] { new FishermansStayGroupDefinition("test", new[] { sample, sample }) },
-                BoatRigCatalog.All[0].Supports
+                Brig.Definition.MastParents,
+                Brig.Definition.WinchMounts
             )
         );
         foreach (
