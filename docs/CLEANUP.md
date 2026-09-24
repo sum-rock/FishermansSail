@@ -33,7 +33,7 @@ placement and live cloth behavior were not validated in-game during the review.
 
 ### CLEANUP-1 — Coordinate winch placement and cloning
 
-- [ ] Implementation and applicable automated checks complete.
+- [x] Implementation and applicable automated checks complete.
 
 **Finding:** Flying sails, custom staysails and stay-owned controls allocate
 positions independently. For a shared donor and mast direction, the second
@@ -59,8 +59,43 @@ sail families, multiple sails, vanilla sails on Fisherman's Stays, removal and
 reinstallation, save/reload and outlines after boat movement. Controls should
 remain accessible, distinct and attached to the correct sail.
 
-**Progress:** Not started. Checks run: none for this item. In-game validation:
-pending. Implementation completed: —.
+**Progress:** Implemented **2026-09-24** in version **0.1.0**. All three control
+paths now use a boat-owned allocator and inactive clone factory in
+[`Controls/`](../Controls/). Reservations use actual donor identity, reject nearby
+native/owned controls, retain occupied slots and release unused/removed controls.
+Donor replacement preserves sail-owned controllers; mount transforms are separate
+from the wheel rotation used by native input. Stay variants without bound ropes
+consume no slots. External handles and cloned outlines share the same ownership
+and initialization policy.
+
+The user also reported floating and inward-facing staysail winches on several
+boats. The previous horizontal offsets could leave a mast surface or cross it
+without rotating the face. Authored boat-local placement directions now cover
+**151 donor/role mappings across seven boats**, measured from installed assets.
+Mast controls prefer vertical stacks, then other faces around the authored mast
+axis, rotating position and facing together. Native interaction sizes determine
+spacing; height and surface travel are bounded. Deck/rail donors retain their
+native mounting orientation and use surface tangents. This is a correction based
+on code and asset measurements, not a confirmed reproduction of every report.
+Exhausted candidates leave the control hidden with a diagnostic and retry;
+sail-owned controllers remain active rather than being destroyed or disabled.
+
+**Checks:** CSharpier formatting/check, Release build, GeometryChecks,
+AssemblyChecks and `git diff --check` pass. New executed checks cover shared
+allocation, release/reuse, donor changes, exhaustion, cross-donor overlap,
+cancellation-style release, all profile references and 151 numeric donor fixtures
+(including native sizes, mast radii, outward-face preservation and boat rotation).
+Each measured donor supports at least three additional controls in isolation.
+Assembly checks inspect clone initialization, input-rotation separation and the
+three lifecycle integrations; they do not execute Unity activation or previews.
+
+**In-game validation:** Pending on all seven boats. Start with Brig, then check
+both marks and mixed families, vanilla sails on Fisherman's Stays, multiple sails,
+boat movement, removal/reinstallation, valid/invalid previews and cancellation,
+save/reload, mouse/VR handles, outlines and rope continuity. Surface accessibility,
+clearance from other boat geometry and the reported placement corrections need
+visual confirmation; the fixture checks do not establish those outcomes.
+Implementation completed: **2026-09-24**.
 
 ### CLEANUP-2 — Extend behavior checks to both staysail marks
 

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using FishermansSail.BoatRigs;
+using FishermansSail.Controls;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
@@ -39,13 +40,13 @@ namespace FishermansSail.Sails.FishermansFlyingSail
         internal MountPair Pair { get; private set; }
         private Sail sail;
         private GameObject controlsRoot;
-        private GPButtonRopeWinch[] controls;
+        private FishermanWinchControls.OwnedWinch[] controls;
         private Transform mastGuide,
             upperGuide;
         private bool bindingDirty;
-        private int controlSlot = -1;
+        private bool controlsDirty;
 
-        internal void Invalidate() => bindingDirty = true;
+        internal void Invalidate() => bindingDirty = controlsDirty = true;
 
         internal static FishermansFlyingSailRigging For(Sail sail)
         {
@@ -182,7 +183,9 @@ namespace FishermansSail.Sails.FishermansFlyingSail
                 || Pair.Fore != resolved.Fore
                 || Pair.Aft != resolved.Aft
                 || Pair.ForeGuide != resolved.ForeGuide
-                || Pair.AftGuide != resolved.AftGuide;
+                || Pair.AftGuide != resolved.AftGuide
+                || Pair.SheetControlSource != resolved.SheetControlSource;
+            controlsDirty |= changed;
             Pair = resolved;
             bindingDirty = false;
             if (changed)
@@ -288,39 +291,33 @@ namespace FishermansSail.Sails.FishermansFlyingSail
                 return;
             if (!controlsRoot)
             {
-                var used = Pair
-                    .Fore.sails.Where(s => s)
-                    .Select(s => s.GetComponent<FishermansFlyingSailRigging>())
-                    .Where(r => r && r != this && r.controlSlot >= 0)
-                    .Select(r => r.controlSlot)
-                    .ToArray();
-                controlSlot = 0;
-                while (used.Contains(controlSlot))
-                    controlSlot++;
                 controlsRoot = new GameObject("FishermansFlyingSail independent controls");
                 controlsRoot.SetActive(false);
                 controlsRoot.transform.SetParent(Pair.Boat.transform, false);
-                controls = new[]
-                {
-                    CopyWinch(FirstControl(Pair.Fore.reefWinch), "Hoist"),
-                    CopyWinch(FirstControl(Pair.SheetControlSource.leftAngleWinch), "Port sheet"),
-                    CopyWinch(
-                        FirstControl(Pair.SheetControlSource.rightAngleWinch),
-                        "Starboard sheet"
-                    ),
-                };
                 mastGuide = new GameObject("FishermansFlyingSail halyard guide").transform;
                 mastGuide.SetParent(controlsRoot.transform, false);
                 upperGuide = new GameObject("FishermansFlyingSail upper halyard guide").transform;
                 upperGuide.SetParent(controlsRoot.transform, false);
                 controlsRoot.SetActive(true);
             }
+            FishermanWinchControls.Reconcile(
+                ref controls,
+                Pair.Boat,
+                sail.gameObject,
+                controlsRoot.transform,
+                new[] { Pair.Fore, Pair.SheetControlSource, Pair.SheetControlSource },
+                new[]
+                {
+                    "FishermansFlyingSail Halyard",
+                    "FishermansFlyingSail Port sheet",
+                    "FishermansFlyingSail Starboard sheet",
+                }
+            );
+            controlsDirty = false;
             var connections = sail.GetComponent<SailConnections>();
-            controls[0].AttachToController(connections.reefController);
-            controls[1].AttachToController(connections.angleControllerLeft);
-            controls[2].AttachToController(connections.angleControllerRight);
-            foreach (var control in controls)
-                control.ShowWinch(true);
+            controls[0].Bind(connections.reefController);
+            controls[1].Bind(connections.angleControllerLeft);
+            controls[2].Bind(connections.angleControllerRight);
             connections.colChecker.RegisterBoatWalkCol(mast.walkColMast);
             // Old saves can restore the wider donor range; keep the checker,
             // shipyard description and native sail limits in agreement.
@@ -334,38 +331,9 @@ namespace FishermansSail.Sails.FishermansFlyingSail
             sail.maxAngle = connections.colChecker.colAngleMax;
         }
 
-        private GPButtonRopeWinch CopyWinch(GPButtonRopeWinch source, string label)
-        {
-            var clone = Object.Instantiate(source.gameObject, controlsRoot.transform, false);
-            clone.name = "FishermansFlyingSail " + label;
-            var towardsFore = Vector3
-                .ProjectOnPlane(
-                    Pair.Fore.transform.position - Pair.Aft.transform.position,
-                    Pair.Boat.transform.up
-                )
-                .normalized;
-            clone.transform.SetPositionAndRotation(
-                source.transform.position + towardsFore * (0.35f * (controlSlot + 1)),
-                source.transform.rotation
-            );
-            clone.transform.localScale = source.transform.lossyScale;
-            var winch = clone.GetComponent<GPButtonRopeWinch>();
-            FishermanWinchVisuals.ResetClonedOutline(winch);
-            winch.rope = null;
-            if (winch.rotHandle && !winch.rotHandle.transform.IsChildOf(clone.transform))
-            {
-                winch.rotHandle = Object.Instantiate(winch.rotHandle, clone.transform, false);
-                winch.rotHandle.transform.localPosition = Vector3.zero;
-            }
-            if (winch.rotHandle)
-                winch.rotHandle.rotatable = clone.transform;
-            clone.SetActive(true);
-            return winch;
-        }
-
         internal void UpdateHalyard(Transform[] attachments, bool struck)
         {
-            if (!controlsRoot)
+            if (!controlsRoot || controlsDirty)
                 AttachControls();
             if (!controlsRoot)
                 return;
@@ -396,6 +364,9 @@ namespace FishermansSail.Sails.FishermansFlyingSail
 
         private void OnDestroy()
         {
+            if (controls != null)
+                foreach (var control in controls)
+                    control.Dispose();
             if (controlsRoot)
                 Object.Destroy(controlsRoot);
         }

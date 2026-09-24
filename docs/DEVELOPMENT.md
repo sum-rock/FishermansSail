@@ -388,3 +388,44 @@ examples consistent. The first release version is **0.1.0**; earlier development
 version numbers are not the public release sequence. Version changes must not
 change the plugin GUID or prefab index. Distribute only the plugin DLL, without
 game assemblies or extracted assets.
+
+
+## Shared winch placement (CLEANUP-1)
+
+Version **0.1.0** uses `Controls/FishermanWinchControls.cs` for inactive cloning,
+owned rotation handles, outline reset and boat-level reservations. Flying Sails,
+Mk.A/Mk.B and stay-owned vanilla controls keep their existing bindings and rope
+routes. Only active owners with a bound rope reserve space; registration-only and
+empty stay variants do not. Donor changes replace affected clones and release old
+reservations without destroying the sail-owned rope controller. Native wheel
+rotation is a child of the mounting transform, so placement refreshes cannot
+be interpreted as player winch input.
+
+`BoatRigs/WinchMountDefinitions.cs` records 151 donor/role mounting directions
+and physical mast references measured on 2026-09-24. Sources are the installed
+`level24`, `shipyard_expansion.assets`, `Leopard/leopard` and
+`ShatteredSeasExpansion/veil piercer`. Expansion transforms were converted through
+the corresponding boat model frame before comparison. Mast collider axes identify
+the spar direction; the native winch datum supplies attachment radius and facing.
+Mast fittings can sit below the native sail-space collider's axial range, so that
+range is not treated as the physical bottom of the spar. Deck-facing coils near a
+mast remain deck fittings. Other controls use the tangent to their native face.
+
+Spacing uses the installed interaction-sphere size, with a 0.35 m minimum and
+2 cm between reserved radii. Mast candidates prefer the native face vertically,
+then ±90° and 180° around the authored axis, rotating the face along with its
+position. Mast height stays between 0.7 m below and 1.4 m above the native datum;
+rail/deck offsets stay within 1.4 m along the tangent. Nearby native fittings and
+all reserved controls exclude candidates. There is no unlimited offset fallback:
+an exhausted fitting is hidden, logs once and retries, while its native controller
+stays alive. These bounds require in-game accessibility and surface-clearance
+checks; a tangent or cylindrical approximation does not model every hull detail.
+
+`tests/GeometryChecks/FishermansStay/WinchMeasurements.txt` contains only numeric
+measurements: boat, source mast ID, role, donor position, face normal, support axis
+point and interaction radius. Checks cover all supported profile references,
+three extra controls per donor in isolation, reservation lifecycle and invariance
+of mast attachment radius/facing. Assembly checks verify structural clone and
+teardown wiring; they do not simulate Unity Awake/Start, previews, handles or
+outlines. All seven boats still require the CLEANUP-1 in-game matrix. No game
+assets or DLLs are included in the fixture.

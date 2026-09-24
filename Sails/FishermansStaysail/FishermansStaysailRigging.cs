@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using FishermansSail.BoatRigs;
+using FishermansSail.Controls;
 using FishermansSail.Stays.FishermansStay;
 using UnityEngine;
 using Object = UnityEngine.Object;
@@ -35,16 +36,13 @@ namespace FishermansSail.Sails.FishermansStaysail
         internal MountPair Pair { get; private set; }
         private Sail sail;
         private GameObject controlsRoot;
-        private GPButtonRopeWinch[] controls;
+        private FishermanWinchControls.OwnedWinch[] controls;
         private Transform mastGuide,
             upperGuide;
         private bool bindingDirty;
-        private int controlSlot = -1;
-        private Mast controlsAftBase,
-            controlsSheetSource;
         private bool controlsDirty;
 
-        internal void Invalidate() => bindingDirty = true;
+        internal void Invalidate() => bindingDirty = controlsDirty = true;
 
         internal static FishermansStaysailRigging For(Sail sail)
         {
@@ -223,64 +221,35 @@ namespace FishermansSail.Sails.FishermansStaysail
             var mast = sail.transform.parent ? sail.transform.parent.GetComponent<Mast>() : null;
             if (!Bind(mast))
                 return;
-            if (controlsAftBase != Pair.AftBase || controlsSheetSource != Pair.SheetControlSource)
-            {
-                var used = Pair
-                    .Boat.GetComponentsInChildren<FishermansStaysailRigging>(true)
-                    .Where(r =>
-                        r
-                        && r != this
-                        && r.controlsRoot
-                        && r.controlSlot >= 0
-                        && (
-                            r.controlsAftBase == Pair.AftBase
-                            || r.controlsSheetSource == Pair.SheetControlSource
-                        )
-                    )
-                    .Select(r => r.controlSlot)
-                    .ToArray();
-                controlSlot = 0;
-                while (used.Contains(controlSlot))
-                    controlSlot++;
-                controlsAftBase = Pair.AftBase;
-                controlsSheetSource = Pair.SheetControlSource;
-            }
             if (!controlsRoot)
             {
                 controlsRoot = new GameObject("FishermansStaysail independent controls");
                 controlsRoot.SetActive(false);
                 controlsRoot.transform.SetParent(Pair.Boat.transform, false);
-                controls = new[]
-                {
-                    CopyWinch(FirstControl(Pair.AftBase.reefWinch), "Halyard"),
-                    CopyWinch(FirstControl(Pair.SheetControlSource.leftAngleWinch), "Port sheet"),
-                    CopyWinch(
-                        FirstControl(Pair.SheetControlSource.rightAngleWinch),
-                        "Starboard sheet"
-                    ),
-                };
                 mastGuide = new GameObject("FishermansStaysail halyard guide").transform;
                 mastGuide.SetParent(controlsRoot.transform, false);
                 upperGuide = new GameObject("FishermansStaysail upper halyard guide").transform;
                 upperGuide.SetParent(controlsRoot.transform, false);
                 controlsRoot.SetActive(true);
             }
-            PositionControl(controls[0].transform, FirstControl(Pair.AftBase.reefWinch));
-            PositionControl(
-                controls[1].transform,
-                FirstControl(Pair.SheetControlSource.leftAngleWinch)
-            );
-            PositionControl(
-                controls[2].transform,
-                FirstControl(Pair.SheetControlSource.rightAngleWinch)
+            FishermanWinchControls.Reconcile(
+                ref controls,
+                Pair.Boat,
+                sail.gameObject,
+                controlsRoot.transform,
+                new[] { Pair.AftBase, Pair.SheetControlSource, Pair.SheetControlSource },
+                new[]
+                {
+                    "FishermansStaysail Halyard",
+                    "FishermansStaysail Port sheet",
+                    "FishermansStaysail Starboard sheet",
+                }
             );
             controlsDirty = false;
             var connections = sail.GetComponent<SailConnections>();
-            controls[0].AttachToController(connections.reefController);
-            controls[1].AttachToController(connections.angleControllerLeft);
-            controls[2].AttachToController(connections.angleControllerRight);
-            foreach (var control in controls)
-                control.ShowWinch(true);
+            controls[0].Bind(connections.reefController);
+            controls[1].Bind(connections.angleControllerLeft);
+            controls[2].Bind(connections.angleControllerRight);
             connections.colChecker.RegisterBoatWalkCol(mast.walkColMast);
             // Old saves can restore the wider donor range; keep the checker,
             // shipyard description and native sail limits in agreement.
@@ -292,40 +261,6 @@ namespace FishermansSail.Sails.FishermansStaysail
             );
             sail.minAngle = connections.colChecker.colAngleMin;
             sail.maxAngle = connections.colChecker.colAngleMax;
-        }
-
-        private GPButtonRopeWinch CopyWinch(GPButtonRopeWinch source, string label)
-        {
-            var clone = Object.Instantiate(source.gameObject, controlsRoot.transform, false);
-            clone.name = "FishermansStaysail " + label;
-            PositionControl(clone.transform, source);
-            var winch = clone.GetComponent<GPButtonRopeWinch>();
-            FishermanWinchVisuals.ResetClonedOutline(winch);
-            winch.rope = null;
-            if (winch.rotHandle && !winch.rotHandle.transform.IsChildOf(clone.transform))
-            {
-                winch.rotHandle = Object.Instantiate(winch.rotHandle, clone.transform, false);
-                winch.rotHandle.transform.localPosition = Vector3.zero;
-            }
-            if (winch.rotHandle)
-                winch.rotHandle.rotatable = clone.transform;
-            clone.SetActive(true);
-            return winch;
-        }
-
-        private void PositionControl(Transform target, GPButtonRopeWinch source)
-        {
-            var towardsFore = Vector3
-                .ProjectOnPlane(
-                    Pair.Fore.transform.position - Pair.Aft.transform.position,
-                    Pair.Boat.transform.up
-                )
-                .normalized;
-            target.SetPositionAndRotation(
-                source.transform.position + towardsFore * (0.35f * (controlSlot + 2)),
-                source.transform.rotation
-            );
-            target.localScale = source.transform.lossyScale;
         }
 
         internal void UpdateHalyard(Transform attachment)
@@ -366,6 +301,9 @@ namespace FishermansSail.Sails.FishermansStaysail
 
         private void OnDestroy()
         {
+            if (controls != null)
+                foreach (var control in controls)
+                    control.Dispose();
             if (controlsRoot)
                 Object.Destroy(controlsRoot);
         }

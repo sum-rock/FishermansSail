@@ -388,6 +388,19 @@ support-mast removal, deck-up hoisting and parked ropes with invisible struck cl
     Automated checks pass; aft controls, rope continuity, multiple sails and the
     proportional reefing animation still need in-game validation.
 
+21. **Keep shared winch placement separate from native wheel input.** CLEANUP-1
+    coordinates Flying Sail, staysail and stay-owned controls through the boat-owned
+    allocator in `Controls/`. Use actual donor identity, release unused reservations,
+    and initialize clones inactive with owned handles and fresh outlines. Native
+    input measures the wheel's local rotation; reposition its parent mounting frame
+    instead. Authored directions and mast axes cover 151 donor/role mappings across
+    seven boats. Mast positions prefer vertical stacks, then other faces with the
+    position and facing rotated together; deck/rail fittings follow their native
+    surface tangent. Do not restore universal foreward offsets: the user reported
+    floating and inward-facing winches. Measured-size spacing, allocation and
+    attachment geometry checks pass; all-boat accessibility, surface clearance,
+    mixed controls, previews, outlines and save/reload remain pending in-game.
+
 For handoff, report the version, behavioral change, checks actually run, remaining
 in-game uncertainty, and the built DLL path. Update these notes when a later
 in-game result confirms or disproves the current approach.

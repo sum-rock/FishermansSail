@@ -8,7 +8,7 @@ internal static class IlReader
 {
     // Decode call operands without asking Harmony to create native patch stubs.
     internal static System.Collections.Generic.IEnumerable<MethodBase> CalledMethods(
-        MethodInfo method
+        MethodBase method
     )
     {
         var bytes = method.GetMethodBody()?.GetILAsByteArray();
@@ -31,7 +31,7 @@ internal static class IlReader
                 yield return method.Module.ResolveMethod(
                     reader.ReadInt32(),
                     method.DeclaringType.GetGenericArguments(),
-                    method.GetGenericArguments()
+                    method is MethodInfo info ? info.GetGenericArguments() : System.Type.EmptyTypes
                 );
                 continue;
             }
