@@ -110,13 +110,17 @@ git diff --check
 
 `tests/GeometryChecks` exercises the pure geometry, skinning, tension, shaping,
 wind-frame, boat-profile and text-wrapping logic. `tests/AssemblyChecks` checks
-actual installed method signatures, Harmony injections, control-list restoration and
+actual installed method signatures, Harmony injections, control-list restoration structure and
 cloth lifecycle restrictions without starting Unity. Direct IL decoding is used
 for lifecycle checks; asking Harmony to create native patch stubs failed in this
 standalone test environment.
+Control-finalizer checks inspect the saved-list assignment and native order
+refresh; they do not execute exception recovery against live Unity objects.
 
-Both suites group feature checks under `FishermansFlyingSail/` and
-`FishermansStay/`, with matching test namespaces. Keep feature assertions and
+Both suites group feature checks under `FishermansFlyingSail/`,
+`FishermansStay/` and `FishermansStaysail/`, with matching test namespaces. Shared
+staysail behavior checks use both cut factories at the family level; cut and
+identity checks stay in `MkA/` and `MkB/`. Keep feature assertions and
 helpers in those directories; root `Program.cs` files only set up and run checks.
 Assembly-wide Harmony signature checks and the IL reader live under
 `tests/AssemblyChecks/Shared/`. The stay measurement fixture lives alongside its

@@ -24,7 +24,7 @@ internal static class Program
         FishermansStaysail.ReefingChecks.Run();
         FishermansStaysail.SheetChecks.Run();
         FishermansStaysail.MkA.UpperTrimChecks.Run();
-        FishermansStaysail.MkA.BillowChecks.Run();
-        FishermansStaysail.MkA.FixedHeadChecks.Run();
+        FishermansStaysail.BillowChecks.Run();
+        FishermansStaysail.FixedHeadChecks.Run();
     }
 }

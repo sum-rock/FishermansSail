@@ -112,7 +112,7 @@ validation above remains pending.
 
 ### CLEANUP-2 — Extend behavior checks to both staysail marks
 
-- [ ] Implementation and applicable automated checks complete.
+- [x] Implementation and applicable automated checks complete.
 
 **Finding:** The detailed fixed-head, tack, sheet-angle and partial-reef sweeps
 instantiate Mk.A. Mk.B has cut and geometry checks, but its different foot and
@@ -121,7 +121,7 @@ describe the older upper-head response. The Flying Sail assembly check reports
 control-list restoration after checking for a finalizer attribute, rather than
 exercising restoration after an exception.
 
-**References:** [Mk.A fixed-head checks](../tests/GeometryChecks/FishermansStaysail/MkA/FixedHeadChecks.cs),
+**References:** [family fixed-head checks](../tests/GeometryChecks/FishermansStaysail/FixedHeadChecks.cs),
 [Mk.B cut checks](../tests/GeometryChecks/FishermansStaysail/MkB/CutChecks.cs),
 [Flying Sail patch checks](../tests/AssemblyChecks/FishermansFlyingSail/PatchChecks.cs).
 
@@ -137,8 +137,28 @@ policy assertions replace obsolete expectations. Test output distinguishes
 structural checks from executed behavior. Both suites pass without claiming
 Unity Cloth stability or in-game validation.
 
-**Progress:** Not started. Checks run: none for this item. In-game validation:
-not established by these tests. Implementation completed: —.
+**Progress:** Complete. A family fixture runs both cut factories through the same
+fixed-head, sheet, reef and weighted-skin sweeps at widths 3/6.9/13.8, slopes
+20°/35°/55°, both tacks and sheets from −40° to +40° in 5° steps. Reef cases
+include the bundle threshold, partial/full deployment and halyard reversals.
+Current-policy assertions cover the 14° × unroll head, its fixed height/span,
+sheet independence, constrained edges and mirrored skin/triangle lengths.
+Geometry-independent tack, travel and billow helpers run once. Cut/identity
+checks remain mark-specific; retained optional trim tests explicitly identify
+dormant helper coverage, pending CLEANUP-3.
+
+**Checks:** CSharpier formatting/check, Release build (zero warnings/errors),
+GeometryChecks, AssemblyChecks and `git diff --check` pass. Both Flying Sail and
+staysail control-finalizer checks now inspect the target/signature, assignment
+of the saved list to `Mast.sails` and subsequent native order refresh. Output
+distinguishes executed geometry from structural assembly checks. The populated
+list's order refresh accesses Unity transforms/components, so standalone checks
+do not execute exception recovery. Version **0.1.0** and production code are
+unchanged. Implementation completed: **2026-09-24**.
+
+**In-game validation:** Not established by these tests. Cloth stability,
+control recovery after an exception and actual sail behavior remain pending
+in-game validation; no installed game files or saves were changed.
 
 ### CLEANUP-3 — Retire dormant upper-corner strategies
 

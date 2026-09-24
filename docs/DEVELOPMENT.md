@@ -49,10 +49,13 @@ It changes files; `check` only reports differences.
 - **GeometryChecks** covers mesh and skinning geometry, coupled tension, shaping,
   travel limits, wind frames, boat profiles, collision bounds, hoisting and text
   wrapping, authored stay endpoints, topmast exclusions, shorter-foremast
-  fallbacks, geometry alignment and older shipyard snapshots.
+  fallbacks, geometry alignment and older shipyard snapshots. Both staysail
+  marks run the same fixed-head, sheet, reef and mirrored-skin behavior matrix.
 - **AssemblyChecks** validates Harmony targets against installed assemblies,
-  texture load paths, patch ordering, control-list restoration and restrictions
+  texture load paths, patch ordering, control-list restoration structure and restrictions
   on the live Cloth lifecycle, plus stay registration ordering and save capacity.
+  Control-finalizer checks inspect the saved-list assignment and native order
+  refresh; they do not execute exception recovery against live Unity objects.
 
 For a custom game directory, pass `-p:SailwindDir` to the test builds too.
 AssemblyChecks also needs that directory as a runtime argument:
@@ -148,6 +151,11 @@ The latter has `MkA/` and `MkB/` for variant checks. Put each feature's
 checks and helpers in its directory, using the namespace
 `FishermansSail.Tests.<Suite>.<Feature>`. Flying-sail rig-profile checks belong
 with the flying sail; authored stay-profile checks belong with the stay.
+Shared staysail geometry behavior lives at the family level, parameterized by
+`BehaviorCases` over both mark factories. Keep cut and prefab identity checks
+under their marks. The remaining optional trim checks are dormant-helper
+coverage, not the active head policy. Test output labels executed behavior and
+structural control-finalizer inspection separately.
 
 Root `Program.cs` files handle setup and run the checks. Shared Harmony signature
 validation and IL decoding live in `tests/AssemblyChecks/Shared/`, using the

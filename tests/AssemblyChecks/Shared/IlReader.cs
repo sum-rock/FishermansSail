@@ -1,6 +1,7 @@
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Reflection.Emit;
 
 namespace FishermansSail.Tests.AssemblyChecks.Shared;
 
@@ -9,7 +10,12 @@ internal static class IlReader
     // Decode call operands without asking Harmony to create native patch stubs.
     internal static System.Collections.Generic.IEnumerable<MethodBase> CalledMethods(
         MethodBase method
-    )
+    ) => Instructions(method).Select(i => i.Operand).OfType<MethodBase>();
+
+    internal static System.Collections.Generic.IEnumerable<(
+        OpCode Code,
+        object Operand
+    )> Instructions(MethodBase method)
     {
         var bytes = method.GetMethodBody()?.GetILAsByteArray();
         if (bytes == null)
@@ -25,13 +31,19 @@ internal static class IlReader
             ushort key = reader.ReadByte();
             if (key == 0xfe)
                 key = (ushort)(0xfe00 | reader.ReadByte());
-            var operand = opcodes[key].OperandType;
-            if (operand == System.Reflection.Emit.OperandType.InlineMethod)
+            var code = opcodes[key];
+            var operand = code.OperandType;
+            if (operand == OperandType.InlineMethod || operand == OperandType.InlineField)
             {
-                yield return method.Module.ResolveMethod(
-                    reader.ReadInt32(),
-                    method.DeclaringType.GetGenericArguments(),
-                    method is MethodInfo info ? info.GetGenericArguments() : System.Type.EmptyTypes
+                yield return (
+                    code,
+                    method.Module.ResolveMember(
+                        reader.ReadInt32(),
+                        method.DeclaringType.GetGenericArguments(),
+                        method is MethodInfo info
+                            ? info.GetGenericArguments()
+                            : System.Type.EmptyTypes
+                    )
                 );
                 continue;
             }
@@ -48,6 +60,7 @@ internal static class IlReader
                 _ => 4,
             };
             reader.BaseStream.Position += size;
+            yield return (code, null);
         }
     }
 }

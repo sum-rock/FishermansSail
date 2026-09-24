@@ -56,8 +56,11 @@ internal static class PatchChecks
                     )
             )
                 throw new Exception("Missing physical mast fit guard: " + patch);
-        if (!Patch("Controls", "Finalizer").IsDefined(typeof(HarmonyFinalizer)))
-            throw new Exception("Mk.A native list restoration is not exception-safe.");
+        Shared.ControlRestorationChecks.Run(
+            assembly,
+            family + "Patches.FishermansStaysailControlsPatch",
+            "Staysail family (Mk.A/Mk.B)"
+        );
         if (!CalledMethods(Patch("Travel", "Postfix")).Any(m => m.Name == "ConstrainHinge"))
             throw new Exception("Mk.A travel is not constrained after native sway.");
         if (

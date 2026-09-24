@@ -101,7 +101,7 @@ internal static class UpperTrimChecks
         CheckArc();
         CheckLimitedFit();
         Console.WriteLine(
-            "PASS: optional wind-driven upper trim, shorter pulley line, fixed head span, reef fade and coupled edge budgets."
+            "PASS (executed, dormant helper using Mk.A cut): optional wind-driven upper trim, shorter pulley line, fixed head span, reef fade and coupled edge budgets."
         );
     }
 
