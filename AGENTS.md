@@ -2,6 +2,14 @@
 
 Follow current user instructions over historical design choices
 
+## Active cleanup work
+
+See [the architecture cleanup checklist](docs/CLEANUP.md) for the reviewed
+findings, priorities and acceptance criteria. Work on one requested item at a
+time and update its implementation and validation status when handing it off.
+The checklist is context for future tasks, not authorization to implement all
+items automatically.
+
 ## Start here
 
 - Read `README.md`, `Plugin.cs`, and the relevant implementation before changing it.
