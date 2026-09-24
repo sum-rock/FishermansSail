@@ -1,148 +1,73 @@
 # Fisherman's Sail
 
-A Sailwind mod that adds a four-corner **Fisherman's Flying Sail** and selectable
-**Fisherman's Stays** between masts. The flying sail mounts on a physical mast;
-the new stays accept native staysails and **Fisherman's Staysail Mk.A/Mk.B**.
+Add four-corner **Fisherman's Staysails** to your Sailwind rig. Fit a
+**Fisherman's Stay** between two masts, then choose one of two sail shapes in
+the shipyard. The mod also includes a separate **Fisherman's Flying Sail**.
+
 Version **0.1.0**.
 
-![Fisherman's Flying Sail hoisted between two masts in Sailwind](references/example0-1-0.png)
+![Fisherman's Staysail Mk.B set between two masts in Sailwind](references/example-0-2-0mkb_1.png)
 
-- Supported boats: Brig, Junk, Jong, Sanbuq, Cog, Leopard and Shroud.
-- Independent port and starboard sheets, plus a hoist winch.
-- Outward travel limited to 40° on each side, with tighter limits where obstructed.
-- White and plain by default, with normal recoloring and no texture selector.
-- Deck-up hoisting, partial furling and invisible cloth when fully lowered.
+## What's included
 
-## Requirements
+| Sail or rigging               | What it adds                                                                                                                   |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| **Fisherman's Stay**          | A high stay between two masts, with variants for supported mast and topmast combinations.                                      |
+| **Fisherman's Staysail Mk.A** | A four-corner sail with a sloping head and a lower edge that slopes downward toward the aft mast.                              |
+| **Fisherman's Staysail Mk.B** | The same head and controls as Mk.A, with a straight lower edge perpendicular to the mast—level with the deck on upright masts. |
+| **Fisherman's Flying Sail**   | A separate sail fitted directly to a mast through the **Other** category.                                                      |
 
-- Sailwind with **BepInEx 5** installed.
-- **Shipyard Expansion** (developed against version 0.11.1).
-- The corresponding boat mod to use the sail on Leopard or Shroud.
+Supported boats: **Brig, Junk, Jong, Sanbuq, Cog, Leopard and Shroud**.
+Leopard and Shroud require their corresponding boat mods. Available stay
+variants depend on the boat and its fitted masts.
 
-## Installation
+## Requirements and installation
+
+- **BepInEx 5**
+- **Shipyard Expansion** (developed against version 0.11.1)
 
 1. Close Sailwind.
 2. Place `FishermansSail.dll` in
    `<Sailwind>/BepInEx/plugins/FishermansSail/`, creating the folder if needed.
-   When updating, replace the existing DLL and remove any duplicate copies.
-3. Launch the game. Check `<Sailwind>/BepInEx/LogOutput.log` for
-   `Fisherman's Sail 0.1.0 loaded!`.
+3. When updating, replace the old DLL and remove any duplicate copies.
+4. Launch the game and visit a shipyard.
 
-Only the plugin DLL is needed. To build it yourself, see the
+## Fitting a staysail
+
+1. Open the shipyard's **rigging parts** and select **Fisherman's Stay** for
+   the mast pair you want to use.
+2. Choose the variant matching your fitted masts and topmasts.
+3. Select that stay in the sail-fitting controls, open **Staysails**, and
+   choose **Fisherman's Staysail Mk.A** or **Fisherman's Staysail Mk.B**.
+4. Resize and position the sail with the normal shipyard controls, leaving
+   clearance from the deck, aft mast and other rigging.
+5. Complete the shipyard order.
+
+**Mk.A and Mk.B fit only on Fisherman's Stays.** Each stay carries one sail;
+these stays can also carry vanilla staysails. Supported three-masted boats
+offer additional mast pairs.
+
+Both cuts start at the same size and can be resized uniformly. New sails are
+white and plain, with normal recoloring available.
+
+Remove a fitted sail before replacing or removing its stay. If you change a
+supporting mast or add a topmast, choose a matching stay variant as part of the
+shipyard changes.
+
+## Using the Flying Sail
+
+At a shipyard, select a **physical mast**, open **Other**, and choose
+**Fisherman's Flying Sail**. It needs a supported active mast behind it.
+
+Resize and position it using the normal shipyard controls. Its own hoist winch
+raises it from the deck, and its port and starboard sheets control the trim.
+Fully lowering it hides the sail.
+
+## Removing the mod
+
+Before uninstalling, remove all Fisherman's sails, remove the Fisherman's Stays,
+and save your game. Remove fitted sails before removing the masts that support
+them.
+
+For building the mod, technical details and testing notes, see the
 [development guide](docs/DEVELOPMENT.md).
-
-## Fitting and sailing
-
-At a shipyard, select a physical mast, open **Other**, and choose
-**Fisherman's Flying Sail**. The selected mast needs a supported active mast behind it,
-with halyard fittings on both masts. The aft mast does not need to carry a sail.
-On the Brig, select the foremast and use the mainmast as aft support. Supported
-three-masted boats can also use a mainmast with a mizzenmast behind it.
-
-Use the normal shipyard controls to resize and position the sail. Its forward
-edge must fit the selected mast, both upper corners must sit below their pulleys,
-and the aft edge must clear the supporting mast and rigging. The default sail is
-13.8 m wide, so resizing is often necessary. Normal mast capacity, vertical-space
-and collision rules apply.
-
-Use the sail's own hoist and port/starboard sheet winches. The cloth opens as it
-rises from the forward mast's deck base. Fully lowering it hides the cloth and
-parks its rope ends at the mast pulleys. Other sails retain their own controls.
-
-New sails use the game's existing white color and plain texture. Recoloring
-remains available, and saved colors are retained. Painted texture choices are
-disabled for this sail; saved patterns become plain when loaded.
-
-## Fisherman's Stays
-
-In the shipyard's rigging parts, select **Fisherman's Stay** for a supported
-mast pair, then choose the variant matching your masts and topmasts. Each group
-starts with **None**. The new stays coexist with the boat's original stays.
-
-The aft attachment sits beside the halyard pulley on the highest fitted aft
-mast section. The stay normally descends toward the forward mast at about 20°
-from horizontal on upright masts. If that line would pass above the forward
-mast, the stay connects to its masthead at a steeper angle instead. Attachments
-are authored separately for each boat configuration.
-
-Select the installed stay to fit one staysail using the normal shipyard
-sail controls. It has independent sheet and halyard winches. Ordinary sail fit,
-collision and support requirements still apply. The Fisherman's Flying Sail
-continues to mount on physical masts under **Other**.
-
-Remove the fitted staysail before replacing or removing its stay. Changing a
-supporting mast or adding a topmast may require replacing the stay with its
-matching variant in the same order. Canceling an order restores the previous
-selection. Some mast combinations have no authored stay variant.
-
-## Fisherman's Staysail Mk.A
-
-Select a **Fisherman's Stay** in the shipyard and choose **Fisherman's Staysail
-Mk.A** from the staysails. Mk.A cannot be fitted to other stays or physical masts.
-Its deployed luff follows the fore mast. In the current experiment, the top-aft
-corner holds **14° out on the leeward side**, independently of the lower sheets.
-It crosses smoothly when the wind changes tack and retains its previous side
-in weak wind. The lower clew still uses the normal sheets and 40° travel limit.
-Use the sail's independent halyard winch at the supporting **aft mast** to reef
-and redeploy it. Its line runs through that mast's pulley to the top-aft corner;
-the lower sheets remain separate.
-A rounded billow profile carries fullness through the middle of the sail, with
-cloth movement bounded around that profile on both tacks.
-
-The nominal cut has two 110° luff corners, a head rising aft along the stay,
-and a foot falling aft at 20°. The head follows steeper masthead-fallback stays.
-New selections start at 50% scale (about 6.9 m wide with a matching luff).
-Use uniform resizing to fit the mast pair; existing saved sizes are retained.
-The luff must fit the selected forward mast section, and the sail must clear
-the aft mast, deck and other sails. Moving the sail changes its height on the
-fore mast while it remains installed on the stay.
-
-Releasing the halyard gathers the foot upward toward the sloping head by the
-stay. Winching it in unfolds the panel using the native brig jib's sampled
-reef animation, adapted to the four-corner cut. When fully furled, a visible
-native sail bundle rests along the head. White/plain defaults and recoloring
-apply to both. The upper angle changes proportionally with deployment:
-**14° fully open, 7° half reefed, and 0° fully furled**. The foot gathers toward
-the same head angle, and the resting bundle follows that head.
-
-With SailInfo installed, Mk.A's “degrees out” label measures rotation around
-the fore mast, accounting for stay slope and boat heel. The physical hinge
-remains limited to 40° per side, or less where obstructed. The readout is not
-clipped to that limit, so it can reveal any physical overshoot.
-The aft halyard and proportional reefing transition still need in-game validation,
-particularly for folding or twisting during reefing and lower-sheet adjustment.
-
-## Fisherman's Staysail Mk.B
-
-Select **Fisherman's Staysail Mk.B** on a Fisherman's Stay. It uses the same
-controls, 14° deployed upper head, reefing, appearance and initial 50% size as
-Mk.A. Its head follows the stay, while its foot meets both the luff and leech at
-90° in the mast frame. The foot is parallel to the deck on an upright mast and
-tilts slightly with a raked mast.
-
-## Saving and uninstalling
-
-The flying sail uses native mast save slots and keeps prefab index **400**, including
-when loading saves from development builds. Remove its sails and save before
-uninstalling the mod. Remove a Fisherman's Flying Sail before removing either mast
-that supports it.
-
-New stays use separate native mount slots in the **128–255** range. Existing
-0.1.0 saves start with no new stays installed. Before uninstalling, remove any
-sails fitted to Fisherman's Stays, remove the stays, and save. Development-era
-triatic-stay saves are not migrated.
-Mk.A uses prefab index **401** and Mk.B uses **402**. Both save in their
-Fisherman's Stay slot. Remove either mark before removing the stay or uninstalling.
-
-## Development and testing
-
-The plugin targets `netstandard2.0`. The repository provides a Nix development
-environment with .NET 8, CSharpier and automated geometry and assembly checks.
-See the [development guide](docs/DEVELOPMENT.md) for build commands, local
-installation, verification and implementation notes.
-
-Automated checks do not simulate Unity rendering, Cloth or hinge physics.
-Automated geometry and assembly checks pass for the stay and both staysail marks.
-In-game validation remains pending for the new stays, native sail fitting,
-Mk.A and Mk.B's furling, resting appearance and sailing behavior, controls, shipyard
-cancellation and save/reload, as well as the flying sail's appearance and menu naming.
