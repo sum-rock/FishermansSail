@@ -79,11 +79,13 @@ selection. Some mast combinations have no authored stay variant.
 
 Select a **Fisherman's Stay** in the shipyard and choose **Fisherman's Staysail
 Mk.A** from the staysails. Mk.A cannot be fitted to other stays or physical masts.
-Its deployed luff follows the fore mast; its free aft head sheets like the
-Flying Sail, with the same 40° maximum travel on either side. Under wind load,
-the top-aft corner draws slightly toward the aft mast's pulley, capped at 2.5%
-of sail width (about 17 cm at the default size). This pull preserves the head
-span, respects foot/leech tension, and fades out during reefing or calm wind.
+Its deployed luff follows the fore mast. In the current experiment, the top-aft
+corner holds **14° out on the leeward side**, independently of the lower sheets.
+It crosses smoothly when the wind changes tack and retains its previous side
+in weak wind. The lower clew still uses the normal sheets and 40° travel limit.
+Use the sail's independent halyard winch at the supporting **aft mast** to reef
+and redeploy it. Its line runs through that mast's pulley to the top-aft corner;
+the lower sheets remain separate.
 A rounded billow profile carries fullness through the middle of the sail, with
 cloth movement bounded around that profile on both tacks.
 
@@ -99,13 +101,16 @@ Releasing the halyard gathers the foot upward toward the sloping head by the
 stay. Winching it in unfolds the panel using the native brig jib's sampled
 reef animation, adapted to the four-corner cut. When fully furled, a visible
 native sail bundle rests along the head. White/plain defaults and recoloring
-apply to both.
+apply to both. The upper angle changes proportionally with deployment:
+**14° fully open, 7° half reefed, and 0° fully furled**. The foot gathers toward
+the same head angle, and the resting bundle follows that head.
 
 With SailInfo installed, Mk.A's “degrees out” label measures rotation around
 the fore mast, accounting for stay slope and boat heel. The physical hinge
 remains limited to 40° per side, or less where obstructed. The readout is not
 clipped to that limit, so it can reveal any physical overshoot.
-These revisions still need in-game validation.
+The aft halyard and proportional reefing transition still need in-game validation,
+particularly for folding or twisting during reefing and lower-sheet adjustment.
 
 ## Saving and uninstalling
 

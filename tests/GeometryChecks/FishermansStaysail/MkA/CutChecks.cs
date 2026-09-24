@@ -175,8 +175,20 @@ internal static class CutChecks
             int baseId = stay.Fore;
             while (masts[baseId].Parents.Length != 0)
                 baseId = masts[baseId].Parents[0];
-            if (FishermansStaysailDefinitions.ForeBase(boat.BoatName, stay.Fore) != baseId)
-                throw new Exception("Wrong authored Mk.A deck/halyard source.");
+            if (FishermansStaysailDefinitions.Base(boat.BoatName, stay.Fore) != baseId)
+                throw new Exception("Wrong authored Mk.A fore-mast base.");
+            int aftBase = stay.Aft;
+            while (masts[aftBase].Parents.Length != 0)
+                aftBase = masts[aftBase].Parents[0];
+            if (FishermansStaysailDefinitions.Base(boat.BoatName, stay.Aft) != aftBase)
+                throw new Exception("Wrong authored Mk.A aft halyard source.");
+            var chain = FishermansStaysailDefinitions.Sections(boat.BoatName, stay.Aft);
+            if (
+                chain[0] != stay.Aft
+                || chain[chain.Length - 1] != aftBase
+                || chain.Distinct().Count() != chain.Length
+            )
+                throw new Exception("Invalid authored aft support chain.");
             var direction = aft.Point(stay.AftPoint) - fore.Point(stay.ForePoint);
             var axis = (fore.Top - fore.Bottom).normalized;
             float slope = FishermansStaysailInstallationGeometry.HeadSlope(direction, axis);
@@ -211,7 +223,7 @@ internal static class CutChecks
         if (count != 97)
             throw new Exception("Missing authored staysail configurations.");
         Console.WriteLine(
-            "PASS: Mk.A alignment and fore-mast base references for all 97 authored stays."
+            "PASS: Mk.A alignment and fore/aft-mast base references for all 97 authored stays."
         );
     }
 

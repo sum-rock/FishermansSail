@@ -7,21 +7,20 @@ namespace FishermansSail.BoatRigs
     internal static class FishermansStaysailDefinitions
     {
         // Installed mast ancestry, authored rather than selected by proximity.
-        internal static int ForeBase(string boat, int section) =>
-            ForeSections(boat, section).Last();
+        internal static int Base(string boat, int section) => Sections(boat, section).Last();
 
-        internal static int[] ForeSections(string boat, int section)
+        internal static int[] Sections(string boat, int section)
         {
             var sections = new List<int>();
             while (section >= 0)
             {
                 sections.Add(section);
-                section = ForeParent(boat, section);
+                section = Parent(boat, section);
             }
             return sections.ToArray();
         }
 
-        private static int ForeParent(string boat, int section)
+        private static int Parent(string boat, int section)
         {
             switch (boat)
             {
@@ -199,7 +198,7 @@ namespace FishermansSail.BoatRigs
                     }
                     break;
             }
-            throw new ArgumentException("No authored staysail fore-mast reference.");
+            throw new ArgumentException("No authored staysail mast reference.");
         }
     }
 }

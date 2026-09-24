@@ -17,12 +17,19 @@ namespace FishermansSail.Sails.FishermansStaysail
             internal Mast Mount,
                 Fore,
                 Aft,
-                ForeBase,
+                AftBase,
                 SheetControlSource;
             internal FishermansStay Stay;
-            internal Mast[] ForeSections;
+            internal Mast[] ForeSections,
+                AftSections;
             internal Transform AftGuide;
-            internal bool Active => Mount && Mount.gameObject.activeInHierarchy && Stay.Available;
+            internal bool Active =>
+                Mount
+                && Mount.gameObject.activeInHierarchy
+                && Stay.Available
+                && AftGuide
+                && AftGuide.gameObject.activeInHierarchy
+                && ForeSections.Concat(AftSections).All(m => m && m.gameObject.activeInHierarchy);
         }
 
         internal MountPair Pair { get; private set; }
@@ -33,6 +40,9 @@ namespace FishermansSail.Sails.FishermansStaysail
             upperGuide;
         private bool bindingDirty;
         private int controlSlot = -1;
+        private Mast controlsAftBase,
+            controlsSheetSource;
+        private bool controlsDirty;
 
         internal void Invalidate() => bindingDirty = true;
 
@@ -57,20 +67,23 @@ namespace FishermansSail.Sails.FishermansStaysail
             var refs = stay.References;
             var boat = mount.GetComponentInParent<BoatRefs>();
             var profile = BoatRigCatalog.Find(boat.name);
-            int baseId = FishermansStaysailDefinitions.ForeBase(
-                profile.BoatName,
-                refs.Fore.orderIndex
-            );
+            int baseId = FishermansStaysailDefinitions.Base(profile.BoatName, refs.Aft.orderIndex);
             var foreSections = FishermansStaysailDefinitions
-                .ForeSections(profile.BoatName, refs.Fore.orderIndex)
+                .Sections(profile.BoatName, refs.Fore.orderIndex)
                 .Select(id => boat.masts[id])
                 .ToArray();
-            var foreBase = boat.masts[baseId];
+            var aftSections = FishermansStaysailDefinitions
+                .Sections(profile.BoatName, refs.Aft.orderIndex)
+                .Select(id => boat.masts[id])
+                .ToArray();
+            var aftBase = boat.masts[baseId];
             if (
-                foreSections.Any(m => !m || !m.gameObject.activeInHierarchy)
-                || !foreBase
-                || !foreBase.gameObject.activeInHierarchy
-                || !FirstControl(foreBase.reefWinch)
+                foreSections.Concat(aftSections).Any(m => !m || !m.gameObject.activeInHierarchy)
+                || !aftBase
+                || !aftBase.gameObject.activeInHierarchy
+                || !refs.Guide
+                || !refs.Guide.gameObject.activeInHierarchy
+                || !FirstControl(aftBase.reefWinch)
                 || !FirstControl(refs.Donor.leftAngleWinch)
                 || !FirstControl(refs.Donor.rightAngleWinch)
             )
@@ -82,8 +95,9 @@ namespace FishermansSail.Sails.FishermansStaysail
                 Stay = stay,
                 Fore = refs.Fore,
                 Aft = refs.Aft,
-                ForeBase = foreBase,
+                AftBase = aftBase,
                 ForeSections = foreSections,
+                AftSections = aftSections,
                 SheetControlSource = refs.Donor,
                 AftGuide = refs.Guide,
             };
@@ -113,7 +127,10 @@ namespace FishermansSail.Sails.FishermansStaysail
                 Pair == null
                 || Pair.Mount != resolved.Mount
                 || Pair.Aft != resolved.Aft
-                || Pair.AftGuide != resolved.AftGuide;
+                || Pair.AftGuide != resolved.AftGuide
+                || Pair.AftBase != resolved.AftBase
+                || Pair.SheetControlSource != resolved.SheetControlSource;
+            controlsDirty |= changed;
             Pair = resolved;
             bindingDirty = false;
             if (changed)
@@ -152,19 +169,19 @@ namespace FishermansSail.Sails.FishermansStaysail
             Pair.Fore.transform.TransformPoint(Pair.Stay.References.Definition.ForePoint);
         internal Vector3 AftPoint =>
             Pair.Aft.transform.TransformPoint(Pair.Stay.References.Definition.AftPoint);
-        internal Vector3 ForeAxis
+        internal Vector3 ForeAxis => MastAxis(Pair.Fore);
+
+        private Vector3 MastAxis(Mast mast)
         {
-            get
-            {
-                var c = Pair.Fore.GetComponent<CapsuleCollider>();
-                var axis = c.transform.TransformDirection(
-                    c.direction == 0 ? Vector3.right
-                    : c.direction == 1 ? Vector3.up
-                    : Vector3.forward
-                );
-                return Vector3.Dot(axis, Pair.Boat.transform.up) < 0 ? -axis : axis;
-            }
+            var c = mast.GetComponent<CapsuleCollider>();
+            var axis = c.transform.TransformDirection(
+                c.direction == 0 ? Vector3.right
+                : c.direction == 1 ? Vector3.up
+                : Vector3.forward
+            );
+            return Vector3.Dot(axis, Pair.Boat.transform.up) < 0 ? -axis : axis;
         }
+
         internal Vector3 SectionBottom
         {
             get
@@ -206,23 +223,36 @@ namespace FishermansSail.Sails.FishermansStaysail
             var mast = sail.transform.parent ? sail.transform.parent.GetComponent<Mast>() : null;
             if (!Bind(mast))
                 return;
-            if (!controlsRoot)
+            if (controlsAftBase != Pair.AftBase || controlsSheetSource != Pair.SheetControlSource)
             {
                 var used = Pair
-                    .Mount.sails.Where(s => s)
-                    .Select(s => s.GetComponent<FishermansStaysailRigging>())
-                    .Where(r => r && r != this && r.controlSlot >= 0)
+                    .Boat.GetComponentsInChildren<FishermansStaysailRigging>(true)
+                    .Where(r =>
+                        r
+                        && r != this
+                        && r.controlsRoot
+                        && r.controlSlot >= 0
+                        && (
+                            r.controlsAftBase == Pair.AftBase
+                            || r.controlsSheetSource == Pair.SheetControlSource
+                        )
+                    )
                     .Select(r => r.controlSlot)
                     .ToArray();
                 controlSlot = 0;
                 while (used.Contains(controlSlot))
                     controlSlot++;
+                controlsAftBase = Pair.AftBase;
+                controlsSheetSource = Pair.SheetControlSource;
+            }
+            if (!controlsRoot)
+            {
                 controlsRoot = new GameObject("FishermansStaysail independent controls");
                 controlsRoot.SetActive(false);
                 controlsRoot.transform.SetParent(Pair.Boat.transform, false);
                 controls = new[]
                 {
-                    CopyWinch(FirstControl(Pair.ForeBase.reefWinch), "Hoist"),
+                    CopyWinch(FirstControl(Pair.AftBase.reefWinch), "Halyard"),
                     CopyWinch(FirstControl(Pair.SheetControlSource.leftAngleWinch), "Port sheet"),
                     CopyWinch(
                         FirstControl(Pair.SheetControlSource.rightAngleWinch),
@@ -235,6 +265,16 @@ namespace FishermansSail.Sails.FishermansStaysail
                 upperGuide.SetParent(controlsRoot.transform, false);
                 controlsRoot.SetActive(true);
             }
+            PositionControl(controls[0].transform, FirstControl(Pair.AftBase.reefWinch));
+            PositionControl(
+                controls[1].transform,
+                FirstControl(Pair.SheetControlSource.leftAngleWinch)
+            );
+            PositionControl(
+                controls[2].transform,
+                FirstControl(Pair.SheetControlSource.rightAngleWinch)
+            );
+            controlsDirty = false;
             var connections = sail.GetComponent<SailConnections>();
             controls[0].AttachToController(connections.reefController);
             controls[1].AttachToController(connections.angleControllerLeft);
@@ -258,17 +298,7 @@ namespace FishermansSail.Sails.FishermansStaysail
         {
             var clone = Object.Instantiate(source.gameObject, controlsRoot.transform, false);
             clone.name = "FishermansStaysail " + label;
-            var towardsFore = Vector3
-                .ProjectOnPlane(
-                    Pair.Fore.transform.position - Pair.Aft.transform.position,
-                    Pair.Boat.transform.up
-                )
-                .normalized;
-            clone.transform.SetPositionAndRotation(
-                source.transform.position + towardsFore * (0.35f * (controlSlot + 2)),
-                source.transform.rotation
-            );
-            clone.transform.localScale = source.transform.lossyScale;
+            PositionControl(clone.transform, source);
             var winch = clone.GetComponent<GPButtonRopeWinch>();
             winch.rope = null;
             if (winch.rotHandle && !winch.rotHandle.transform.IsChildOf(clone.transform))
@@ -282,33 +312,55 @@ namespace FishermansSail.Sails.FishermansStaysail
             return winch;
         }
 
-        internal void UpdateHalyard(Transform[] attachments, bool struck)
+        private void PositionControl(Transform target, GPButtonRopeWinch source)
         {
-            if (!controlsRoot)
+            var towardsFore = Vector3
+                .ProjectOnPlane(
+                    Pair.Fore.transform.position - Pair.Aft.transform.position,
+                    Pair.Boat.transform.up
+                )
+                .normalized;
+            target.SetPositionAndRotation(
+                source.transform.position + towardsFore * (0.35f * (controlSlot + 2)),
+                source.transform.rotation
+            );
+            target.localScale = source.transform.lossyScale;
+        }
+
+        internal void UpdateHalyard(Transform attachment)
+        {
+            if (!controlsRoot || controlsDirty)
                 AttachControls();
-            if (!controlsRoot)
+            if (!controlsRoot || Pair == null || !Pair.Active)
                 return;
-            mastGuide.position = ForePoint;
-            upperGuide.position = ForePoint + ForeAxis * 0.05f;
+            // These are sail-owned guides. Never hand the physical mast fitting
+            // or a skin bone to RopeEffect, which rotates endpoints with LookAt.
+            upperGuide.position = Pair.AftGuide.position;
+            mastGuide.position = upperGuide.position - MastAxis(Pair.Aft) * 0.05f;
             var connections = sail.GetComponent<SailConnections>();
             var guide = connections.mastReefAttachment;
             var upper = connections.mastReefAttExtension;
-            guide.SetParent(mastGuide, false);
+            if (guide.parent != mastGuide)
+                guide.SetParent(mastGuide, false);
             guide.localPosition = Vector3.zero;
-            upper.SetParent(upperGuide, false);
+            if (upper.parent != upperGuide)
+                upper.SetParent(upperGuide, false);
             upper.localPosition = Vector3.zero;
             connections.reefController.GetComponent<RopeEffect>().attachment = guide;
             guide.GetComponent<RopeEffect>().attachment = upper;
-            upper.GetComponent<RopeEffect>().attachment = attachments[0];
+            upper.GetComponent<RopeEffect>().attachment = attachment;
         }
 
         internal bool DependsOn(BoatPartOption option)
         {
             if (Pair == null)
                 return false;
-            return new[] { Pair.Mount, Pair.Fore, Pair.Aft, Pair.ForeBase }.Any(m =>
-                m && (m.GetComponent<BoatPartOption>() == option || option.childMast == m)
-            );
+            return new[] { Pair.Mount }
+                .Concat(Pair.ForeSections)
+                .Concat(Pair.AftSections)
+                .Any(m =>
+                    m && (m.GetComponent<BoatPartOption>() == option || option.childMast == m)
+                );
         }
 
         private void OnDestroy()

@@ -99,6 +99,10 @@
       Include="../../Sails/FishermansStaysail/FishermansStaysailUpperTrim.cs"
       Link="FishermansStaysail/FishermansStaysailUpperTrim.cs"
     />
+    <Compile
+      Include="../../Sails/FishermansStaysail/FishermansStaysailFixedHead.cs"
+      Link="FishermansStaysail/FishermansStaysailFixedHead.cs"
+    />
     <Reference Include="UnityEngine.CoreModule">
       <HintPath>$(SailwindDir)/Sailwind_Data/Managed/UnityEngine.CoreModule.dll</HintPath>
     </Reference>

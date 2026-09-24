@@ -31,15 +31,15 @@ namespace FishermansSail.Sails.FishermansStaysail
         public Transform[] Bones;
         public Vector3[] Corners;
         public Transform SheetAttachment;
-        public Transform[] HalyardAttachments;
+        public Transform HalyardAttachment;
         public SkinnedMeshRenderer ReefedRenderer;
         public MeshRenderer FurledColorReference;
         public Transform MastFrame;
         public Vector3 OriginalHingeAxis;
         public Vector3 OriginalHingeAnchor;
         public bool OriginalAutoAnchor;
-        public FishermansStaysailSupportLine SupportLine;
         public Transform Shadow;
+        private FishermansStaysailFixedHead fixedHead;
         private float clothLoad;
         private float camber = 1;
         private int camberSide = 1;
@@ -111,13 +111,8 @@ namespace FishermansSail.Sails.FishermansStaysail
             }
             // RopeEffect.LookAt rotates both endpoint transforms. Never give
             // it a skin bone directly: use independent leaves beneath the bones.
-            rig.HalyardAttachments = new Transform[2];
-            for (int i = 0; i < 2; i++)
-            {
-                var attachment = new GameObject("FishermansStaysail head halyard " + i).transform;
-                attachment.SetParent(rig.Bones[i], false);
-                rig.HalyardAttachments[i] = attachment;
-            }
+            rig.HalyardAttachment = new GameObject("FishermansStaysail aft-head halyard").transform;
+            rig.HalyardAttachment.SetParent(rig.Bones[1], false);
             mesh.bindposes = poses;
             // The donor Cloth contains serialized simulation data for a different
             // topology. Recreate only that component on the inactive clone, after
@@ -172,7 +167,6 @@ namespace FishermansSail.Sails.FishermansStaysail
             var connections = sail.GetComponent<SailConnections>();
             var left = connections.angleControllerLeft.GetComponent<RopeEffect>();
             var right = connections.angleControllerRight.GetComponent<RopeEffect>();
-            rig.SupportLine = FishermansStaysailSupportLine.Create(sail.transform, left, right);
             rig.SheetAttachment = left.attachment;
             if (!rig.SheetAttachment || right.attachment != rig.SheetAttachment)
                 throw new InvalidOperationException("Expected a shared brig jib sheet attachment.");
@@ -281,6 +275,7 @@ namespace FishermansSail.Sails.FishermansStaysail
             {
                 bool wasBound = boundToMast;
                 lastMount = mount;
+                fixedHead = default;
                 rigging = mount ? FishermansStaysailRigging.For(Sail) : null;
                 if (wasBound && !rigging)
                 {
@@ -631,13 +626,36 @@ namespace FishermansSail.Sails.FishermansStaysail
                 var neutralHead = NeutralPoint(Corners[1]);
                 var clothTransform = Sail.cloth.transform;
                 rigging.ForeSailFrame(out var forePoint, out var mastAxis);
-                var head = FishermansStaysailFrameGeometry.UpperHead(
-                    neutralHead,
-                    clothTransform.TransformPoint(Corners[1]),
-                    clothTransform.TransformPoint(Bones[0].localPosition),
-                    mastAxis,
-                    Sail.currentUnroll
-                );
+                var shape = GetComponent<FishermansStaysailShape>();
+                var fixedAngle = shape.FixedUpperHeadAngle;
+                Vector3 head;
+                if (fixedAngle.HasValue)
+                {
+                    fixedHead.Update(
+                        Sail.apparentWind,
+                        mastAxis,
+                        rigging.AftReference - forePoint,
+                        Time.deltaTime
+                    );
+                    head = FishermansStaysailFixedHead.Position(
+                        neutralHead,
+                        forePoint,
+                        mastAxis,
+                        fixedHead.Side,
+                        fixedAngle.Value,
+                        Sail.currentUnroll
+                    );
+                }
+                else
+                {
+                    head = FishermansStaysailFrameGeometry.UpperHead(
+                        neutralHead,
+                        clothTransform.TransformPoint(Corners[1]),
+                        clothTransform.TransformPoint(Bones[0].localPosition),
+                        mastAxis,
+                        Sail.currentUnroll
+                    );
+                }
                 var localHead = clothTransform.InverseTransformPoint(head);
                 var normal = Vector3.Cross(mastAxis, rigging.AftReference - forePoint).normalized;
                 var clew = Bones[3].localPosition;
@@ -654,7 +672,11 @@ namespace FishermansSail.Sails.FishermansStaysail
                         neutralClew,
                         forePoint,
                         mastAxis,
-                        sheetAngle * FishermansStaysailBillow.Deployment(Sail.currentUnroll)
+                        FishermansStaysailFixedHead.LowerAngle(
+                            sheetAngle,
+                            fixedAngle.HasValue ? fixedHead.Side * fixedAngle.Value : 0,
+                            Sail.currentUnroll
+                        )
                     )
                 );
                 var tack = Bones[2].localPosition;
@@ -669,7 +691,7 @@ namespace FishermansSail.Sails.FishermansStaysail
                     -Corners[0].z,
                     clothLoad,
                     Sail.currentUnroll,
-                    GetComponent<FishermansStaysailShape>().UpperCornerTrim,
+                    fixedAngle.HasValue ? 0 : shape.UpperCornerTrim,
                     (Corners[1] - Corners[3]).magnitude * Mathf.Max(0.015f, Reefing.Lift),
                     (clew - tack).magnitude,
                     leechPoints,
@@ -686,18 +708,9 @@ namespace FishermansSail.Sails.FishermansStaysail
                     Bones[FishermansStaysailGeometry.LeechBone(row)].localPosition = leechPoints[
                         FishermansStaysailGeometry.Rows - row
                     ];
-                HalyardAttachments[0].localPosition = Vector3.zero;
+                HalyardAttachment.localPosition = Vector3.zero;
                 SheetAttachment.localPosition = Vector3.zero;
-                rigging.UpdateHalyard(HalyardAttachments, state == 0);
-
-                if (!GameState.currentlyLoading)
-                    SupportLine.Draw(Bones[1].position, rigging.Pair.AftGuide.position);
-                else
-                    SupportLine.Hide();
-            }
-            else
-            {
-                SupportLine.Hide();
+                rigging.UpdateHalyard(HalyardAttachment);
             }
             UpdateShapeBones();
             RefreshAerodynamics();
@@ -720,8 +733,8 @@ namespace FishermansSail.Sails.FishermansStaysail
             FurledColorReference.sharedMaterial = clothRenderer.sharedMaterial;
             ReefedRenderer.enabled = visible && state == 1;
             Reefing.DrawBundle(
-                supported ? NeutralPoint(Corners[0]) : Bones[0].position,
-                supported ? NeutralPoint(Corners[1]) : Bones[1].position,
+                Bones[0].position,
+                Bones[1].position,
                 supported ? rigging.ForeAxis : Sail.cloth.transform.right,
                 Sail.cloth.transform.parent.localScale.x,
                 clothRenderer.sharedMaterial,

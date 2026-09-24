@@ -8,6 +8,7 @@ namespace FishermansSail.Sails.FishermansStaysail
     {
         internal abstract string ObjectPrefix { get; }
         internal virtual float UpperCornerTrim => 0;
+        internal virtual float? FixedUpperHeadAngle => null;
         internal abstract FishermansStaysailMeshData Create(float width, float headSlope);
     }
 }

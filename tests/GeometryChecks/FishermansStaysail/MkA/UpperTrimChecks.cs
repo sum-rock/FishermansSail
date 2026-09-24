@@ -47,7 +47,7 @@ internal static class UpperTrimChecks
                     width,
                     load,
                     unroll,
-                    FishermansStaysailMkAGeometry.UpperCornerTrim,
+                    0.025f,
                     leech,
                     foot,
                     points,
@@ -64,8 +64,7 @@ internal static class UpperTrimChecks
                 tolerance,
                 "trim preserves head span"
             );
-            float maxTravel =
-                width * FishermansStaysailMkAGeometry.UpperCornerTrim * Math.Abs(load) * deployment;
+            float maxTravel = width * 0.025f * Math.Abs(load) * deployment;
             if ((head - baseline).magnitude > maxTravel + tolerance)
                 throw new Exception("Upper trim exceeds its travel budget.");
             if ((pulley - head).magnitude > (pulley - baseline).magnitude + tolerance)
@@ -102,7 +101,7 @@ internal static class UpperTrimChecks
         CheckArc();
         CheckLimitedFit();
         Console.WriteLine(
-            "PASS: Mk.A wind-driven upper trim, shorter pulley line, fixed head span, reef fade and coupled edge budgets."
+            "PASS: optional wind-driven upper trim, shorter pulley line, fixed head span, reef fade and coupled edge budgets."
         );
     }
 

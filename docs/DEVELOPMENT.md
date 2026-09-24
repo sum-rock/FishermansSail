@@ -126,7 +126,7 @@ named **Fisherman's Flying Sail** in game.
   controls and patches. `MkA/` contains the 110° cut, shape component and prefab
   registration; another mark supplies its own `FishermansStaysailShape`.
 - `BoatRigs/FishermansStaysailDefinitions.cs` holds authored fore-mast ancestry
-  for selecting the fore-mast control source.
+  for selecting both physical mast chains and the aft-base halyard source.
 
 The geometry checks link feature sources directly; update their project includes
 when moving files. The assembly checks resolve internal types by full name;
@@ -185,22 +185,51 @@ length and mast separation. The deployed luff must fit its selected section.
 Each mark provides a cut through `FishermansStaysailShape`. On first binding,
 Mk.A creates an owned mesh for the actual stay angle before enabling Cloth.
 The mesh and bind poses then remain fixed. Its luff is straight and fully
-pinned; its aft head retains the Flying Sail's 85% angular response and the
+pinned; the current experiment holds the aft head at 14° while retaining the
 coupled foot/leech solver. Uniform scaling preserves the cut. New shipyard
 selections use `SailScaler.SetScaleAbs(0.5, 0.5)` after SE's initialization;
 existing saves retain their stored dimensions.
 
-Mk.A adds a small load-dependent upper-corner trim after its baseline 85%
-sheeting response. The mark specifies a maximum travel of 0.025 × sail width;
-the family default is zero. `FishermansStaysailUpperTrim` moves the corner toward
-the actual aft pulley on an arc about the fore head, retaining its existing
-head span and stopping at the nearest point on that sphere. Travel uses the
-existing smoothed absolute wind load and deployment factor. The coupled solver
-fits the new head; if the requested trim is infeasible, it checks the baseline
-and uses 16 bisection steps to retain a smaller feasible adjustment. Invalid
-baseline fits retain the original finite failure behavior. Shaping, upper-line
-rendering and aerodynamic framing then consume the fitted corner positions.
-No mesh replacement, rope constraint or additional winch is involved.
+The user reported that the fixed 20° experiment appeared to work and requested
+a further 6° inward adjustment. The user then found the 14° setting pretty good. The current change adds an
+aft halyard and proportional reef-angle transition, which await in-game validation.
+
+Mk.A selects a nullable mark-level `FixedUpperHeadAngle` of 14°. The family
+default is null, retaining its existing 85% head policy and optional trim for
+other marks. Mk.A bypasses both of those responses. The fixed target rotates
+the neutral head around the fore-mast axis, retaining height and head span.
+The angle is multiplied directly by clamped `currentUnroll`: 14° at full
+hoist, 7° at half reef, and 0° fully furled. The lower corner blends from its
+sheet angle toward this reefed head angle using the existing gathering factor;
+it no longer gathers toward 0° while the head is still out. The native bundle
+uses the posed head endpoints, maintaining its route through the visibility
+threshold and returning to neutral at full furl.
+
+Per-instance `FishermansStaysailFixedHead` state selects the leeward side using
+apparent wind projected onto `Cross(mastAxis, neutralAftDirection)`. This frame
+is independent of the sheet-rotated body and cloth. A ±0.6 m/s deadband retains
+the prior side; initial indeterminate wind defaults to +14°. Subsequent tack
+changes use the existing smoothing rate, settling exactly at ±14°. Wind strength
+and lower-sheet travel cannot trim the settled upper position. The fixed mode
+passes zero additional trim to the coupled solver, which adjusts the lower clew
+and leech without moving the upper corner. Invalid fits retain finite fallback
+points and the existing warning.
+
+The functional halyard is now cloned from the supporting aft base's reef winch,
+bound to the existing native reef controller, and routed through owned guides
+at the authored aft pulley to a leaf beneath the top-aft corner. The guide
+chain retains its 5 cm separation along the aft spar. The fore-head halyard
+route and both decorative upper-sheet lines are removed. The existing lower
+sheet sources and native reef direction remain unchanged.
+
+The authored ancestry tables cover both fore and aft sections of all 97 stay
+variants. Resolve active aft ancestors and require a valid aft-base reef winch;
+do not fall back to the fore mast. Installed-asset checks confirm matching
+rendered/collidable reef winches on all selected aft bases across seven boats.
+Control slots are allocated across sails sharing an aft base or lower-sheet
+source, and owned controls are repositioned/rebound when their sources change.
+Removal protection includes both full mast chains. No save fields or migration
+are needed; controls reconstruct from the sail's existing native stay slot.
 
 The user's Sanbuq screenshots showed a smoother starboard tack and pronounced
 upper/middle folds on port after the first upper-trim pass. The installed DLL
@@ -216,8 +245,8 @@ rounder shoulders and more middle-panel depth. Interior movement is capped at
 60% of local camber plus small allowances near the foot and leech, retaining
 the existing clew taper. Rest vertices, bind poses and Cloth coefficients are
 initialized together; tacking only moves the existing bones. The native wind
-response, mesh lifecycle and Flying Sail remain unchanged. The stronger 2.5%
-upper-trim cap retains the 85% baseline and existing length constraints.
+response, mesh lifecycle and Flying Sail remain unchanged. The fixed-head
+experiment preserves these billow settings and existing length constraints.
 
 The installed brig jib (prefab 110, `sharedassets15.assets`) supplies the native
 `reef` clip/controller and `furled__sail_cloth_jib` mesh. An inactive, stripped
@@ -239,8 +268,10 @@ follow the moving corners rather than rotating skin bones.
 Automated validation covers all 97 authored stay frames, the nominal cut and
 pin mask, repeated sheeting, edge budgets, reef-channel normalization and
 reversals, partial-reef edge budgets, renderer thresholds, new-sail scaling
-scope, upper-trim span/travel limits, pulley distance, both tacks, load
-reversals, reef fading, constrained-fit fallback, full weighted-skin symmetry,
+scope, retained optional-trim span/travel limits, fixed-head lower-sheet sweeps,
+sheet-independent stay distance at each reef level, aft ancestry and halyard
+binding, both tacks, wind reversals/deadband,
+reef fading, constrained-fit fallback, full weighted-skin symmetry,
 triangle lengths and interior travel bounds, and all 54 statically
 declared Harmony patch signatures. The optional
 SailInfo integration has a separate installed-signature check. Installed
@@ -256,10 +287,14 @@ tighter collision restrictions. SailInfo settings and force readouts are unchang
 
 In-game acceptance: start on the Brig with a vanilla staysail for comparison.
 Check Mk.A menu restrictions, uniform sizing, movement, support protection,
-both tacks and tighter collision limits. With the upper trim enabled, compare
-weak/full wind and eased/tight sheets: the top-aft corner should curl slightly
-toward the aft pulley without new creases, corner jumps, slack collapse or rope
-detachment. Verify new sails start at half width
+both tacks and tighter collision limits. On Sanbuq and Brig, repeatedly sweep
+the lower sheets from tight to eased while watching the fixed upper corner.
+It should stay 14° out while fully deployed and at constant distance from the
+stay for a given reef amount. Use the aft halyard to verify 14°/7°/0° at
+full/half/zero deployment, with no rope jump at the bundle threshold. Check
+that no fore-mast halyard or decorative upper-sheet line remains. Inspect for twisting, new creases, corner jumps, slack collapse
+or rope detachment. Change wind strength, cross tacks, and test weak wind to
+check side retention and smooth transitions. Verify new sails start at half width
 and height and existing saves keep their size. Compare SailInfo's readout to
 physical travel on both sheets, including heel and a steep stay. Release the
 halyard, pause and reverse at several positions, fully furl upward, inspect
@@ -270,9 +305,10 @@ The first in-game pass reported unwanted furling on deck, excessive initial
 size and incorrect SailInfo degrees. These revisions address those observations;
 upward reefing, bundle alignment, default sizing and angle reporting await the
 next in-game pass. The user found the initial Mk.A upper trim generally good, with the port/starboard
-appearance difference described above. The revised rounder profile, cloth bounds
-and 2.5% trim await in-game validation. Passing length constraints and mirrored
-skin tests does not establish stable Unity Cloth.
+appearance difference described above. The rounded profile and cloth bounds remain in the fixed-14° experiment;
+the 2.5% trim is bypassed. The user found the 14° setting pretty good; the aft
+halyard and proportional reefing revision await in-game validation. Passing
+length constraints and mirrored skin tests does not establish stable Unity Cloth.
 
 ## Fisherman's Stay profiles and verification
 

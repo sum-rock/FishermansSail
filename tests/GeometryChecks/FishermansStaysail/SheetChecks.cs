@@ -111,7 +111,7 @@ internal static class SheetChecks
         if (min != -25 || max != 30)
             throw new Exception("Mk.A lost tighter collision restrictions.");
         Console.WriteLine(
-            "PASS: Mk.A repeated sheeting, 85% aft-head motion, coupled edge budgets, aerodynamic frames mast-relative readout and final 40-degree/tighter travel limits."
+            "PASS: retained family 85% head policy, coupled edge budgets, aerodynamic frames, mast-relative readout and final 40-degree/tighter travel limits."
         );
     }
 }

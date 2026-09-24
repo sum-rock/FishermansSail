@@ -42,7 +42,7 @@ internal static class BillowChecks
             }
         }
         Console.WriteLine(
-            "PASS: Mk.A complete weighted skin and triangle lengths mirror across tacks, including trimmed corners and reefs."
+            "PASS: Mk.A complete weighted skin and triangle lengths mirror across tacks, including fixed upper corners and reefs."
         );
 
         const float sampleWidth = 6.9f;
@@ -88,11 +88,13 @@ internal static class BillowChecks
     {
         var c = data.Corners;
         float deployment = FishermansStaysailBillow.Deployment(unroll);
-        var head = FishermansStaysailFrameGeometry.RotateAroundMast(
+        var head = FishermansStaysailFixedHead.Position(
             c[1],
             c[0],
             Vector3.right,
-            angle * 0.85f * deployment
+            -side,
+            FishermansStaysailMkAGeometry.FixedUpperHeadAngle,
+            unroll
         );
         var tack = FishermansStaysailReefingGeometry.Pose(c[2], c[0], c[1], unroll, unroll);
         var clew = FishermansStaysailReefingGeometry.Pose(c[3], c[0], c[1], unroll, unroll);
@@ -100,7 +102,11 @@ internal static class BillowChecks
             clew,
             c[0],
             Vector3.right,
-            angle * deployment
+            FishermansStaysailFixedHead.LowerAngle(
+                angle,
+                -side * FishermansStaysailMkAGeometry.FixedUpperHeadAngle,
+                unroll
+            )
         );
         var pulley = c[0] + (c[1] - c[0]) * 1.5f + Vector3.right * (width * 0.03f);
         var leech = new Vector3[FishermansStaysailGeometry.Rows + 1];
@@ -116,7 +122,7 @@ internal static class BillowChecks
                 width,
                 side,
                 unroll,
-                FishermansStaysailMkAGeometry.UpperCornerTrim,
+                0,
                 (c[1] - c[3]).magnitude * Math.Max(0.015f, unroll),
                 (clew - tack).magnitude,
                 leech,

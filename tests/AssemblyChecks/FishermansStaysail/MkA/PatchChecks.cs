@@ -134,6 +134,49 @@ internal static class PatchChecks
             )
         )
             throw new Exception("Upper trim must be fitted using the mark's tuning.");
+        if (
+            !lateUpdate.Any(m =>
+                m.DeclaringType.Name == "FishermansStaysailFixedHead" && m.Name == "Update"
+            )
+            || !lateUpdate.Any(m =>
+                m.DeclaringType.Name == "FishermansStaysailFixedHead" && m.Name == "Position"
+            )
+            || !lateUpdate.Any(m => m.Name == "get_FixedUpperHeadAngle")
+            || Type("MkA.FishermansStaysailMkAShape")
+                .GetProperty("FixedUpperHeadAngle", all)
+                .DeclaringType != Type("MkA.FishermansStaysailMkAShape")
+            || Type("MkA.FishermansStaysailMkAShape")
+                .GetProperty("UpperCornerTrim", all)
+                .DeclaringType != Type("FishermansStaysailShape")
+            || (float)
+                Type("MkA.FishermansStaysailMkAGeometry")
+                    .GetField("FixedUpperHeadAngle", all)
+                    .GetRawConstantValue() != 14f
+        )
+            throw new Exception(
+                "Mk.A must select the fixed 14-degree policy without its old upper trim."
+            );
+        if (
+            assembly.GetType(family + "FishermansStaysailSupportLine") != null
+            || Type("FishermansStaysailRig").GetField("HalyardAttachment", all)?.FieldType.FullName
+                != "UnityEngine.Transform"
+            || Method("FishermansStaysailRigging", "UpdateHalyard")
+                .GetParameters()
+                .Single()
+                .ParameterType.FullName != "UnityEngine.Transform"
+        )
+            throw new Exception(
+                "Mk.A must use one real aft halyard leaf, not decorative upper sheets."
+            );
+        var halyard = CalledMethods(Method("FishermansStaysailRigging", "UpdateHalyard")).ToArray();
+        if (
+            halyard.Any(m => m.Name == "get_ForePoint")
+            || !halyard.Any(m => m.Name == "MastAxis")
+            || !halyard.Any(m => m.Name == "AttachControls")
+        )
+            throw new Exception(
+                "Aft halyard route must refresh its controls and use the aft mast axis."
+            );
         var prefix = Patch("OrderText");
         if (
             !prefix
