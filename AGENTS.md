@@ -10,12 +10,13 @@ editing. Check `git status --short` and preserve existing user changes.
   current families are Fisherman's Staysails (Mk.A/Mk.B) and Fisherman's Flying
   Sails, with Fisherman's Stays as supporting rigging. Future sail families
   belong to this mod without being forced into either existing family's design.
-- The repository and checkout are named `MoreSailwindSails`. This project rename
-  does not rename the existing C# namespace, plugin display name or binary.
+- The repository, `MoreSailwindSails.csproj` and output `MoreSailwindSails.dll`
+  use the project name, as does the BepInEx display name `MoreSailwindSails`.
+  The C# namespace remains `FishermansSail`.
 - This is a C# Sailwind mod using BepInEx 5, HarmonyX and Shipyard Expansion.
   The plugin targets `netstandard2.0`; executable checks use .NET 8.
-- Version **0.1.0** is the first public release. Keep GUID
-  `com.august.fishermanssail`, DLL name `FishermansSail.dll` and prefab IDs
+- The mod is unreleased; **0.1.0** is the planned first release. Keep GUID
+  `com.august.moresailwindsails`, DLL name `MoreSailwindSails.dll` and prefab IDs
   **400** (Flying Sail), **401** (Staysail Mk.A), **402** (Staysail Mk.B) stable.
   For releases, keep plugin/project versions and documented startup examples consistent.
 - Keep Flying Sail and staysail mechanics independently editable. Shared-helper
@@ -155,7 +156,7 @@ Use `dotnet csharpier check .` instead of formatting during read-only work.
 First-time Nix/NuGet operations may need normal network escalation; do not change
 project dependencies to bypass it. Override the game path with
 `-p:SailwindDir="/path/to/Sailwind"`; see the guide for the assembly-check runtime
-argument. Output: `bin/Release/netstandard2.0/FishermansSail.dll`.
+argument. Output: `bin/Release/netstandard2.0/MoreSailwindSails.dll`.
 Documentation-only changes normally require diff/link/path review, not a build.
 
 Tests mirror feature directories and namespaces. Staysail behavior checks cover
@@ -188,7 +189,7 @@ Game directory: `/home/august/.local/share/Steam/steamapps/common/Sailwind`.
 Inspect `Sailwind_Data/Managed/Assembly-CSharp.dll`, Unity assemblies,
 `BepInEx/core/` (including HarmonyX), and installed dependencies under
 `BepInEx/plugins/`: ShipyardExpansion/SE_Bridge, NANDFixes, AllSailsAllShipyards
-and SailInfo. The installed `BepInEx/plugins/FishermansSail/FishermansSail.dll`
+and SailInfo. The installed `BepInEx/plugins/MoreSailwindSails/MoreSailwindSails.dll`
 is distinct from build output; confirm its startup version when diagnosing.
 
 Read both logs; Unity warnings may be absent from BepInEx's log:

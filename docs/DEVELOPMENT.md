@@ -5,9 +5,10 @@ Fisherman's Staysails (Mk.A/Mk.B) and Fisherman's Flying Sails are the two
 current sail families; Fisherman's Stays supply supporting rigging. Additional
 families can be developed within the same mod as their own features.
 
-The repository and local checkout are named `MoreSailwindSails`. The current
-release retains the `FishermansSail` project/namespace and DLL, plugin GUID
-`com.august.fishermanssail`, and BepInEx display name `Fisherman's Sail`.
+The repository and local checkout are named `MoreSailwindSails`. The project
+file is `MoreSailwindSails.csproj` and its assembly is `MoreSailwindSails.dll`.
+The mod is unreleased. The C# namespace remains `FishermansSail`, with plugin
+GUID `com.august.moresailwindsails` and BepInEx display name `MoreSailwindSails`.
 
 ## Environment and build
 
@@ -41,7 +42,7 @@ nix develop -c dotnet build -c Release -p:SailwindDir="/path/to/Sailwind"
 
 The build references the installed BepInEx, HarmonyX, Shipyard Expansion, game
 and Unity assemblies. They are not bundled with the plugin or committed to Git.
-The output is `bin/Release/netstandard2.0/FishermansSail.dll`.
+The output is `bin/Release/netstandard2.0/MoreSailwindSails.dll`.
 
 ## Automated checks
 
@@ -86,9 +87,11 @@ Close Sailwind, build, then run from the repository root:
 
 Use `./install-local.sh "/path/to/Sailwind"` for another installation. This
 script copies only the built DLL; it does not build it. Builds and checks do
-not replace the installed plugin or change saves.
+not replace the installed plugin or change saves. Before installing this renamed
+build, remove any old `FishermansSail.dll` from the game's plugin directory to
+avoid loading both assemblies.
 
-Confirm the retained startup message `Fisherman's Sail 0.1.0 loaded!` in
+Confirm the startup message `MoreSailwindSails 0.1.0 loaded!` in
 `BepInEx/LogOutput.log`. Flying Sail registration should report donor index
 **110**, sail index **400** and **825** vertices. Staysail registrations use
 indices **401** (Mk.A) and **402** (Mk.B). Read

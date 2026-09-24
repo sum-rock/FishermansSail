@@ -29,15 +29,16 @@ variants depend on the boat and its fitted masts.
 
 ## Requirements and installation
 
-The current release of MoreSailwindSails ships as `FishermansSail.dll`.
+The current build produces `MoreSailwindSails.dll`.
 
 - **BepInEx 5**
 - **Shipyard Expansion** (developed against version 0.11.1)
 
 1. Close Sailwind.
-2. Place `FishermansSail.dll` in
-   `<Sailwind>/BepInEx/plugins/FishermansSail/`, creating the folder if needed.
-3. When updating, replace the old DLL and remove any duplicate copies.
+2. Place `MoreSailwindSails.dll` in
+   `<Sailwind>/BepInEx/plugins/MoreSailwindSails/`, creating the folder if needed.
+3. When updating, replace the old DLL and remove any duplicate copies, including
+   `FishermansSail.dll` from earlier development builds.
 4. Launch the game and visit a shipyard.
 
 ## Fitting a staysail

@@ -38,7 +38,7 @@ internal static class Program
             return null;
         };
         var assembly = Assembly.LoadFrom(
-            Path.Combine(AppContext.BaseDirectory, "FishermansSail.dll")
+            Path.Combine(AppContext.BaseDirectory, "MoreSailwindSails.dll")
         );
 
         HarmonySignatureChecks.Run(assembly);
