@@ -327,12 +327,12 @@ stale full-size cloth; test recoloring, cancellation and save/reload. Repeat on
 a steeper fallback stay and an offset topmast, then the other supported boats.
 The first in-game pass reported unwanted furling on deck, excessive initial
 size and incorrect SailInfo degrees. These revisions address those observations;
-upward reefing, bundle alignment, default sizing and angle reporting await the
-next in-game pass. The user found the initial Mk.A upper trim generally good, with the port/starboard
-appearance difference described above. The rounded profile and cloth bounds remain in the fixed-14° experiment;
-the 2.5% trim is bypassed. The user found the 14° setting pretty good; the aft
-halyard and proportional reefing revision await in-game validation. Passing
-length constraints and mirrored skin tests does not establish stable Unity Cloth.
+the rounded profile and cloth bounds remain with the fixed 14° head policy.
+The earlier 2.5% trim was removed in CLEANUP-3. The user found the 14° setting
+pretty good and reported favorable initial validation after that cleanup,
+without itemizing boats or scenarios. Full reefing, bundle alignment, sizing,
+angle reporting and save/reload coverage remain pending. Passing length
+constraints and mirrored skin tests does not establish stable Unity Cloth.
 
 ## Fisherman's Stay profiles and verification
 
@@ -446,8 +446,9 @@ point and interaction radius. Checks cover all supported profile references,
 three extra controls per donor in isolation, reservation lifecycle and invariance
 of mast attachment radius/facing. Assembly checks verify structural clone and
 teardown wiring; they do not simulate Unity Awake/Start, previews, handles or
-outlines. All seven boats still require the CLEANUP-1 in-game matrix. No game
-assets or DLLs are included in the fixture.
+outlines. The user reported improved placement; full coverage on all seven
+boats remains pending. Follow the winch validation scenarios in
+[AGENTS.md](../AGENTS.md). No game assets or DLLs are included in the fixture.
 
 
 The 2026-09-24 organizational follow-up consolidated the boat tables without
@@ -456,4 +457,4 @@ matched exactly for seven boats, 97 stay variants, 151 winch mappings, 69 mast
 section chains and 453 placement cases. The full Release build, formatting,
 geometry and assembly checks passed. Profile checks also cover missing entries,
 Leopard's three-section chain and rejection of cyclic ancestry. This refactor
-adds no new in-game validation; the outstanding CLEANUP-1 matrix still applies.
+adds no new in-game validation; the outstanding winch scenarios above still apply.
