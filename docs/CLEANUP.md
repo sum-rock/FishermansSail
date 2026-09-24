@@ -144,8 +144,8 @@ include the bundle threshold, partial/full deployment and halyard reversals.
 Current-policy assertions cover the 14° × unroll head, its fixed height/span,
 sheet independence, constrained edges and mirrored skin/triangle lengths.
 Geometry-independent tack, travel and billow helpers run once. Cut/identity
-checks remain mark-specific; retained optional trim tests explicitly identify
-dormant helper coverage, pending CLEANUP-3.
+checks remain mark-specific. At this step, retained optional trim tests explicitly
+identified dormant helper coverage; CLEANUP-3 subsequently removed them.
 
 **Checks:** CSharpier formatting/check, Release build (zero warnings/errors),
 GeometryChecks, AssemblyChecks and `git diff --check` pass. Both Flying Sail and
@@ -162,7 +162,7 @@ in-game validation; no installed game files or saves were changed.
 
 ### CLEANUP-3 — Retire dormant upper-corner strategies
 
-- [ ] Implementation and applicable automated checks complete.
+- [x] Implementation and applicable automated checks complete.
 
 **Finding:** Both shipped marks select the fixed 14° upper-head policy, reduced
 during reefing. The alternative sheet-following branch and optional upper-corner
@@ -172,7 +172,7 @@ enforce some of this dormant plumbing.
 
 **References:** [staysail rig](../Sails/FishermansStaysail/FishermansStaysailRig.cs),
 [shape policy](../Sails/FishermansStaysail/FishermansStaysailShape.cs),
-[upper trim helper](../Sails/FishermansStaysail/FishermansStaysailUpperTrim.cs).
+[retained edge-fit helper](../Sails/FishermansStaysail/FishermansStaysailEdgeFit.cs).
 
 **Change:** Make the current head policy explicit and remove unused strategies
 and their obsolete tests. Preserve the active support-bow and coupled tension
@@ -185,8 +185,27 @@ lower-sheet behavior and finite tension fallback. The expanded behavior tests
 pass. In-game, check both tacks, eased/tight sheets, partial/full reef and
 redeployment without resetting Cloth or changing the mesh.
 
-**Progress:** Not started. Checks run: none for this item. In-game validation:
-pending. Implementation completed: —.
+**Progress:** Complete. Both marks now supply a required, non-nullable fixed
+head angle. Removed the staysail 85% sheet-following branch, optional inward
+trim, arc target/backoff search and obsolete trim tests. The smaller
+`FishermansStaysailEdgeFit` preserves support bow, deployment weighting and
+coupled tension, including finite failure points. The head is input-only.
+Updated historical guidance; Flying Sail behavior, save identities and version
+**0.1.0** are unchanged. Implementation completed: **2026-09-24**.
+
+**Checks:** CSharpier formatting/check, Release build (zero warnings/errors),
+GeometryChecks, AssemblyChecks and `git diff --check` pass. The expanded
+both-mark matrix still passes; new family checks cover loaded support bow,
+edge budgets and degenerate/impossible-fit fallback. An isolated comparison
+against the prior zero-trim helper matched exactly in 9,072 cases across both
+marks, sizes, slopes, tacks, sheets, reefs, loads and valid/invalid edge budgets:
+all sampled points, fixed heads and success/failure results agree. Assembly
+checks verify the required fixed-angle policy and active edge-fit call.
+
+**In-game validation:** Pending. Check both marks on Brig, then Sanbuq: both
+tacks, eased/tight sheets, partial/full reef and redeployment, with no Cloth
+reset or mesh changes. Automated equivalence does not establish Unity Cloth
+stability. No installed game files or saves were changed.
 
 ### CLEANUP-4 — Extract identical shared calculations
 

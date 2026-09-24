@@ -114,13 +114,10 @@ internal static class BillowChecks
             Vector3.right,
             FishermansStaysailFixedHead.LowerAngle(angle, -side * headAngle, unroll)
         );
-        var pulley = c[0] + (c[1] - c[0]) * 1.5f + Vector3.right * (width * 0.03f);
         var leech = new Vector3[FishermansStaysailGeometry.Rows + 1];
         if (
-            !FishermansStaysailUpperTrim.Fit(
+            !FishermansStaysailEdgeFit.Fit(
                 head,
-                c[0],
-                pulley,
                 clew,
                 tack,
                 Vector3.up,
@@ -128,11 +125,9 @@ internal static class BillowChecks
                 width,
                 side,
                 unroll,
-                0,
                 (c[1] - c[3]).magnitude * Math.Max(0.015f, unroll),
                 (clew - tack).magnitude,
-                leech,
-                out head
+                leech
             )
         )
             throw new Exception("Mirrored-pose fixture must fit.");

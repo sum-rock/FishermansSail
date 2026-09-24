@@ -127,10 +127,8 @@ internal static class FixedHeadChecks
                     float leech = (c[1] - c[3]).magnitude * Math.Max(0.015f, unroll);
                     var points = new Vector3[33];
                     if (
-                        !FishermansStaysailUpperTrim.Fit(
+                        !FishermansStaysailEdgeFit.Fit(
                             head,
-                            c[0],
-                            pulley,
                             clew,
                             tack,
                             Vector3.up,
@@ -138,22 +136,14 @@ internal static class FixedHeadChecks
                             width,
                             side,
                             unroll,
-                            0,
                             leech,
                             foot,
-                            points,
-                            out var fittedHead
+                            points
                         )
                     )
                         throw new Exception(
                             $"Fixed-head fit failed at slope {slope}, side {side}, unroll {unroll}, sheet {sheet}."
                         );
-                    BehaviorCases.Near(
-                        (fittedHead - head).magnitude,
-                        0,
-                        0,
-                        "solver cannot move fixed upper corner"
-                    );
                     BehaviorCases.Near(
                         (points[32] - head).magnitude,
                         0,

@@ -341,17 +341,14 @@ support-mast removal, deck-up hoisting and parked ropes with invisible struck cl
     collision limits. Revised reefing, bundle appearance, starting size, angle
     readout, Cloth behavior and save/reload still need in-game validation.
 
-17. **The earlier Mk.A upper trim preserved the head span.** Its baseline was the 85%
-    sheeting response. The approved additional pull toward the aft pulley is
-    capped at 2.5% of width and scaled by smoothed absolute wind load and
-    deployment. Move along the head-span sphere, then fit both foot and leech;
-    back off the new trim if those constraints reject it. Keep the family default
-    at zero for future marks and keep Flying Sail mechanics unchanged. Upper
-    ropes follow the resulting corner through independent attachments. Automated
-    geometry/assembly checks pass. The user found the initial 1.5% trim generally
-    good, with better appearance on starboard than port. The revised 2.5% trim
-    was superseded by the fixed-head experiment in lesson 19. Retain the helper
-    for other policies; do not apply it to Mk.A while testing a fixed angle.
+17. **The earlier Mk.A upper trim is retired.** Its 85% sheeting baseline and
+    wind-driven pull along the head-span sphere were superseded by lesson 19.
+    The user found the initial 1.5% trim generally good, with better appearance
+    on starboard than port; a revised 2.5% trim preceded the fixed-head policy.
+    CLEANUP-3 removed those dormant strategies and their tests. Git history
+    preserves the experiments. Keep the active support bow, coupled foot/leech
+    fit and finite failure behavior in `FishermansStaysailEdgeFit`; the solver
+    must never move the fixed upper corner. Flying Sail mechanics are separate.
 
 18. **Match Mk.A cloth travel to its own billow depth.** The user's Sanbuq
     screenshots (`starbord tack.png`, `port tack.png`) showed upper/middle folds
@@ -370,7 +367,8 @@ support-mast removal, deck-up hoisting and parked ropes with invisible struck cl
     Select tacks from neutral-frame apparent wind with the existing 0.6 m/s
     deadband; keep the prior side in weak wind and default to +14° on an
     indeterminate first initialization. Smooth tack changes, retaining fixed
-    height and head span. Bypass both the old 85% response and inward trim.
+    height and head span. Both marks require this fixed-angle policy; the old
+    staysail 85% response and inward trim were removed in CLEANUP-3.
     The visual upper sheets were subsequently replaced by the aft halyard in
     lesson 20. Keep the upper angle independent of lower sheets; its reefing
     angle is now proportional to native deployment. The coupled solver

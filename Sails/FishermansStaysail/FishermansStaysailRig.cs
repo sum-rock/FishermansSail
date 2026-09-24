@@ -628,34 +628,20 @@ namespace FishermansSail.Sails.FishermansStaysail
                 rigging.ForeSailFrame(out var forePoint, out var mastAxis);
                 var shape = GetComponent<FishermansStaysailShape>();
                 var fixedAngle = shape.FixedUpperHeadAngle;
-                Vector3 head;
-                if (fixedAngle.HasValue)
-                {
-                    fixedHead.Update(
-                        Sail.apparentWind,
-                        mastAxis,
-                        rigging.AftReference - forePoint,
-                        Time.deltaTime
-                    );
-                    head = FishermansStaysailFixedHead.Position(
-                        neutralHead,
-                        forePoint,
-                        mastAxis,
-                        fixedHead.Side,
-                        fixedAngle.Value,
-                        Sail.currentUnroll
-                    );
-                }
-                else
-                {
-                    head = FishermansStaysailFrameGeometry.UpperHead(
-                        neutralHead,
-                        clothTransform.TransformPoint(Corners[1]),
-                        clothTransform.TransformPoint(Bones[0].localPosition),
-                        mastAxis,
-                        Sail.currentUnroll
-                    );
-                }
+                fixedHead.Update(
+                    Sail.apparentWind,
+                    mastAxis,
+                    rigging.AftReference - forePoint,
+                    Time.deltaTime
+                );
+                var head = FishermansStaysailFixedHead.Position(
+                    neutralHead,
+                    forePoint,
+                    mastAxis,
+                    fixedHead.Side,
+                    fixedAngle,
+                    Sail.currentUnroll
+                );
                 var localHead = clothTransform.InverseTransformPoint(head);
                 var normal = Vector3.Cross(mastAxis, rigging.AftReference - forePoint).normalized;
                 var clew = Bones[3].localPosition;
@@ -674,16 +660,14 @@ namespace FishermansSail.Sails.FishermansStaysail
                         mastAxis,
                         FishermansStaysailFixedHead.LowerAngle(
                             sheetAngle,
-                            fixedAngle.HasValue ? fixedHead.Side * fixedAngle.Value : 0,
+                            fixedHead.Side * fixedAngle,
                             Sail.currentUnroll
                         )
                     )
                 );
                 var tack = Bones[2].localPosition;
-                bool fitted = FishermansStaysailUpperTrim.Fit(
+                bool fitted = FishermansStaysailEdgeFit.Fit(
                     localHead,
-                    Bones[0].localPosition,
-                    clothTransform.InverseTransformPoint(rigging.Pair.AftGuide.position),
                     clew,
                     tack,
                     clothTransform.InverseTransformDirection(normal),
@@ -691,11 +675,9 @@ namespace FishermansSail.Sails.FishermansStaysail
                     -Corners[0].z,
                     clothLoad,
                     Sail.currentUnroll,
-                    fixedAngle.HasValue ? 0 : shape.UpperCornerTrim,
                     (Corners[1] - Corners[3]).magnitude * Mathf.Max(0.015f, Reefing.Lift),
                     (clew - tack).magnitude,
-                    leechPoints,
-                    out _
+                    leechPoints
                 );
                 if (!fitted && !tensionWarning && state == 2)
                 {

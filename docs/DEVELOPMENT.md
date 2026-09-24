@@ -153,8 +153,8 @@ checks and helpers in its directory, using the namespace
 with the flying sail; authored stay-profile checks belong with the stay.
 Shared staysail geometry behavior lives at the family level, parameterized by
 `BehaviorCases` over both mark factories. Keep cut and prefab identity checks
-under their marks. The remaining optional trim checks are dormant-helper
-coverage, not the active head policy. Test output labels executed behavior and
+under their marks. Family edge-fit checks cover the active support bow and
+finite failure fallback. Test output labels executed behavior and
 structural control-finalizer inspection separately.
 
 Root `Program.cs` files handle setup and run the checks. Shared Harmony signature
@@ -213,9 +213,9 @@ The user reported that the fixed 20° experiment appeared to work and requested
 a further 6° inward adjustment. The user then found the 14° setting pretty good. The current change adds an
 aft halyard and proportional reef-angle transition, which await in-game validation.
 
-Mk.A selects a nullable mark-level `FixedUpperHeadAngle` of 14°. The family
-default is null, retaining its existing 85% head policy and optional trim for
-other marks. Mk.A bypasses both of those responses. The fixed target rotates
+Each mark supplies a required `FixedUpperHeadAngle`, currently 14° for both.
+The dormant staysail sheet-following policy and optional inward trim were
+removed in CLEANUP-3. The fixed target rotates
 the neutral head around the fore-mast axis, retaining height and head span.
 The angle is multiplied directly by clamped `currentUnroll`: 14° at full
 hoist, 7° at half reef, and 0° fully furled. The lower corner blends from its
@@ -229,9 +229,10 @@ apparent wind projected onto `Cross(mastAxis, neutralAftDirection)`. This frame
 is independent of the sheet-rotated body and cloth. A ±0.6 m/s deadband retains
 the prior side; initial indeterminate wind defaults to +14°. Subsequent tack
 changes use the existing smoothing rate, settling exactly at ±14°. Wind strength
-and lower-sheet travel cannot trim the settled upper position. The fixed mode
-passes zero additional trim to the coupled solver, which adjusts the lower clew
-and leech without moving the upper corner. Invalid fits retain finite fallback
+and lower-sheet travel cannot trim the settled upper position.
+`FishermansStaysailEdgeFit` retains the load-dependent support bow and calls
+the coupled solver, which adjusts the lower clew and leech without moving the
+upper corner. Invalid fits retain finite fallback
 points and the existing warning.
 
 The functional halyard is now cloned from the supporting aft base's reef winch,
