@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace FishermansSail
+namespace FishermansSail.BoatRigs
 {
     internal sealed class MastSupportDefinition
     {
@@ -38,6 +38,7 @@ namespace FishermansSail
     {
         internal readonly string BoatName;
         internal readonly MastSupportDefinition[] Supports;
+        internal readonly FishermansStayGroupDefinition[] Stays;
 
         internal IEnumerable<IGrouping<int, MastSupportDefinition>> MastPairs(int foreIndex) =>
             Supports
@@ -45,12 +46,23 @@ namespace FishermansSail
                 .GroupBy(s => s.AftSections.Last());
 
         internal BoatRigDefinition(string boatName, params MastSupportDefinition[] supports)
+            : this(boatName, new FishermansStayGroupDefinition[0], supports) { }
+
+        internal BoatRigDefinition(
+            string boatName,
+            FishermansStayGroupDefinition[] stays,
+            params MastSupportDefinition[] supports
+        )
         {
             if (
                 supports.Length == 0
                 || supports.Select(s => s.SheetControlSource).Distinct().Count() != supports.Length
             )
                 throw new ArgumentException("Empty mast supports or duplicate control source.");
+            var mounts = stays.SelectMany(g => g.Variants).Select(v => v.MountIndex).ToArray();
+            if (mounts.Distinct().Count() != mounts.Length)
+                throw new ArgumentException("Duplicate Fisherman's Stay mount ID.");
+            Stays = stays;
             BoatName = boatName;
             Supports = supports;
         }

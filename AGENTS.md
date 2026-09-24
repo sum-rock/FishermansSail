@@ -25,20 +25,43 @@ Follow current user instructions over historical design choices
 
 ## Code map
 
-| Area                                                           | Main files                                                      |
-| -------------------------------------------------------------- | --------------------------------------------------------------- |
-| Plugin metadata, registration and independent assets           | `Plugin.cs`, `FishermanSail.cs`                                 |
-| Native appearance defaults and texture options                 | `FishermanAppearance.cs`                                       |
-| Mesh, skin weights, pins and bone indexing             | `FishermanGeometry.cs`                                          |
-| Live rig, corners, shaping bones, furling and render selection | `FishermanSailRig.cs`                                           |
-| Camber response, movement limits and edge curves               | `FishermanBillow.cs`                                            |
-| Coupled foot/leech length constraints                          | `FishermanTension.cs`                                           |
-| Mast rotation, upper-corner motion and upper rope routes       | `FlyingSailGeometry.cs`, `FishermanSupportLine.cs`              |
-| Sheet travel and post-sway hinge limits                       | `FishermanTravel.cs`, `FishermanTravelPatch.cs`                |
-| Aerodynamic frame and scoped native force patches              | `FishermanAerodynamics.cs`, `AerodynamicPatches.cs`             |
-| Boat-specific mast pairs, active guides and independent controls | `BoatRigs/`, `FishermanRigging.cs`                              |
-| Mast installation, support protection and deck-up hoisting     | `MastInstallationPatches.cs`, `MastInstallationGeometry.cs`, `FlyingSailPatches.cs` |
-| Shipyard order-text freeze protection                          | `FishermanOrderText.cs`, `FishermanOrderTextPatch.cs`                     |
+The mast-mounted sail is **Fisherman's Flying Sail**, with the code identity
+`FishermansFlyingSail`. Feature files below are relative to
+`Sails/FishermansFlyingSail/`, with namespace
+`FishermansSail.Sails.FishermansFlyingSail`; patches use its `.Patches` namespace.
+Boat definitions use `FishermansSail.BoatRigs`. Plugin branding, GUID, DLL name,
+version **0.1.0** and prefab index **400** remain unchanged.
+
+| Area | Main files |
+| --- | --- |
+| Plugin metadata and patch discovery | [Plugin.cs](Plugin.cs) |
+| Sail registration and shipyard inventory | [FishermansFlyingSail.cs](Sails/FishermansFlyingSail/FishermansFlyingSail.cs), [Patches/FishermansFlyingSailRegistrationPatches.cs](Sails/FishermansFlyingSail/Patches/FishermansFlyingSailRegistrationPatches.cs) |
+| Native appearance defaults and texture options | [FishermansFlyingSailAppearance.cs](Sails/FishermansFlyingSail/FishermansFlyingSailAppearance.cs), [Patches/FishermansFlyingSailAppearancePatches.cs](Sails/FishermansFlyingSail/Patches/FishermansFlyingSailAppearancePatches.cs) |
+| Mesh, skin weights, pins and bone indexing | [FishermansFlyingSailGeometry.cs](Sails/FishermansFlyingSail/FishermansFlyingSailGeometry.cs) |
+| Live rig, owned assets, corners, shaping, furling and rendering | [FishermansFlyingSailRig.cs](Sails/FishermansFlyingSail/FishermansFlyingSailRig.cs) |
+| Camber response, movement limits and edge curves | [FishermansFlyingSailBillow.cs](Sails/FishermansFlyingSail/FishermansFlyingSailBillow.cs) |
+| Coupled foot/leech length constraints | [FishermansFlyingSailTension.cs](Sails/FishermansFlyingSail/FishermansFlyingSailTension.cs) |
+| Mast rotation, upper-corner motion and upper rope routes | [FishermansFlyingSailFrameGeometry.cs](Sails/FishermansFlyingSail/FishermansFlyingSailFrameGeometry.cs), [FishermansFlyingSailSupportLine.cs](Sails/FishermansFlyingSail/FishermansFlyingSailSupportLine.cs) |
+| Sheet travel and post-sway hinge limits | [FishermansFlyingSailTravel.cs](Sails/FishermansFlyingSail/FishermansFlyingSailTravel.cs), [Patches/FishermansFlyingSailTravelPatch.cs](Sails/FishermansFlyingSail/Patches/FishermansFlyingSailTravelPatch.cs) |
+| Aerodynamic frame and scoped native force patches | [FishermansFlyingSailAerodynamics.cs](Sails/FishermansFlyingSail/FishermansFlyingSailAerodynamics.cs), [Patches/FishermansFlyingSailAerodynamicPatches.cs](Sails/FishermansFlyingSail/Patches/FishermansFlyingSailAerodynamicPatches.cs) |
+| Active mast guides and independent controls | [FishermansFlyingSailRigging.cs](Sails/FishermansFlyingSail/FishermansFlyingSailRigging.cs) |
+| Mast installation, support protection, hoisting and collision | [FishermansFlyingSailMastInstallationGeometry.cs](Sails/FishermansFlyingSail/FishermansFlyingSailMastInstallationGeometry.cs), [Patches/FishermansFlyingSailMastInstallationPatches.cs](Sails/FishermansFlyingSail/Patches/FishermansFlyingSailMastInstallationPatches.cs), [Patches/FishermansFlyingSailCollisionPatches.cs](Sails/FishermansFlyingSail/Patches/FishermansFlyingSailCollisionPatches.cs) |
+| Shipyard order-text freeze protection | [FishermansFlyingSailOrderText.cs](Sails/FishermansFlyingSail/FishermansFlyingSailOrderText.cs), [Patches/FishermansFlyingSailOrderTextPatch.cs](Sails/FishermansFlyingSail/Patches/FishermansFlyingSailOrderTextPatch.cs) |
+| Boat-specific mast pairs | [BoatRigs/](BoatRigs/) |
+
+The independent Fisherman's Stay feature is in `Stays/FishermansStay/`, with
+patches in its `Patches/` subdirectory. `BoatRigs/Stays/` holds its authored
+mast-local attachment references and fixed mount IDs. See the development guide
+for profile counts, asset provenance and the stay verification checklist.
+The custom staysail family is in `Sails/FishermansStaysail/`; `MkA/` contains
+the first cut and registration (prefab **401**); `MkB/` has the 90° foot cut
+and registration (prefab **402**). Family patches, controls,
+reefing and rig remain separate from the Flying Sail. Tests mirror the family
+and mark directories. `BoatRigs/FishermansStaysailDefinitions.cs` supplies
+authored mast ancestry for both supports and the aft-base halyard source.
+The first Mk.A in-game pass reported deckward reefing, excessive starting size
+and incorrect SailInfo angles; see lesson 16. Revised behavior and full stay/save
+acceptance remain pending. Earlier observations apply to the flying-sail mechanics.
 
 ## Build and checks
 
@@ -80,6 +103,13 @@ actual installed method signatures, Harmony injections, control-list restoration
 cloth lifecycle restrictions without starting Unity. Direct IL decoding is used
 for lifecycle checks; asking Harmony to create native patch stubs failed in this
 standalone test environment.
+
+Both suites group feature checks under `FishermansFlyingSail/` and
+`FishermansStay/`, with matching test namespaces. Keep feature assertions and
+helpers in those directories; root `Program.cs` files only set up and run checks.
+Assembly-wide Harmony signature checks and the IL reader live under
+`tests/AssemblyChecks/Shared/`. The stay measurement fixture lives alongside its
+geometry checks and is copied to `FishermansStay/` in the test output.
 
 **Neither suite simulates Unity Cloth.** A passing build and mathematically valid
 mesh do not establish stable cloth motion. Say "automated checks pass; in-game
@@ -247,7 +277,7 @@ support-mast removal, deck-up hoisting and parked ropes with invisible struck cl
     restrictions and apply the final cap after sway without resetting Cloth or
     snapping transforms. The user reported that this limit looked great in game.
 
-12. **Do not repeat the tighter upper-corner experiment.** Reducing the upper
+12. **Do not repeat the Flying Sail tighter upper-corner experiment.** Reducing the upper
     corner's angle ratio from 85% to 60% passed automated checks but produced
     creases in game. The user reverted it. Retain the 85% ratio and existing
     geometry; mathematical feasibility did not establish stable Cloth behavior.
@@ -259,6 +289,96 @@ support-mast removal, deck-up hoisting and parked ropes with invisible struck cl
     Guard SE's material update so saved patterns cannot return. Do not invent
     RGB colors or textures, or change donor/shared assets. Appearance validation
     in game remains pending.
+
+14. **Keep new stays independent and use authored endpoints.** Fisherman's Stays
+    are separate native staysail mounts, not changes to the flying sail. Their
+    aft attachment follows explicit highest-section variants beside the halyard
+    guide. Prefer 70° from the aft spar; if the forward spar is too short, use
+    its physical masthead and steepen the stay. Coordinates are authored per
+    configuration, not inferred at runtime. Keep fore/aft direction physical
+    (the old Cog support ordering cannot be reused blindly).
+15. **Keep stay save layout and preview handling stable.** Append new part groups
+    without reordering existing slots; preserve explicit mount IDs 128–255 and
+    grow capacity without shrinking other mods' arrays. Older snapshots default
+    new parts to None. Preserve occupied stays and supports during invalid order
+    previews and always restore preview state in a finalizer. Retain the separate
+    Fisherman's Stay text guard before NANDFixes. Validate profiles before
+    registration and roll back the whole boat's new stays if construction fails.
+    Automated checks pass; stay installation, controls and saving remain pending
+    in-game validation.
+
+16. **Mk.A reefs upward to a visible native bundle at its head.** Keep its entire deployed
+    luff on the fore mast, its head parallel to the actual Fisherman's Stay,
+    and its aft head independent of the stay. See lesson 19 for the current
+    fixed-angle experiment replacing its earlier 85% sheeting response. It saves on
+    the registered stay at prefab 401. Its per-instance cut is initialized before
+    Cloth is enabled and remains fixed during sailing. Releasing the halyard
+    samples the brig jib's native `reef` animation and raises the foot toward
+    the sloping head; winching unfolds it. The user rejected deckward reefing
+    after the first in-game pass. Keep the native furled mesh visible below
+    4% deployment, with matching recoloring. Do not replace this with the Flying
+    Sail's hidden resting state or linear hoist. Animation sampling uses an
+    inactive hierarchy without live donor scripts or colliders; ropes remain
+    leaf attachments. Start new selections at 50% width and height through SE
+    scaling, preserving saved sizes. SailInfo's donor-axis angle was incorrect:
+    its optional integration now reports the actual mast-relative sheet angle,
+    without clamping the label. Preserve the final ±40° hinge cap and tighter
+    collision limits. Revised reefing, bundle appearance, starting size, angle
+    readout, Cloth behavior and save/reload still need in-game validation.
+
+17. **The earlier Mk.A upper trim preserved the head span.** Its baseline was the 85%
+    sheeting response. The approved additional pull toward the aft pulley is
+    capped at 2.5% of width and scaled by smoothed absolute wind load and
+    deployment. Move along the head-span sphere, then fit both foot and leech;
+    back off the new trim if those constraints reject it. Keep the family default
+    at zero for future marks and keep Flying Sail mechanics unchanged. Upper
+    ropes follow the resulting corner through independent attachments. Automated
+    geometry/assembly checks pass. The user found the initial 1.5% trim generally
+    good, with better appearance on starboard than port. The revised 2.5% trim
+    was superseded by the fixed-head experiment in lesson 19. Retain the helper
+    for other policies; do not apply it to Mk.A while testing a fixed angle.
+
+18. **Match Mk.A cloth travel to its own billow depth.** The user's Sanbuq
+    screenshots (`starbord tack.png`, `port tack.png`) showed upper/middle folds
+    on port. Full weighted-skin and triangle-length tests mirror under equivalent
+    tack conditions; no directional cut failure was reproduced. The prior motion
+    bounds exceeded the shallow interior camber, allowing crossing of the target
+    plane. This is a plausible contributor, not a proven runtime cause. Mk.A now
+    uses rounded sine shoulders, a fuller middle and interior travel capped near
+    its own camber, retaining foot/leech freedom. Do not mirror/swap a live mesh
+    or reset Cloth to change tacks. The new shape and bound changes await in-game
+    comparison, especially on Sanbuq (the reported boat) and Brig.
+
+19. **Mk.A currently tests an independent 14° upper corner.** The deployed
+    top-aft corner stays 14° out on the leeward side in the neutral mast/stay
+    frame. Lower sheets and wind strength must not change its settled position.
+    Select tacks from neutral-frame apparent wind with the existing 0.6 m/s
+    deadband; keep the prior side in weak wind and default to +14° on an
+    indeterminate first initialization. Smooth tack changes, retaining fixed
+    height and head span. Bypass both the old 85% response and inward trim.
+    The visual upper sheets were subsequently replaced by the aft halyard in
+    lesson 20. Keep the upper angle independent of lower sheets; its reefing
+    angle is now proportional to native deployment. The coupled solver
+    may fit the lower clew but must never shift the fixed upper corner. The
+    experiment adds no winch or save fields and leaves Flying Sail behavior
+    unchanged. Geometry and assembly checks pass; Sanbuq/Brig sheet sweeps and
+    in-game cloth stability remain pending. The user reported that the 20°
+    experiment appeared to work and requested another 6° inward, then reported
+    the 14° setting was pretty good. This does not establish all-tack stability.
+
+20. **Mk.A reefs from the aft mast through the top-aft corner.** Clone the aft
+    base's native reef winch and bind the sail's existing reef controller.
+    Resolve both mast chains from authored references; all 97 variants and the
+    installed aft winch sources have been checked. Use owned guide leaves at
+    the active aft pulley and a dedicated leaf beneath the top-aft skin bone.
+    The fore halyard route and decorative upper sheets are removed. Preserve
+    independent lower sheets, occupied-support protection and native save slots.
+    Allocate control offsets across sails sharing sources and refresh placement
+    after source changes. The user chose proportional reefing: upper angle is
+    14° × currentUnroll (7° at half reef, 0° fully furled). Gather the foot toward
+    that head angle and draw the native bundle between the posed head endpoints.
+    Automated checks pass; aft controls, rope continuity, multiple sails and the
+    proportional reefing animation still need in-game validation.
 
 For handoff, report the version, behavioral change, checks actually run, remaining
 in-game uncertainty, and the built DLL path. Update these notes when a later

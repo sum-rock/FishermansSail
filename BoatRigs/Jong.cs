@@ -1,9 +1,10 @@
-namespace FishermansSail
+namespace FishermansSail.BoatRigs
 {
     internal static partial class BoatRigCatalog
     {
         private static readonly BoatRigDefinition Jong = new BoatRigDefinition(
             "BOAT junk large (70)",
+            JongStays(),
             new MastSupportDefinition(10, new[] { 1 }, new[] { 2 }),
             new MastSupportDefinition(12, new[] { 2 }, new[] { 3 }),
             new MastSupportDefinition(55, new[] { 51 }, new[] { 52 }),
