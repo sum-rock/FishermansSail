@@ -367,7 +367,7 @@ namespace FishermansSail.Sails.FishermansStaysail
         }
 
         // This runs once per installed/preview instance, before its Cloth is enabled.
-        // The shared inactive prefab remains the nominal Mk.A cut.
+        // Each shared inactive prefab retains its mark's nominal cut.
         private void InitializeCut(float slope)
         {
             Sail.cloth.enabled = false;

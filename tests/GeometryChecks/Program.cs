@@ -18,6 +18,7 @@ internal static class Program
         AerodynamicChecks.Run();
         MeshChecks.Run();
         FishermansStaysail.MkA.CutChecks.Run();
+        FishermansStaysail.MkB.CutChecks.Run();
         FishermansStaysail.ReefingChecks.Run();
         FishermansStaysail.SheetChecks.Run();
         FishermansStaysail.MkA.UpperTrimChecks.Run();

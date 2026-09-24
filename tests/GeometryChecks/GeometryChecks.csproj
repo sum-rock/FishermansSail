@@ -96,6 +96,10 @@
       Link="FishermansStaysail/MkA/FishermansStaysailMkAGeometry.cs"
     />
     <Compile
+      Include="../../Sails/FishermansStaysail/MkB/FishermansStaysailMkBGeometry.cs"
+      Link="FishermansStaysail/MkB/FishermansStaysailMkBGeometry.cs"
+    />
+    <Compile
       Include="../../Sails/FishermansStaysail/FishermansStaysailUpperTrim.cs"
       Link="FishermansStaysail/FishermansStaysailUpperTrim.cs"
     />

@@ -123,8 +123,9 @@ named **Fisherman's Flying Sail** in game.
 - `BoatRigs/Stays/` contains authored stay variants. Other sail types belong in
   sibling directories under `Sails/`.
 - `Sails/FishermansStaysail/` owns the staysail family's rig, reefing adapter,
-  controls and patches. `MkA/` contains the 110° cut, shape component and prefab
-  registration; another mark supplies its own `FishermansStaysailShape`.
+  controls, prefab builder and patches. `MkA/` contains the original 110° cut;
+  `MkB/` keeps its head and has a 90° foot. Each mark supplies its own
+  `FishermansStaysailShape` and save identity.
 - `BoatRigs/FishermansStaysailDefinitions.cs` holds authored fore-mast ancestry
   for selecting both physical mast chains and the aft-base halyard source.
 
@@ -139,7 +140,7 @@ The new menu name and loading existing sails still need in-game verification.
 
 Both `tests/GeometryChecks/` and `tests/AssemblyChecks/` contain
 `FishermansFlyingSail/`, `FishermansStay/` and `FishermansStaysail/` directories.
-The latter has `MkA/` for variant checks. Put each feature's
+The latter has `MkA/` and `MkB/` for variant checks. Put each feature's
 checks and helpers in its directory, using the namespace
 `FishermansSail.Tests.<Suite>.<Feature>`. Flying-sail rig-profile checks belong
 with the flying sail; authored stay-profile checks belong with the stay.
@@ -173,8 +174,8 @@ tools and regression lessons, including approaches that failed in game.
 
 ## Mk.A implementation and verification
 
-Mk.A registers as staysail prefab **401** after Shipyard Expansion and before
-All Sails caches its inventory. Registry membership restricts fitting to an
+Mk.A registers as staysail prefab **401** and Mk.B as **402**, after Shipyard
+Expansion and before All Sails caches its inventory. Registry membership restricts fitting to an
 active Fisherman's Stay. The native stay slot owns the saved sail, while the
 rig places its hinge and full pinned luff on the forward physical mast.
 The saved installation coordinate measures downward displacement from the
@@ -182,13 +183,19 @@ stay's forward endpoint, with 15 cm head and aft-mast clearances.
 Native collision checks remain active; custom fit checks use forward spar
 length and mast separation. The deployed luff must fit its selected section.
 
-Each mark provides a cut through `FishermansStaysailShape`. On first binding,
-Mk.A creates an owned mesh for the actual stay angle before enabling Cloth.
+Each mark provides a cut through `FishermansStaysailShape`. The shared prefab
+builder gives each mark its own cloth and shadow meshes. On first binding,
+each creates an owned mesh for the actual stay angle before enabling Cloth.
 The mesh and bind poses then remain fixed. Its luff is straight and fully
 pinned; the current experiment holds the aft head at 14° while retaining the
 coupled foot/leech solver. Uniform scaling preserves the cut. New shipyard
 selections use `SailScaler.SetScaleAbs(0.5, 0.5)` after SE's initialization;
 existing saves retain their stored dimensions.
+
+Mk.B retains Mk.A's head and fixed 14° upper corner. Its foot has 90° corners
+against the luff and leech in the fore-mast frame, so it is deck-parallel on
+upright masts and tilts slightly on raked masts. Both marks use the same
+halyard, sheet, reefing, appearance and fitting code.
 
 The user reported that the fixed 20° experiment appeared to work and requested
 a further 6° inward adjustment. The user then found the 14° setting pretty good. The current change adds an

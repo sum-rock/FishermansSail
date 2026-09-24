@@ -54,7 +54,8 @@ patches in its `Patches/` subdirectory. `BoatRigs/Stays/` holds its authored
 mast-local attachment references and fixed mount IDs. See the development guide
 for profile counts, asset provenance and the stay verification checklist.
 The custom staysail family is in `Sails/FishermansStaysail/`; `MkA/` contains
-the first cut and registration (prefab **401**). Family patches, controls,
+the first cut and registration (prefab **401**); `MkB/` has the 90° foot cut
+and registration (prefab **402**). Family patches, controls,
 reefing and rig remain separate from the Flying Sail. Tests mirror the family
 and mark directories. `BoatRigs/FishermansStaysailDefinitions.cs` supplies
 authored mast ancestry for both supports and the aft-base halyard source.

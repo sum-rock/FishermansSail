@@ -2,7 +2,7 @@
 
 A Sailwind mod that adds a four-corner **Fisherman's Flying Sail** and selectable
 **Fisherman's Stays** between masts. The flying sail mounts on a physical mast;
-the new stays accept native staysails and **Fisherman's Staysail Mk.A**.
+the new stays accept native staysails and **Fisherman's Staysail Mk.A/Mk.B**.
 Version **0.1.0**.
 
 ![Fisherman's Flying Sail hoisted between two masts in Sailwind](references/example0-1-0.png)
@@ -112,6 +112,14 @@ clipped to that limit, so it can reveal any physical overshoot.
 The aft halyard and proportional reefing transition still need in-game validation,
 particularly for folding or twisting during reefing and lower-sheet adjustment.
 
+## Fisherman's Staysail Mk.B
+
+Select **Fisherman's Staysail Mk.B** on a Fisherman's Stay. It uses the same
+controls, 14° deployed upper head, reefing, appearance and initial 50% size as
+Mk.A. Its head follows the stay, while its foot meets both the luff and leech at
+90° in the mast frame. The foot is parallel to the deck on an upright mast and
+tilts slightly with a raked mast.
+
 ## Saving and uninstalling
 
 The flying sail uses native mast save slots and keeps prefab index **400**, including
@@ -123,8 +131,8 @@ New stays use separate native mount slots in the **128–255** range. Existing
 0.1.0 saves start with no new stays installed. Before uninstalling, remove any
 sails fitted to Fisherman's Stays, remove the stays, and save. Development-era
 triatic-stay saves are not migrated.
-Mk.A uses prefab index **401** and saves in its Fisherman's Stay slot. Remove
-Mk.A along with other fitted staysails before removing the stay or uninstalling.
+Mk.A uses prefab index **401** and Mk.B uses **402**. Both save in their
+Fisherman's Stay slot. Remove either mark before removing the stay or uninstalling.
 
 ## Development and testing
 
@@ -134,7 +142,7 @@ See the [development guide](docs/DEVELOPMENT.md) for build commands, local
 installation, verification and implementation notes.
 
 Automated checks do not simulate Unity rendering, Cloth or hinge physics.
-Automated geometry and assembly checks pass for the stay and Mk.A implementations.
+Automated geometry and assembly checks pass for the stay and both staysail marks.
 In-game validation remains pending for the new stays, native sail fitting,
-Mk.A's furling, resting appearance and sailing behavior, controls, shipyard
+Mk.A and Mk.B's furling, resting appearance and sailing behavior, controls, shipyard
 cancellation and save/reload, as well as the flying sail's appearance and menu naming.

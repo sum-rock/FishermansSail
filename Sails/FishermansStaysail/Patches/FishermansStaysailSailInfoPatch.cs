@@ -41,7 +41,7 @@ namespace FishermansSail.Sails.FishermansStaysail.Patches
             if (target == null)
             {
                 Plugin.Log.LogWarning(
-                    "SailInfo's angle API changed; Mk.A angle integration skipped."
+                    "SailInfo's angle API changed; Fisherman's staysail angle integration skipped."
                 );
                 return;
             }

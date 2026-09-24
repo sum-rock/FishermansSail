@@ -1,4 +1,5 @@
 using FishermansSail.Sails.FishermansStaysail.MkA;
+using FishermansSail.Sails.FishermansStaysail.MkB;
 using HarmonyLib;
 
 namespace FishermansSail.Sails.FishermansStaysail.Patches
@@ -11,8 +12,11 @@ namespace FishermansSail.Sails.FishermansStaysail.Patches
         [HarmonyPostfix]
         [HarmonyAfter("com.nandbrew.shipyardexpansion")]
         [HarmonyBefore("NatoriusG.AllSailsAllShipyards")]
-        private static void Postfix(PrefabsDirectory __instance) =>
+        private static void Postfix(PrefabsDirectory __instance)
+        {
             FishermansStaysailMkA.Register(__instance);
+            FishermansStaysailMkB.Register(__instance);
+        }
     }
 
     [HarmonyPatch(typeof(Shipyard), "Awake")]
@@ -20,8 +24,11 @@ namespace FishermansSail.Sails.FishermansStaysail.Patches
     {
         [HarmonyPostfix]
         [HarmonyPriority(Priority.Last)]
-        private static void Postfix(Shipyard __instance) =>
+        private static void Postfix(Shipyard __instance)
+        {
             FishermansStaysailMkA.AddToShipyard(__instance);
+            FishermansStaysailMkB.AddToShipyard(__instance);
+        }
     }
 
     [HarmonyPatch(typeof(Shipyard), "ActivateDocuments")]
@@ -29,7 +36,10 @@ namespace FishermansSail.Sails.FishermansStaysail.Patches
     {
         // Covers shipyards that awakened before PrefabsDirectory.Start.
         [HarmonyPrefix]
-        private static void Prefix(Shipyard __instance) =>
+        private static void Prefix(Shipyard __instance)
+        {
             FishermansStaysailMkA.AddToShipyard(__instance);
+            FishermansStaysailMkB.AddToShipyard(__instance);
+        }
     }
 }
