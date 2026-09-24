@@ -6,14 +6,14 @@ namespace FishermansSail.Sails.FishermansStaysail
 {
     internal static class FishermansStaysailPrefab
     {
+        internal const int SourceIndex = 110;
+        internal const float TemplateHeadSlope = 20f;
+
         internal static GameObject Register<TShape>(
             PrefabsDirectory directory,
             GameObject current,
-            int sourceIndex,
             int prefabIndex,
-            string displayName,
-            string objectPrefix,
-            Func<float, FishermansStaysailMeshData> createGeometry
+            string displayName
         )
             where TShape : FishermansStaysailShape
         {
@@ -34,16 +34,16 @@ namespace FishermansSail.Sails.FishermansStaysail
                     );
 
                 var source =
-                    directory.sails.Length > sourceIndex ? directory.sails[sourceIndex] : null;
+                    directory.sails.Length > SourceIndex ? directory.sails[SourceIndex] : null;
                 var sourceSail = source ? source.GetComponent<Sail>() : null;
                 if (
                     !sourceSail
-                    || sourceSail.prefabIndex != sourceIndex
+                    || sourceSail.prefabIndex != SourceIndex
                     || sourceSail.category != SailCategory.staysail
                     || sourceSail.sailName != "brig jib"
                 )
                     throw new InvalidOperationException(
-                        $"Expected the brig jib staysail at index {sourceIndex}."
+                        $"Expected the brig jib staysail at index {SourceIndex}."
                     );
                 var sourceRenderer = sourceSail.cloth
                     ? sourceSail.cloth.GetComponent<SkinnedMeshRenderer>()
@@ -58,14 +58,17 @@ namespace FishermansSail.Sails.FishermansStaysail
                     );
 
                 var sourceMesh = sourceRenderer.sharedMesh;
-                var geometry = createGeometry(sourceSail.installHeight);
 
                 // An inactive parent prevents Awake/Start from running on our
                 // template. Installed copies retain activeSelf=true and initialize normally.
-                container = new GameObject(objectPrefix + " Prefabs");
+                container = new GameObject("FishermansStaysail Prefabs");
                 container.SetActive(false);
                 container.transform.SetParent(directory.transform, false);
                 var clone = Object.Instantiate(source, container.transform, false);
+                var shape = clone.AddComponent<TShape>();
+                var objectPrefix = shape.ObjectPrefix;
+                container.name = objectPrefix + " Prefabs";
+                var geometry = shape.Create(sourceSail.installHeight, TemplateHeadSlope);
                 clone.name = $"{prefabIndex} SAIL {displayName}";
                 var sail = clone.GetComponent<Sail>();
                 sail.prefabIndex = prefabIndex;
@@ -138,7 +141,6 @@ namespace FishermansSail.Sails.FishermansStaysail
                     8,
                 };
                 shadowMesh.RecalculateBounds();
-                clone.AddComponent<TShape>();
                 FishermansStaysailRig.Configure(sail, geometry, mesh, shadowMesh);
                 FishermansStaysailAppearance.Configure(sail);
                 var renderer = sail.cloth.GetComponent<SkinnedMeshRenderer>();
@@ -152,7 +154,7 @@ namespace FishermansSail.Sails.FishermansStaysail
                     );
 
                 string registrationMessage =
-                    $"Registered {displayName}: source={sourceIndex}, index={prefabIndex}, "
+                    $"Registered {displayName}: source={SourceIndex}, index={prefabIndex}, "
                     + $"vertices={mesh.vertexCount}, corners=4, pinnedLuff=true, "
                     + $"area={sourceSail.GetSailArea():F2}->{sail.sailArea:F2}. Original brig jib preserved.";
 

@@ -195,8 +195,12 @@ stay's forward endpoint, with 15 cm head and aft-mast clearances.
 Native collision checks remain active; custom fit checks use forward spar
 length and mast separation. The deployed luff must fit its selected section.
 
-Each mark provides a cut through `FishermansStaysailShape`. The shared prefab
-builder gives each mark its own cloth and shadow meshes. On first binding,
+Each mark provides its cut and owned-asset prefix through
+`FishermansStaysailShape`. Registration attaches that shape to the clone under
+an inactive container and uses it for template geometry and asset naming;
+callers supply only the selected shape type, prefab identity and current prefab.
+The family prefab builder owns brig-jib donor index **110** and the **20°**
+template head slope, giving each mark its own cloth and shadow meshes. On first binding,
 each creates an owned mesh for the actual stay angle before enabling Cloth.
 The mesh and bind poses then remain fixed. Its luff is straight and fully
 pinned; the current experiment holds the aft head at 14° while retaining the

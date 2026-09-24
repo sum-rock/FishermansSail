@@ -13,11 +13,8 @@ namespace FishermansSail.Sails.FishermansStaysail.MkB
             prefab = FishermansStaysailPrefab.Register<FishermansStaysailMkBShape>(
                 directory,
                 prefab,
-                MkA.FishermansStaysailMkA.SourceIndex,
                 PrefabIndex,
-                DisplayName,
-                "FishermansStaysailMkB",
-                width => FishermansStaysailMkBGeometry.Create(width)
+                DisplayName
             );
 
         internal static void AddToShipyard(Shipyard shipyard) =>

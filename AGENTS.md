@@ -68,7 +68,11 @@ The custom staysail family is in `Sails/FishermansStaysail/`; `MkA/` contains
 the first cut and registration (prefab **401**); `MkB/` has the 90° foot cut
 and registration (prefab **402**). Family patches, controls,
 reefing and rig remain separate from the Flying Sail. Tests mirror the family
-and mark directories. Each boat profile supplies authored mast ancestry for
+and mark directories. Each mark's shape component supplies template and instance
+geometry and asset prefixes. The family prefab builder owns donor **110** and
+the **20°** template slope; do not reintroduce independent geometry/prefix
+registration arguments or a Mk.B dependency on Mk.A's donor constant.
+Each boat profile supplies authored mast ancestry for
 both supports and the aft-base halyard source.
 The first Mk.A in-game pass reported deckward reefing, excessive starting size
 and incorrect SailInfo angles; see lesson 16. Revised behavior and full stay/save
@@ -377,7 +381,9 @@ support-mast removal, deck-up hoisting and parked ropes with invisible struck cl
     unchanged. Geometry and assembly checks pass; Sanbuq/Brig sheet sweeps and
     in-game cloth stability remain pending. The user reported that the 20°
     experiment appeared to work and requested another 6° inward, then reported
-    the 14° setting was pretty good. This does not establish all-tack stability.
+    the 14° setting was pretty good. Initial in-game validation after CLEANUP-3
+    also looked good, according to the user; the scenarios were not itemized.
+    This does not establish all-tack stability.
 
 20. **Mk.A reefs from the aft mast through the top-aft corner.** Clone the aft
     base's native reef winch and bind the sail's existing reef controller.

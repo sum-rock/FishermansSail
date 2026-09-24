@@ -4,8 +4,6 @@ namespace FishermansSail.Sails.FishermansStaysail.MkA
 {
     internal static class FishermansStaysailMkA
     {
-        internal const int SourceIndex = 110;
-
         // Stable across launches: Sailwind stores this index in boat saves.
         internal const int PrefabIndex = 401;
         internal const string DisplayName = "Fisherman's Staysail Mk.A";
@@ -15,11 +13,8 @@ namespace FishermansSail.Sails.FishermansStaysail.MkA
             prefab = FishermansStaysailPrefab.Register<FishermansStaysailMkAShape>(
                 directory,
                 prefab,
-                SourceIndex,
                 PrefabIndex,
-                DisplayName,
-                "FishermansStaysailMkA",
-                width => FishermansStaysailMkAGeometry.Create(width)
+                DisplayName
             );
 
         internal static void AddToShipyard(Shipyard shipyard) =>

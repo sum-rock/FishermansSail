@@ -202,10 +202,12 @@ marks, sizes, slopes, tacks, sheets, reefs, loads and valid/invalid edge budgets
 all sampled points, fixed heads and success/failure results agree. Assembly
 checks verify the required fixed-angle policy and active edge-fit call.
 
-**In-game validation:** Pending. Check both marks on Brig, then Sanbuq: both
-tacks, eased/tight sheets, partial/full reef and redeployment, with no Cloth
-reset or mesh changes. Automated equivalence does not establish Unity Cloth
-stability. No installed game files or saves were changed.
+**In-game validation:** The user reported that initial validation looked good
+after CLEANUP-3. The boats and scenarios covered were not itemized, so full
+validation remains pending: both marks on Brig, then Sanbuq, both tacks,
+eased/tight sheets, partial/full reef and redeployment, with no Cloth reset or
+mesh changes. Automated equivalence does not establish Unity Cloth stability.
+No installed game files or saves were changed during implementation.
 
 ### CLEANUP-4 — Extract identical shared calculations
 
@@ -231,12 +233,14 @@ geometry checks, the Release build and assembly checks. Validate both sail
 families in-game for propulsion, appearance and shipyard interactions affected
 by the extracted code.
 
-**Progress:** Not started. Checks run: none for this item. In-game validation:
-pending. Implementation completed: —.
+**Progress:** Deferred at the user's request. The user reverted the extraction
+to preserve independent Flying Sail development. Keep both families' helpers
+separate until that work settles; CLEANUP-5 does not depend on this extraction.
+Checks run: none retained for this item. Implementation completed: —.
 
 ### CLEANUP-5 — Consolidate staysail variant definitions
 
-- [ ] Implementation and applicable automated checks complete.
+- [x] Implementation and applicable automated checks complete.
 
 **Finding:** Prefab registration accepts a shape component, geometry factory and
 object prefix separately, although the shape component also supplies geometry
@@ -257,8 +261,29 @@ template geometry and instance initialization agree. Preserve scaling, native
 appearance and save compatibility. Run registration and geometry checks and
 verify fitting both marks plus existing-save reload in-game.
 
-**Progress:** Not started. Checks run: none for this item. In-game validation:
-pending. Implementation completed: —.
+**Progress:** Complete. Registration now attaches the selected shape component
+to the clone under the inactive template container, then obtains both geometry
+and owned-asset prefixes from that component. Removed the redundant geometry
+factory, prefix and donor arguments. The family prefab builder owns donor
+index **110** and the existing **20°** template head slope. Installed cuts
+continue using the same shape interface with the actual stay slope. Per-mark
+names and IDs **401/402**, scaling, appearance, asset ownership and version
+**0.1.0** are unchanged. Flying Sail code remains isolated; CLEANUP-4 stays
+deferred. Implementation completed: **2026-09-24**.
+
+**Checks:** CSharpier formatting/check, Release build (zero warnings/errors),
+GeometryChecks, AssemblyChecks and `git diff --check` pass. New structural
+checks verify each registration's shape/cut/prefix selection, family donor and
+template slope, construction order under an inactive parent, and the shared
+shape interface used by template and installed-instance initialization. The
+existing mark identity, cut geometry and both-mark behavior matrices pass.
+Assembly checks inspect the registration path; they do not execute Unity
+prefab construction.
+
+**In-game validation:** Fitting both marks and reloading existing saves remain
+pending. Check names, cut selection, scaling, appearance and normal rigging;
+neither suite establishes Unity Cloth stability. No installed game files or
+saves were changed.
 
 ## Deferred work
 
