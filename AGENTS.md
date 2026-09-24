@@ -1,4 +1,4 @@
-# Working on Fisherman's Sail
+# Working on MoreSailwindSails
 
 Current user instructions take precedence over historical design choices.
 Read [README.md](README.md), [Plugin.cs](Plugin.cs) and the relevant code before
@@ -6,6 +6,12 @@ editing. Check `git status --short` and preserve existing user changes.
 
 ## Scope and identity
 
+- MoreSailwindSails is an expandable collection of Sailwind sail types. The
+  current families are Fisherman's Staysails (Mk.A/Mk.B) and Fisherman's Flying
+  Sails, with Fisherman's Stays as supporting rigging. Future sail families
+  belong to this mod without being forced into either existing family's design.
+- The repository and checkout are named `MoreSailwindSails`. This project rename
+  does not rename the existing C# namespace, plugin display name or binary.
 - This is a C# Sailwind mod using BepInEx 5, HarmonyX and Shipyard Expansion.
   The plugin targets `netstandard2.0`; executable checks use .NET 8.
 - Version **0.1.0** is the first public release. Keep GUID

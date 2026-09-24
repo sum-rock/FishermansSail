@@ -1,8 +1,14 @@
-# Fisherman's Sail
+# MoreSailwindSails
 
-Add four-corner **Fisherman's Staysails** to your Sailwind rig. Fit a
-**Fisherman's Stay** between two masts, then choose one of two sail shapes in
-the shipyard. The mod also includes a separate **Fisherman's Flying Sail**.
+MoreSailwindSails adds new sail types to Sailwind, with room for more as they
+are developed. The mod currently includes two sail families:
+
+- **Fisherman's Staysails** — Mk.A and Mk.B cuts fitted to a Fisherman's Stay
+  between two masts.
+- **Fisherman's Flying Sails** — sails fitted directly to a physical mast,
+  with an active mast behind it for support.
+
+**Fisherman's Stays** provide the rigging mounts for the staysail family.
 
 Version **0.1.0**.
 
@@ -22,6 +28,8 @@ Leopard and Shroud require their corresponding boat mods. Available stay
 variants depend on the boat and its fitted masts.
 
 ## Requirements and installation
+
+The current release of MoreSailwindSails ships as `FishermansSail.dll`.
 
 - **BepInEx 5**
 - **Shipyard Expansion** (developed against version 0.11.1)
@@ -65,9 +73,9 @@ Fully lowering it hides the sail.
 
 ## Removing the mod
 
-Before uninstalling, remove all Fisherman's sails, remove the Fisherman's Stays,
-and save your game. Remove fitted sails before removing the masts that support
-them.
+Before uninstalling, remove all sails and rigging added by MoreSailwindSails
+(currently the Fisherman's sails and stays), then save your game. Remove fitted
+sails before removing the stays or masts that support them.
 
 For building the mod, technical details and testing notes, see the
 [development guide](docs/DEVELOPMENT.md).

@@ -1,4 +1,13 @@
-# Development
+# MoreSailwindSails development
+
+MoreSailwindSails is a collection of additional sail types for Sailwind.
+Fisherman's Staysails (Mk.A/Mk.B) and Fisherman's Flying Sails are the two
+current sail families; Fisherman's Stays supply supporting rigging. Additional
+families can be developed within the same mod as their own features.
+
+The repository and local checkout are named `MoreSailwindSails`. The current
+release retains the `FishermansSail` project/namespace and DLL, plugin GUID
+`com.august.fishermanssail`, and BepInEx display name `Fisherman's Sail`.
 
 ## Environment and build
 
@@ -79,8 +88,10 @@ Use `./install-local.sh "/path/to/Sailwind"` for another installation. This
 script copies only the built DLL; it does not build it. Builds and checks do
 not replace the installed plugin or change saves.
 
-Confirm `Fisherman's Sail 0.1.0 loaded!` in `BepInEx/LogOutput.log`. Registration
-should report donor index **110**, sail index **400** and **825** vertices. Read
+Confirm the retained startup message `Fisherman's Sail 0.1.0 loaded!` in
+`BepInEx/LogOutput.log`. Flying Sail registration should report donor index
+**110**, sail index **400** and **825** vertices. Staysail registrations use
+indices **401** (Mk.A) and **402** (Mk.B). Read
 Unity's `Player.log` as well when diagnosing warnings or cloth problems; this
 machine's paths are recorded in [AGENTS.md](../AGENTS.md).
 
@@ -109,9 +120,9 @@ checks.
 
 ## Source organization
 
-`Plugin.cs` owns the plugin metadata and assembly-wide Harmony registration.
-The plugin identity and output remain `FishermansSail`; the existing sail is
-named **Fisherman's Flying Sail** in game.
+`Plugin.cs` owns the plugin metadata and assembly-wide Harmony registration for
+MoreSailwindSails. Each sail family owns its mechanics and game-facing names;
+the project rename does not change existing menus or saved sail identities.
 
 - `Sails/FishermansFlyingSail/` contains the mast-mounted sail's registration,
   geometry, appearance, cloth rig and controls, using the namespace
@@ -136,12 +147,17 @@ named **Fisherman's Flying Sail** in game.
   `MkB/` keeps its head and has a 90° foot. Each mark supplies its own
   `FishermansStaysailShape` and save identity.
 
+Add future sail families under their own `Sails/<Family>/` directory with
+corresponding feature tests. Reuse existing mechanics only when their behavior
+fits the new sail; the deferred shared-helper cleanup is not a prerequisite.
+
 The geometry checks link feature sources directly; update their project includes
 when moving files. The assembly checks resolve internal types by full name;
 update those references when renaming types or namespaces. Runtime object and
-mesh labels use `FishermansFlyingSail`; donor hierarchy names remain unchanged.
-Prefab index **400**, native mast save slots and version **0.1.0** are unchanged.
-The new menu name and loading existing sails still need in-game verification.
+mesh labels use each family's or mark's prefix; donor hierarchy names remain
+unchanged. Prefab IDs **400/401/402**, native save slots and version **0.1.0**
+are unchanged. Existing-save reload after registration cleanup still needs
+in-game verification.
 
 ### Test organization
 

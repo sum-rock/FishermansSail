@@ -1,4 +1,4 @@
-# Deferred architecture cleanup
+# MoreSailwindSails — deferred architecture cleanup
 
 CLEANUP-1, CLEANUP-2, CLEANUP-3 and CLEANUP-5 are implemented and passed their
 applicable automated checks. Their detailed history is in Git; current behavior
