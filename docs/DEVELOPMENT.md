@@ -470,7 +470,8 @@ the corresponding boat model frame before comparison. Mast collider axes identif
 the spar direction; the native winch datum supplies attachment radius and facing.
 Mast fittings can sit below the native sail-space collider's axial range, so that
 range is not treated as the physical bottom of the spar. Deck-facing coils near a
-mast remain deck fittings. Other controls use the tangent to their native face.
+mast remain deck fittings. Other controls use the tangent to their native face,
+except Brig sheet controls, which use measured solid rail-cap segments below.
 
 Spacing uses the installed interaction-sphere size, with a 0.35 m minimum and
 2 cm between reserved radii. Mast candidates prefer the native face vertically,
@@ -485,13 +486,12 @@ checks; a tangent or cylindrical approximation does not model every hull detail.
 `tests/GeometryChecks/FishermansStay/WinchMeasurements.txt` contains only numeric
 measurements: boat, source mast ID, role, donor position, face normal, support axis
 point and interaction radius. Checks cover all supported profile references,
-three extra controls per donor in isolation, reservation lifecycle and invariance
-of mast attachment radius/facing. Assembly checks verify structural clone and
-teardown wiring; they do not simulate Unity Awake/Start, previews, handles or
+three extra controls per tangent/mast donor in isolation, at least two per bounded
+Brig rail donor, reservation lifecycle and invariance of mast attachment radius/facing.
+Assembly checks verify structural clone and teardown wiring; they do not simulate Unity Awake/Start, previews, handles or
 outlines. The user reported improved placement; full coverage on all seven
 boats remains pending. Follow the winch validation scenarios in
 [AGENTS.md](../AGENTS.md). No game assets or DLLs are included in the fixture.
-
 
 The 2026-09-24 organizational follow-up consolidated the boat tables without
 changing their authored values or ordering. Before/after canonical snapshots
@@ -500,3 +500,35 @@ section chains and 453 placement cases. The full Release build, formatting,
 geometry and assembly checks passed. Profile checks also cover missing entries,
 Leopard's three-section chain and rejection of cyclic ancestry. This refactor
 adds no new in-game validation; the outstanding winch scenarios above still apply.
+
+### Brig rail correction (2026-09-24)
+
+The user's `screenshot_20260924_214716-region.png` shows an added sheet winch
+floating outboard and another over the stair opening. The former horizontal
+tangents ran mostly across the boat; tangent alignment did not establish that a
+solid surface supported a candidate. Installed aft sheet donors also have
+inconsistent heights relative to the rail cap.
+
+All 24 Brig left/right donor mappings now use boat-local centerlines measured
+from `level24`'s `medi medium new/structure_container/trim_006`. The three usable
+faces on each side span z **-4.2071 to -8.3161**, **-8.3493 to -11.7052**, and
+**-12.0830 to -13.0060** metres. Short bevels and bends are omitted, and each
+end is inset by the measured interaction radius. Candidates follow rail height,
+remain within **1.401 m** of their donor, and are tried nearest first. The
+installed winch mesh's base is local z **-0.095856** at scale **0.8**; mounting
+origins sit **0.0766848 m** along the cap normal, with the parent mount rotated
+to align the donor face to that normal. Native donors are not moved.
+
+`tests/GeometryChecks/FishermansStay/BrigRailMeasurements.txt` records independent
+numeric face bounds. Checks verify seating and orientation, rail-end clearance,
+stair avoidance, rejection of the former across-boat offsets, neighboring native
+fittings, multiple controls and exhaustion. Other boats and Brig mast winches
+retain their existing placement paths; all shared consumers of a corrected Brig
+sheet mapping use the same rail positions. Reservation ownership, wheel input,
+rope binding and the hide/diagnostic/retry behavior are unchanged.
+
+Release build, GeometryChecks, AssemblyChecks and formatting passed for this
+correction. In-game confirmation remains pending: inspect both sides on Brig,
+including multiple/mixed sails, mouse/VR handles and outlines, boat movement,
+preview cancellation and save/reload. Automated geometry checks do not establish
+live Unity accessibility or appearance.

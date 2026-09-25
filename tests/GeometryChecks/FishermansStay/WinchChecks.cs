@@ -154,7 +154,7 @@ internal static class WinchChecks
                 axisPoint
             );
             Check(
-                candidates.Length >= 4,
+                candidates.Length >= (definition.RailSegments == null ? 4 : 1),
                 "A measured winch has too few mounting candidates: " + line
             );
             var sourceRadial = Vector3.ProjectOnPlane(origin - axisPoint, definition.Direction);
@@ -184,7 +184,7 @@ internal static class WinchChecks
                         "Mast fitting escaped its bounded height band."
                     );
                 }
-                else
+                else if (definition.RailSegments == null)
                 {
                     Check(
                         delta.magnitude >= 0.34f && delta.magnitude <= 1.401f,
@@ -205,7 +205,7 @@ internal static class WinchChecks
                 );
             }
             var capacity = new WinchReservations();
-            for (int i = 0; i < 3; i++)
+            for (int i = 0; i < (definition.RailSegments == null ? 3 : 2); i++)
                 Check(
                     capacity.Acquire(
                         donor,
@@ -214,7 +214,7 @@ internal static class WinchChecks
                         radius,
                         (position, r) => WinchReservations.Overlap(position, r, origin, radius)
                     ) != null,
-                    "Measured donor cannot serve three extra controls: " + line
+                    "Measured donor has insufficient safe mounting capacity: " + line
                 );
             measured++;
         }
@@ -222,6 +222,7 @@ internal static class WinchChecks
             measured == BoatRigCatalog.All.Sum(b => b.WinchMounts.Length),
             "A mounting profile has no installed-asset measurement."
         );
+        BrigWinchChecks.Run();
         Console.WriteLine(
             $"PASS: shared winch allocation, release, donor changes, bounded placement and {measured} installed donor datums across seven boats. Surface accessibility and Unity lifecycle require in-game validation."
         );

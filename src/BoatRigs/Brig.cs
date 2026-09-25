@@ -63,179 +63,71 @@ namespace MoreSailwindSails.BoatRigs
                 new WinchMountDefinition(5, WinchRole.Reef, new Vector3(0f, 1f, 0f), true, 5),
                 new WinchMountDefinition(6, WinchRole.Reef, new Vector3(0f, 1f, 0f), true, 6),
                 new WinchMountDefinition(7, WinchRole.Reef, new Vector3(0f, 1f, 0f), true, 7),
-                new WinchMountDefinition(
-                    15,
-                    WinchRole.Left,
-                    new Vector3(0.992723f, 0f, 0.120421f),
-                    false,
-                    -1
-                ),
-                new WinchMountDefinition(
-                    15,
-                    WinchRole.Right,
-                    new Vector3(0.992723f, 0f, 0.120421f),
-                    false,
-                    -1
-                ),
-                new WinchMountDefinition(
-                    16,
-                    WinchRole.Left,
-                    new Vector3(0.992723f, 0f, 0.120421f),
-                    false,
-                    -1
-                ),
-                new WinchMountDefinition(
-                    16,
-                    WinchRole.Right,
-                    new Vector3(0.992723f, 0f, 0.120421f),
-                    false,
-                    -1
-                ),
-                new WinchMountDefinition(
-                    18,
-                    WinchRole.Left,
-                    new Vector3(0.992723f, 0f, 0.120421f),
-                    false,
-                    -1
-                ),
-                new WinchMountDefinition(
-                    18,
-                    WinchRole.Right,
-                    new Vector3(0.992723f, 0f, 0.120421f),
-                    false,
-                    -1
-                ),
-                new WinchMountDefinition(
-                    20,
-                    WinchRole.Left,
-                    new Vector3(0.992723f, 0f, 0.120421f),
-                    false,
-                    -1
-                ),
-                new WinchMountDefinition(
-                    20,
-                    WinchRole.Right,
-                    new Vector3(0.992723f, 0f, 0.120421f),
-                    false,
-                    -1
-                ),
-                new WinchMountDefinition(
-                    22,
-                    WinchRole.Left,
-                    new Vector3(0.943135f, 0f, 0.332409f),
-                    false,
-                    -1
-                ),
-                new WinchMountDefinition(
-                    22,
-                    WinchRole.Right,
-                    new Vector3(0.992723f, 0f, 0.120421f),
-                    false,
-                    -1
-                ),
-                new WinchMountDefinition(
-                    24,
-                    WinchRole.Left,
-                    new Vector3(0.943135f, 0f, 0.332409f),
-                    false,
-                    -1
-                ),
-                new WinchMountDefinition(
-                    24,
-                    WinchRole.Right,
-                    new Vector3(0.992723f, 0f, 0.120421f),
-                    false,
-                    -1
-                ),
+                SheetMount(15, WinchRole.Left),
+                SheetMount(15, WinchRole.Right),
+                SheetMount(16, WinchRole.Left),
+                SheetMount(16, WinchRole.Right),
+                SheetMount(18, WinchRole.Left),
+                SheetMount(18, WinchRole.Right),
+                SheetMount(20, WinchRole.Left),
+                SheetMount(20, WinchRole.Right),
+                SheetMount(22, WinchRole.Left),
+                SheetMount(22, WinchRole.Right),
+                SheetMount(24, WinchRole.Left),
+                SheetMount(24, WinchRole.Right),
                 new WinchMountDefinition(56, WinchRole.Reef, new Vector3(0f, 1f, 0f), true, 5),
                 new WinchMountDefinition(58, WinchRole.Reef, new Vector3(0f, 1f, 0f), true, 58),
                 new WinchMountDefinition(59, WinchRole.Reef, new Vector3(0f, 1f, 0f), true, 59),
                 new WinchMountDefinition(60, WinchRole.Reef, new Vector3(0f, 1f, 0f), true, 60),
-                new WinchMountDefinition(
-                    61,
-                    WinchRole.Left,
-                    new Vector3(0.549092f, 0f, -0.835762f),
-                    false,
-                    -1
-                ),
-                new WinchMountDefinition(
-                    61,
-                    WinchRole.Right,
-                    new Vector3(0.992722f, 0f, 0.120428f),
-                    false,
-                    -1
-                ),
-                new WinchMountDefinition(
-                    62,
-                    WinchRole.Left,
-                    new Vector3(0.549092f, 0f, -0.835762f),
-                    false,
-                    -1
-                ),
-                new WinchMountDefinition(
-                    62,
-                    WinchRole.Right,
-                    new Vector3(0.992722f, 0f, 0.120428f),
-                    false,
-                    -1
-                ),
-                new WinchMountDefinition(
-                    63,
-                    WinchRole.Left,
-                    new Vector3(0.549092f, 0f, -0.835762f),
-                    false,
-                    -1
-                ),
-                new WinchMountDefinition(
-                    63,
-                    WinchRole.Right,
-                    new Vector3(0.992722f, 0f, 0.120428f),
-                    false,
-                    -1
-                ),
-                new WinchMountDefinition(
-                    64,
-                    WinchRole.Left,
-                    new Vector3(0.549092f, 0f, -0.835762f),
-                    false,
-                    -1
-                ),
-                new WinchMountDefinition(
-                    64,
-                    WinchRole.Right,
-                    new Vector3(0.992722f, 0f, 0.120428f),
-                    false,
-                    -1
-                ),
-                new WinchMountDefinition(
-                    65,
-                    WinchRole.Left,
-                    new Vector3(0.943135f, 0f, 0.332409f),
-                    false,
-                    -1
-                ),
-                new WinchMountDefinition(
-                    65,
-                    WinchRole.Right,
-                    new Vector3(0.992722f, 0f, 0.120426f),
-                    false,
-                    -1
-                ),
-                new WinchMountDefinition(
-                    66,
-                    WinchRole.Left,
-                    new Vector3(0.943135f, 0f, 0.332409f),
-                    false,
-                    -1
-                ),
-                new WinchMountDefinition(
-                    66,
-                    WinchRole.Right,
-                    new Vector3(0.992722f, 0f, 0.120426f),
-                    false,
-                    -1
-                ),
+                SheetMount(61, WinchRole.Left),
+                SheetMount(61, WinchRole.Right),
+                SheetMount(62, WinchRole.Left),
+                SheetMount(62, WinchRole.Right),
+                SheetMount(63, WinchRole.Left),
+                SheetMount(63, WinchRole.Right),
+                SheetMount(64, WinchRole.Left),
+                SheetMount(64, WinchRole.Right),
+                SheetMount(65, WinchRole.Left),
+                SheetMount(65, WinchRole.Right),
+                SheetMount(66, WinchRole.Left),
+                SheetMount(66, WinchRole.Right),
             };
+
+        private static WinchMountDefinition SheetMount(int mast, WinchRole role)
+        {
+            // level24/medi medium new/structure_container/trim_006, measured
+            // 2026-09-24. Centerlines of the long, solid rail-cap faces; omit the
+            // short bevels/bends. The cap is mirrored about boat x = -0.0067 m.
+            Vector3 Point(float x, float y, float z) =>
+                new Vector3(role == WinchRole.Left ? x : -x - 0.0134f, y, z);
+            var normal = new Vector3(-0.003216f, 0.999643f, 0.026511f);
+            if (role == WinchRole.Left)
+            {
+                if (mast >= 61 && mast <= 64)
+                    normal = new Vector3(0.062461f, 0.997203f, 0.041037f);
+                else if (mast == 22 || mast == 24 || mast == 65 || mast == 66)
+                    normal = new Vector3(-0.008877f, 0.999643f, 0.025186f);
+            }
+            return new WinchMountDefinition(
+                mast,
+                role,
+                normal,
+                // Installed winch mesh base z = -0.095856, at scale 0.8.
+                0.0766848f,
+                new WinchRailSegment(
+                    Point(-3.16415f, 5.1307f, -4.2071f),
+                    Point(-3.1002f, 5.2706f, -8.3161f)
+                ),
+                new WinchRailSegment(
+                    Point(-3.0983f, 5.2719f, -8.3493f),
+                    Point(-2.754f, 5.4098f, -11.7052f)
+                ),
+                new WinchRailSegment(
+                    Point(-2.71175f, 5.4507f, -12.083f),
+                    Point(-2.5748f, 5.6009f, -13.006f)
+                )
+            );
+        }
 
         // Authored from installed Brig and Shipyard Expansion assets.
         // Endpoint vectors are local to the named physical mast section.

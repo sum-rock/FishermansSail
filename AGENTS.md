@@ -191,6 +191,11 @@ winch coverage, appearance and full cloth/reefing scenarios remain pending.
 The CLEANUP-5 handoff passed Release, both suites and formatting checks.
 Mk.C’s rising foot and revised collision strips still require in-game validation
 on Brig, then Sanbuq; automated checks do not establish Cloth behavior.
+The 2026-09-24 Brig screenshot showed unsupported sheet winches outside the rail
+and over the stairs. All 24 Brig sheet mappings now use measured, bounded solid
+rail-cap segments with corrected base height/facing. Release and both suites
+passed; visual seating, mouse/VR accessibility and mixed-sail/save-reload runtime
+checks remain pending.
 
 ## Local investigation and handoff
 
