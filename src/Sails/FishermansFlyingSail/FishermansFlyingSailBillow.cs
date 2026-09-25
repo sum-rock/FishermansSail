@@ -7,7 +7,7 @@ namespace MoreSailwindSails.Sails.FishermansFlyingSail
     {
         // The free leech has up to 6% width of travel about its fitted curve.
         // Reduce movement progressively through the cloth near the clew.
-        // Moving skin targets carry the top/luff camber across the sail.
+        // Moving skin targets carry the circular camber through the head and foot.
         // Bound travel near the luff by the physical mast gap. Farther aft,
         // retain the existing foot, free leech and clew reinforcement limits.
         internal static float ClothTravel(
@@ -18,14 +18,23 @@ namespace MoreSailwindSails.Sails.FishermansFlyingSail
             float maximumScale = 1
         ) =>
             Math.Min(
-                width
-                    * ClewTaper(u, v)
-                    * (
-                        (0.08f * (1 - v) + 0.13f * v) * (float)Math.Sin(Math.PI * u)
-                        + 0.015f * u
-                        + 0.045f * u * (float)Math.Sin(Math.PI * v)
-                        + 0.04f * (float)Math.Pow(1 - u, 4) * (float)Math.Sin(Math.PI * v)
-                    ),
+                Math.Min(
+                    FishermansFlyingSailGeometry.RestCamber(width, u, v) * 0.6f
+                        + width
+                            * (
+                                0.015f * u
+                                + (0.045f * u + 0.04f * (float)Math.Pow(1 - u, 4))
+                                    * (float)Math.Sin(Math.PI * v)
+                            ),
+                    width
+                        * ClewTaper(u, v)
+                        * (
+                            (0.08f * (1 - v) + 0.13f * v) * (float)Math.Sin(Math.PI * u)
+                            + 0.015f * u
+                            + 0.045f * u * (float)Math.Sin(Math.PI * v)
+                            + 0.04f * (float)Math.Pow(1 - u, 4) * (float)Math.Sin(Math.PI * v)
+                        )
+                ),
                 (
                     FishermansFlyingSailFrameGeometry.TieLength * 0.25f
                     + width * u * minimumScale * 0.5f

@@ -35,7 +35,6 @@ namespace MoreSailwindSails.Sails.FishermansFlyingSail
         public Vector3 OriginalHingeAnchor;
         public bool OriginalAutoAnchor;
         public FishermansFlyingSailSupportLine SupportLine;
-        public FishermansFlyingSailLuffTies LuffTies;
         public Transform Shadow;
         private float clothLoad;
         private float camber = 1;
@@ -167,8 +166,12 @@ namespace MoreSailwindSails.Sails.FishermansFlyingSail
             var connections = sail.GetComponent<SailConnections>();
             var left = connections.angleControllerLeft.GetComponent<RopeEffect>();
             var right = connections.angleControllerRight.GetComponent<RopeEffect>();
-            rig.SupportLine = FishermansFlyingSailSupportLine.Create(sail.transform, left, right);
-            rig.LuffTies = FishermansFlyingSailLuffTies.Create(sail.transform, rig.Bones, left);
+            rig.SupportLine = FishermansFlyingSailSupportLine.Create(
+                sail.transform,
+                left,
+                right,
+                rig.Bones
+            );
             rig.SheetAttachment = left.attachment;
             if (!rig.SheetAttachment || right.attachment != rig.SheetAttachment)
                 throw new InvalidOperationException("Expected a shared brig jib sheet attachment.");
@@ -539,6 +542,12 @@ namespace MoreSailwindSails.Sails.FishermansFlyingSail
             }
         }
 
+        private void OnDisable()
+        {
+            if (SupportLine)
+                SupportLine.Hide();
+        }
+
         private void LateUpdate()
         {
             if (!Sail || Bones == null || Bones.Length != FishermansFlyingSailGeometry.BoneCount)
@@ -655,17 +664,6 @@ namespace MoreSailwindSails.Sails.FishermansFlyingSail
                 rigging.UpdateHalyard(HalyardAttachments, state == 0);
                 if (state == 0)
                     SheetAttachment.position = rigging.Pair.ForeGuide.position;
-                if (!GameState.currentlyLoading)
-                    SupportLine.Draw(
-                        state == 0 ? rigging.Pair.AftGuide.position : Bones[1].position,
-                        rigging.Pair.AftGuide.position
-                    );
-                else
-                    SupportLine.Hide();
-            }
-            else
-            {
-                SupportLine.Hide();
             }
             UpdateShapeBones(supported);
             RefreshAerodynamics();
@@ -680,19 +678,23 @@ namespace MoreSailwindSails.Sails.FishermansFlyingSail
             Sail.cloth.enabled = supported && state == 2;
             var clothRenderer = Sail.cloth.GetComponent<SkinnedMeshRenderer>();
             bool visible = supported && !GameState.currentlyLoading;
-            if (visible && state != 0)
+            if (visible)
             {
                 rigging.LuffSailFrame(out var luffPoint, out var axis);
-                LuffTies.Draw(
+                SupportLine.Draw(
+                    Bones,
+                    rigging.Pair.AftGuide.position,
+                    rigging.Pair.ForeGuide.position,
                     FishermansFlyingSailFrameGeometry.AftDirection(
                         luffPoint,
                         axis,
                         rigging.AftReference
-                    )
+                    ),
+                    state == 0
                 );
             }
             else
-                LuffTies.Hide();
+                SupportLine.Hide();
             // WindCloth writes renderer.enabled in Update; select the correct
             // renderer here in LateUpdate so the disabled solver cannot leave
             // stale full-size triangles visible when the sail is struck.

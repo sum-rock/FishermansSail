@@ -118,28 +118,6 @@ namespace MoreSailwindSails.Sails.FishermansFlyingSail
             return Math.Max(0, Math.Min(1, 1 - totalLength / currentLength));
         }
 
-        // Two spans meet exactly at the mast guide (t = 0.5). These are visual
-        // sheets driven by native slack, not additional physical constraints.
-        internal static Vector3 UpperSheetPoint(
-            Vector3 head,
-            Vector3 guide,
-            Vector3 control,
-            float slack,
-            float t
-        )
-        {
-            var from = t <= 0.5f ? head : guide;
-            var to = t <= 0.5f ? guide : control;
-            float along = t <= 0.5f ? t * 2 : (t - 0.5f) * 2;
-            float sag = (to - from).magnitude * (0.005f + 0.08f * Math.Max(0, Math.Min(1, slack)));
-            return FishermansFlyingSailBillow.SupportPoint(
-                from,
-                to,
-                new Vector3(0, -sag, 0),
-                along
-            );
-        }
-
         internal static Vector3 RotateAroundMast(
             Vector3 point,
             Vector3 pivot,

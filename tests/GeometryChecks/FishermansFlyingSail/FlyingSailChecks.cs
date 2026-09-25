@@ -180,7 +180,7 @@ internal static class FlyingSailChecks
             ),
             "Actual rig changes must update the hinge."
         );
-        CheckUpperSheets();
+        CheckSheetSlack();
         CheckUpperGuideSelection();
         Console.WriteLine(
             "PASS: fixed eighteen-inch mast ties, offset trim pivot, mast radii, rake, scaling, hoisting, boat motion, moving aft head/clew and upper pulley routes."
@@ -299,68 +299,8 @@ internal static class FlyingSailChecks
             .Select(position => new FishermansFlyingSailSheetGuideState(position, true, true))
             .ToArray();
 
-    private static void CheckUpperSheets()
+    private static void CheckSheetSlack()
     {
-        var head = new Vector3(4, 12, 7);
-        var guide = new Vector3(0, 18, 10);
-        var controls = new[] { new Vector3(-2, 1, 12), new Vector3(2, 1, 12) };
-        foreach (var control in controls)
-        foreach (float slack in new[] { 0f, 0.25f, 1f })
-        {
-            Near(
-                FishermansFlyingSailFrameGeometry.UpperSheetPoint(head, guide, control, slack, 0),
-                head,
-                "Upper sheet detached from the moving head."
-            );
-            Near(
-                FishermansFlyingSailFrameGeometry.UpperSheetPoint(
-                    head,
-                    guide,
-                    control,
-                    slack,
-                    0.5f
-                ),
-                guide,
-                "Upper sheet missed the aft mast's existing upper pulley."
-            );
-            Near(
-                FishermansFlyingSailFrameGeometry.UpperSheetPoint(head, guide, control, slack, 1),
-                control,
-                "Upper sheet failed to join its existing sheet control."
-            );
-            for (int i = 0; i <= 32; i++)
-            {
-                var point = FishermansFlyingSailFrameGeometry.UpperSheetPoint(
-                    head,
-                    guide,
-                    control,
-                    slack,
-                    i / 32f
-                );
-                Check(
-                    float.IsFinite(point.x) && float.IsFinite(point.y) && float.IsFinite(point.z),
-                    "Upper sheet generated invalid positions."
-                );
-            }
-            for (int i = 1; i <= 16; i++)
-                Check(
-                    FishermansFlyingSailFrameGeometry
-                        .UpperSheetPoint(head, guide, control, slack, i / 32f)
-                        .y
-                        > FishermansFlyingSailFrameGeometry
-                            .UpperSheetPoint(head, guide, control, slack, (i - 1) / 32f)
-                            .y,
-                    "The upper sheet must rise from the sail corner to the elevated pulley."
-                );
-            foreach (float t in new[] { 0.25f, 0.75f })
-                Check(
-                    FishermansFlyingSailFrameGeometry.UpperSheetPoint(head, guide, control, 1, t).y
-                        < FishermansFlyingSailFrameGeometry
-                            .UpperSheetPoint(head, guide, control, 0, t)
-                            .y,
-                    "Slack sheets must sag farther than tensioned sheets on both spans."
-                );
-        }
         Check(
             FishermansFlyingSailFrameGeometry.SheetSlack(1, 1) == 0
                 && Math.Abs(FishermansFlyingSailFrameGeometry.SheetSlack(1, 0.44f) - 0.56f) < 1e-6f

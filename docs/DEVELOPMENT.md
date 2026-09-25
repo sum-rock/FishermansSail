@@ -199,11 +199,28 @@ remain unchanged.
   native-styled straight line and separate leaf endpoints. The ropes keep their
   length through sheeting and scaling; mast ends follow the hoisting corners
   vertically. Ties hide when struck, unsupported, loading or disabled.
+- A sail-owned visual route joins each fixed mast tie to its luff corner and
+  aft corner. The shared head span continues to the aft guide, then branches to
+  the sheet controls; lower branches go directly from the clew to those controls.
+  Shared spans draw once. Cubic spans share join directions, limit handles to
+  one-third of adjacent lengths, and add 1–2% gravity sag from native sheet slack.
+  The same native rope material/width is used throughout. A marker-scoped
+  `RopeEffect.LateUpdate` postfix hides this sail's original line and optional
+  `ClothRope` visuals while leaving native tension/input calculations active.
+  Routes draw after the sail pose; striking hides extensions/ties and parks
+  the upper/lower branches at the aft/fore guides. Loading, missing supports and
+  disabling the sail hide the custom routes.
+- The transverse rest section is a circular arc with depth `0.20 × width`,
+  retained through the head, middle and foot. Twelve shaping intervals smooth
+  that arc over the existing 24 × 32 mesh; topology and bind poses are created
+  under the inactive template only. Both edges contain spare fabric and only
+  the four corners are pinned, so fabric can arch away from the ropes. Interior
+  Cloth travel is bounded relative to local camber while retaining edge freedom.
 - The rest mesh includes spare fabric for a mastward luff arc, capped at
   0.2286 m before scaling. Bone targets retain that inward direction on both
   tacks, reduce it with the smallest scale when shrinking, and cap enlargement
   at nine inches. Partial hoists gather the arc using the existing deployment
-  curve. Signed head/interior camber still changes smoothly with the tack.
+  curve. Signed full-height camber changes smoothly with the tack.
   Scale-dependent Cloth coefficients reserve at least a quarter of the mast
   gap beyond the luff arch and its travel sphere. Coefficients update during
   fitting/scaling; tack changes move bones without resetting Cloth.
@@ -224,14 +241,18 @@ remain unchanged.
   white/plain defaults. Scoped patches limit textures and sheet travel only for
   this sail.
 
-Flying Sail trapezoid/tie revision: Release, GeometryChecks, AssemblyChecks and
-formatting passed. Automated checks cover the cut, edge
-budgets, weighted skin, constant tie lengths across trim/hoist/scale and boat
-motion, bounded inward arch, support heights and neutral collision strips.
-Runtime validation is pending on Brig, then Sanbuq: check both tacks, eased
-and tight sheets, weak wind, partial/full lowering and redeployment, mast
-clearance, rope seating, resizing/recoloring, mixed sails, previews/cancellation,
-support removal and save/reload. These checks do not simulate Unity Cloth.
+Flying Sail continuous-rope/circular-billow revision: Release, GeometryChecks,
+AssemblyChecks and formatting passed. Automated checks cover full-height
+circular sections, spare head/foot fabric, weighted skin, corner pins, smooth
+tacks, hoisting, inward luff clearance and neutral collision. Rope checks cover
+attachments, join tangents, bounded sag/handles, collapsed spans and boat motion;
+IL checks verify scoped visual suppression and lifecycle ordering against the
+installed native rope fields. They do not simulate Unity Cloth or rendering.
+Runtime validation is pending on Brig, then Sanbuq, with both rope settings:
+check head/foot fabric separation, smooth rope seating and absence of duplicate
+sheets on both tacks, eased/tight sheets, weak wind, partial/full lowering and
+redeployment. Also check resizing/recoloring, mixed sails, previews/cancellation,
+support removal and save/reload.
 
 See [AGENTS.md](../AGENTS.md) for the code map, installed-assembly inspection
 tools and regression lessons, including approaches that failed in game.

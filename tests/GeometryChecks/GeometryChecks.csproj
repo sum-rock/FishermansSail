@@ -7,6 +7,10 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile
+      Include="../../src/Sails/FishermansFlyingSail/FishermansFlyingSailRopeGeometry.cs"
+      Link="FishermansFlyingSail/FishermansFlyingSailRopeGeometry.cs"
+    />
+    <Compile
       Include="../../src/Controls/WinchPlacementGeometry.cs"
       Link="FishermansStay/WinchPlacementGeometry.cs"
     />

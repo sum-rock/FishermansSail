@@ -51,12 +51,12 @@ internal static class ShapingChecks
             int top = FishermansFlyingSailGeometry.Columns / 2;
             int luff =
                 FishermansFlyingSailGeometry.Rows / 2 * (FishermansFlyingSailGeometry.Columns + 1);
-            foreach (int peak in new[] { top })
+            foreach (int peak in new[] { top, top + luff, top + luff * 2 })
             {
                 float travel = data.Constraints[peak].maxDistance;
                 Check(
                     positive[peak].y - travel > 0 && negative[peak].y + travel < 0,
-                    "Settled top peaks can still billow on the wrong side within their travel sphere."
+                    "Settled head, middle and foot peaks can still billow on the wrong side within their travel sphere."
                 );
             }
             Check(
@@ -102,7 +102,8 @@ internal static class ShapingChecks
                         var pose = Pose(data, width, camber, 1);
                         for (int i = 0; i < pose.Length; i++)
                             Check(
-                                (pose[i] - previous[i]).magnitude < width * 0.8f / fps,
+                                (pose[i] - previous[i]).magnitude
+                                    <= width * (0.4f * (1 - (float)Math.Exp(-3f / fps)) + 1e-5f),
                                 "A tack abruptly displaced the shaping surface."
                             );
                         previous = pose;

@@ -179,12 +179,26 @@ internal static class MastInstallationChecks
         var pulley = new Vector3(0, 22, 10);
         var control = new Vector3(2, 2, 8);
         Near(
-            FishermansFlyingSailFrameGeometry.UpperSheetPoint(pulley, pulley, control, 0, 0),
+            FishermansFlyingSailRopeGeometry.Point(
+                pulley,
+                control,
+                (control - pulley) / 3,
+                (control - pulley) / 3,
+                0,
+                0
+            ),
             pulley,
             "Parked upper rope left its pulley."
         );
         Near(
-            FishermansFlyingSailFrameGeometry.UpperSheetPoint(pulley, pulley, control, 0, 1),
+            FishermansFlyingSailRopeGeometry.Point(
+                pulley,
+                control,
+                (control - pulley) / 3,
+                (control - pulley) / 3,
+                0,
+                1
+            ),
             control,
             "Parked upper rope lost its deck control."
         );

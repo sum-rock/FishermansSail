@@ -19,7 +19,7 @@ namespace MoreSailwindSails.Sails.FishermansFlyingSail
     {
         internal const int Columns = 24;
         internal const int Rows = 32;
-        internal const int ShapeColumns = 6;
+        internal const int ShapeColumns = 12;
         internal const int ShapeStride = Columns / ShapeColumns;
         internal const int BoneCount = (ShapeColumns + 1) * (Rows + 1);
         internal const float ForeDepthRatio = 2f;
@@ -113,11 +113,11 @@ namespace MoreSailwindSails.Sails.FishermansFlyingSail
             + Vector3.up * RestCamber(width, u, v)
             + Vector3.back * RestLuffBow(width, u, v);
 
-        // Extra top-edge cloth is part of the rest mesh, rather than simulated
-        // by stretching a straight panel between two fully separated corners.
+        // A circular section carries spare fabric through the head and foot.
+        // Sample on the bone grid so translation-only skinning reproduces it.
         internal static float RestCamber(float width, float u, float v)
         {
-            if (u < 0 || u >= 1 || v >= 1)
+            if (u < 0 || u >= 1)
                 return 0;
             int left = Math.Min(ShapeColumns - 1, (int)(u * ShapeColumns));
             float blend = u * ShapeColumns - left;
@@ -127,10 +127,12 @@ namespace MoreSailwindSails.Sails.FishermansFlyingSail
 
         private static float CamberSample(float width, float u, float v)
         {
-            if (u >= 1 || v >= 1)
+            if (u <= 0 || u >= 1)
                 return 0;
-            float curve = (float)Math.Sin(Math.PI * u);
-            return width * 0.12f * curve * curve * (1 - v);
+            const float depth = 0.20f;
+            const float radius = 1 / (8 * depth) + depth / 2;
+            float offset = u - 0.5f;
+            return width * ((float)Math.Sqrt(radius * radius - offset * offset) - (radius - depth));
         }
 
         // The luff's spare fabric bends toward the mast on both tacks. Sample

@@ -10,6 +10,7 @@ internal static class PatchChecks
 {
     internal static void Run(Assembly assembly)
     {
+        SheetVisualChecks.Run(assembly);
         // The installed SE save loader and texture button both go through this update.
         // Guarding only the selector would allow an old saved pattern to reappear.
         var textureTarget = assembly

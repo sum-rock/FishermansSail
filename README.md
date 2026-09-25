@@ -80,8 +80,11 @@ The base cut is an isosceles trapezoid: the mast-side edge is twice the
 fore-to-aft fabric span, with a head rising 20° and a foot falling 20° toward
 the aft mast. Two short ropes hold its luff corners 18 inches from the mast;
 that gap stays constant while resizing or trimming. The luff arches inward
-toward the mast while the sail billows. Leave room for the higher aft head
-below its supporting pulley when positioning the sail.
+toward the mast while the sail billows. Smooth head and foot ropes continue
+through those ties to the fore mast, while the fabric arches away in a fuller,
+rounded billow. The upper sheets still pass through the aft masthead guide,
+and the lower sheets run directly to their winches. Leave room for the higher
+aft head below its supporting pulley when positioning the sail.
 
 ## Removing the mod
 

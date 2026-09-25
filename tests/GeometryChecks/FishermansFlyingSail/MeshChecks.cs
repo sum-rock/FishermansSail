@@ -40,7 +40,7 @@ internal static class MeshChecks
             throw new Exception("Invalid width accepted.");
         }
         Console.WriteLine(
-            "PASS: four-corner outline, revised cut, spare top-edge cloth, area, winding, UVs, bone weights, cloth pins, render states, and independent mesh arrays."
+            "PASS: four-corner outline, revised cut, circular full-height camber, spare head/foot cloth, area, winding, UVs, bone weights, cloth pins, render states, and independent mesh arrays."
         );
     }
 
@@ -111,7 +111,10 @@ internal static class MeshChecks
                     )
                 );
         Require(Math.Abs(projectedArea / expected - 1) < 1e-5, "Projected cut area is wrong.");
-        Require(area > expected && area < expected * 1.05, "Camber must add actual cloth area.");
+        Require(
+            area > expected * 1.07 && area < expected * 1.12,
+            "Camber must add actual cloth area."
+        );
         Require(
             (centroid / (float)area - d.Center).magnitude < width * 1e-5f,
             "Wind center must use the revised surface centroid."
@@ -120,14 +123,42 @@ internal static class MeshChecks
         for (int col = 1; col <= FishermansFlyingSailGeometry.Columns; col++)
             topLength += (d.Vertices[col] - d.Vertices[col - 1]).magnitude;
         Require(
-            topLength > (c[1] - c[0]).magnitude && topLength < (c[1] - c[0]).magnitude * 1.05,
+            topLength > (c[1] - c[0]).magnitude * 1.08
+                && topLength < (c[1] - c[0]).magnitude * 1.10,
             "The head needs spare cloth between its fixed endpoints."
         );
         Require(
-            Math.Abs(d.Vertices[FishermansFlyingSailGeometry.Columns / 2].y - width * 0.12f)
+            Math.Abs(d.Vertices[FishermansFlyingSailGeometry.Columns / 2].y - width * 0.20f)
                 < width * 1e-5f,
-            "Top camber must peak at twelve percent of width."
+            "Camber must peak at twenty percent of width."
         );
+        int stride = FishermansFlyingSailGeometry.Columns + 1;
+        double footLength = 0;
+        for (int col = 1; col < stride; col++)
+            footLength += (
+                d.Vertices[FishermansFlyingSailGeometry.Rows * stride + col]
+                - d.Vertices[FishermansFlyingSailGeometry.Rows * stride + col - 1]
+            ).magnitude;
+        Require(
+            Math.Abs(footLength - topLength) < width * 1e-5,
+            "The foot needs the same spare fabric as the head."
+        );
+        // Each shaping station lies on one circle through the head, middle and foot.
+        for (int row = 0; row <= FishermansFlyingSailGeometry.Rows; row++)
+        for (
+            int col = 0;
+            col <= FishermansFlyingSailGeometry.Columns;
+            col += FishermansFlyingSailGeometry.ShapeStride
+        )
+        {
+            var point = d.Vertices[row * stride + col];
+            float across = (float)col / FishermansFlyingSailGeometry.Columns - 0.5f;
+            float height = point.y / width + 0.525f;
+            Require(
+                Math.Abs(across * across + height * height - 0.725f * 0.725f) < 1e-6,
+                "The full-height billow must follow a circular section."
+            );
+        }
         double luffLength = 0;
         for (int row = 1; row <= FishermansFlyingSailGeometry.Rows; row++)
             luffLength += (
