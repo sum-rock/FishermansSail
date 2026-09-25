@@ -91,7 +91,7 @@ internal static class StayChecks
         );
         int variants = 0,
             fallback = 0;
-        int[] counts = { 24, 9, 9, 26, 3, 18, 8 };
+        int[] counts = { 24, 9, 9, 26, 3, 18, 8, 14 };
         for (int boatIndex = 0; boatIndex < BoatRigCatalog.All.Length; boatIndex++)
         {
             var boat = BoatRigCatalog.All[boatIndex];
@@ -156,7 +156,7 @@ internal static class StayChecks
                 variants++;
             }
         }
-        Check(fallback == 17, "Shorter-foremast fallback coverage changed.");
+        Check(fallback == 25, "Shorter-foremast fallback coverage changed.");
         // Actual Brig coordinates straddle the boundary: the same authored aft
         // anchor meets a bare foremast head, or the preferred line on its topmast.
         var brig = BoatRigCatalog.All[0].Stays[0].Variants;
@@ -245,7 +245,7 @@ internal static class StayChecks
             "Stay guard changed flying-sail scope."
         );
         Console.WriteLine(
-            $"PASS: {variants} authored stays across seven boats, {fallback} masthead fallbacks, physical endpoints, topmast dependencies, stable IDs, pose invariance and order text."
+            $"PASS: {variants} authored stays across eight boats, {fallback} masthead fallbacks, physical endpoints, topmast dependencies, stable IDs, pose invariance and order text."
         );
     }
 

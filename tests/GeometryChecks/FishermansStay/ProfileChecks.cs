@@ -19,6 +19,34 @@ internal static class ProfileChecks
         )
             throw new Exception("Profile lookup or ordered mast ancestry changed.");
 
+        var largeDhow = LargeDhow.Definition;
+        if (
+            !ReferenceEquals(BoatRigCatalog.Find("BOAT dhow large (30)(Clone)"), largeDhow)
+            || !largeDhow.Sections(3).SequenceEqual(new[] { 3, 2 })
+            || !largeDhow.Sections(5).SequenceEqual(new[] { 5, 4 })
+        )
+            throw new Exception("Large dhow topmasts lost their matching lower sections.");
+        // Every native combination gets exactly one stay per adjacent mast pair.
+        // Adding a topmast replaces the forward stay without disabling the aft stay.
+        foreach (int fore in new[] { 0, 1 })
+        foreach (int main in new[] { 2, 4 })
+        foreach (bool topmast in new[] { false, true })
+        foreach (int mizzen in new[] { 6, 7, 8 })
+        {
+            var active = new HashSet<int> { fore, main, mizzen };
+            if (topmast)
+                active.Add(main + 1);
+            foreach (var group in largeDhow.Stays)
+                if (
+                    group.Variants.Count(s =>
+                        s.Required.All(active.Contains) && !s.Forbidden.Any(active.Contains)
+                    ) != 1
+                )
+                    throw new Exception(
+                        "Large dhow mast combination has missing or ambiguous stays."
+                    );
+        }
+
         Reject<ArgumentException>(() => leopard.Sections(127));
         Reject<ArgumentException>(() => leopard.Base(127));
         Reject<InvalidOperationException>(() => leopard.WinchMount(127, WinchRole.Reef));

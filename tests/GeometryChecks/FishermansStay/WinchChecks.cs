@@ -206,7 +206,14 @@ internal static class WinchChecks
                 );
             }
             var capacity = new WinchReservations();
-            for (int i = 0; i < (definition.SurfaceSegments == null ? 3 : 2); i++)
+            // The large dhow's mesh-collider reef fittings use the conservative
+            // mesh radius; require one extra slot in the existing height band.
+            // Retain the three-slot requirement for the older mast fittings.
+            int minimum =
+                definition.SurfaceSegments != null ? 2
+                : fields[0] == LargeDhow.Definition.BoatName ? 1
+                : 3;
+            for (int i = 0; i < minimum; i++)
                 Check(
                     capacity.Acquire(
                         donor,
@@ -225,8 +232,9 @@ internal static class WinchChecks
         );
         BrigWinchChecks.Run();
         SurfaceWinchChecks.Run();
+        LargeDhowWinchChecks.Run();
         Console.WriteLine(
-            $"PASS: shared winch allocation, release, donor changes, bounded placement and {measured} installed donor datums across seven boats. Surface accessibility and Unity lifecycle require in-game validation."
+            $"PASS: shared winch allocation, release, donor changes, bounded placement and {measured} installed donor datums across eight boats. Surface accessibility and Unity lifecycle require in-game validation."
         );
     }
 }

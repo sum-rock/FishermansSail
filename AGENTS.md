@@ -145,7 +145,7 @@ implementation notes, asset provenance and verification procedures.
 
 ### Boat profiles and winches
 
-- Seven profiles contain **97 stay variants** and **151 donor/role winch mappings**.
+- Eight profiles contain **111 stay variants** and **180 donor/role winch mappings**.
   Keep authored values in the corresponding boat class, shared types in
   `src/BoatRigs/Definitions.cs` and placement math in `src/Controls/WinchPlacementGeometry.cs`.
 - All three control paths use boat-owned reservations keyed by actual donor
@@ -154,7 +154,7 @@ implementation notes, asset provenance and verification procedures.
 - Initialize clones inactive with owned external handles and fresh outlines.
   Reposition the parent mount, not the wheel whose local rotation drives input.
 - Mast positions prefer vertical stacks, then other faces with position and
-  facing rotated together. All 114 deck/rail mappings use measured finite solid
+  facing rotated together. All 134 deck/rail mappings use measured finite solid
   support strips, with explicit normals and donor-specific base offsets. Never
   restore the unsupported surface-tangent fallback. Include safe strip ends as
   candidates; neighboring native fittings can obstruct the regular spacing grid.
@@ -224,6 +224,14 @@ ShipShape update from 1.3.0 to 1.3.1. The follow-up logs contain no missing-came
 spam, but still showed six custom-sail `SailFlapAudio.Awake` errors. The audio
 hierarchy correction requires in-game loading and sound validation; see
 [DEVELOPMENT.md](docs/DEVELOPMENT.md).
+
+The Sailwind 0.39 large dhow (`BOAT dhow large (30)`) has a new `LargeDhow.cs`
+profile with 14 stays and 29 winch mappings. Its optional main topmasts use lower
+mainmast guides. The large mesh-collider reef winches have limited clone capacity;
+upper band-end candidates preserve space beside native topmast controls without
+expanding travel limits. Release and both suites passed. Native configuration,
+Cloth, winch accessibility, mixed-sail capacity and save/reload need in-game checks
+on the new ship after a Brig regression check.
 
 ## Local investigation and handoff
 

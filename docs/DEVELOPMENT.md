@@ -363,10 +363,10 @@ chain retains its 5 cm separation along the aft spar. The fore-head halyard
 route and both decorative upper-sheet lines are removed. The existing lower
 sheet sources and native reef direction remain unchanged.
 
-The authored ancestry tables cover both fore and aft sections of all 97 stay
+The authored ancestry tables cover both fore and aft sections of all 111 stay
 variants. Resolve active aft ancestors and require a valid aft-base reef winch;
 do not fall back to the fore mast. Installed-asset checks confirm matching
-rendered/collidable reef winches on all selected aft bases across seven boats.
+rendered/collidable reef winches on all selected aft bases across eight boats.
 Control slots are allocated across sails sharing an aft base or lower-sheet
 source, and owned controls are repositioned/rebound when their sources change.
 Removal protection includes both full mast chains. No save fields or migration
@@ -406,7 +406,7 @@ deployed cloth uses its initialized solver. Recoloring and the native plain
 texture apply to the panel and bundle. Ropes attach to independent leaves and
 follow the moving corners rather than rotating skin bones.
 
-Automated validation covers all 97 authored stay frames, the nominal cut and
+Automated validation covers all 111 authored stay frames, the nominal cut and
 pin mask, repeated sheeting, edge budgets, reef-channel normalization and
 reversals, partial-reef edge budgets, renderer thresholds, new-sail scaling
 scope, retained optional-trim span/travel limits, fixed-head lower-sheet sweeps,
@@ -470,6 +470,7 @@ Use the installed assemblies to confirm import parents and part dependencies.
 | Cog | 1 | 3 | 0 |
 | Leopard | 2 | 18 | 4 |
 | Shroud | 2 | 8 | 2 |
+| Large dhow (Sailwind 0.39) | 2 | 14 | 8 |
 
 The nominal angle is 70° between the aft spar's downward axis and the stay
 (110° at the forward end for parallel spars). During authoring, intersect that
@@ -542,8 +543,8 @@ reservations without destroying the sail-owned rope controller. Native wheel
 rotation is a child of the mounting transform, so placement refreshes cannot
 be interpreted as player winch input.
 
-The seven boat classes in `src/BoatRigs/` record 151 donor/role mappings: 37 mast
-references and 114 bounded surface mappings measured on 2026-09-24. Their shared record type is
+The eight boat classes in `src/BoatRigs/` record 180 donor/role mappings: 46 mast
+references and 134 bounded surface mappings measured on 2026-09-24 and 2026-09-25. Their shared record type is
 in `src/BoatRigs/Definitions.cs`; candidate positions are calculated in
 `src/Controls/WinchPlacementGeometry.cs`. Sources are the installed
 `level24`, `shipyard_expansion.assets`, `Leopard/leopard` and
@@ -558,8 +559,10 @@ support strips; a donor's face tangent alone does not establish physical support
 Regular candidate spacing uses the installed interaction-sphere size, with a
 0.35 m minimum and 2 cm beyond the padded radii. Mast candidates prefer the native face vertically,
 then ±90° and 180° around the authored axis, rotating the face along with its
-position. Mast height stays between 0.7 m below and 1.4 m above the native datum;
-surface positions stay within 1.401 m of the donor, following measured surface
+position. Mast height stays between 0.7 m below and 1.4 m above the native datum.
+The upper band end is tried after regular positions to clear larger neighboring
+fittings; no additional lower endpoint is introduced near deck level.
+Surface positions stay within 1.401 m of the donor, following measured surface
 height and normal. Surface candidates include both ends inset by the interaction
 radius, so nearby fittings cannot strand usable space between grid positions.
 Nearby native fittings and
@@ -571,11 +574,12 @@ checks; numeric support strips and mast cylinders do not model every hull detail
 `tests/GeometryChecks/FishermansStay/WinchMeasurements.txt` contains only numeric
 measurements: boat, source mast ID, role, donor position, face normal, support axis
 point and interaction radius. Checks cover all supported profile references,
-three extra controls per mast donor in isolation, at least two per bounded
+three extra controls per older mast donor in isolation, one per large-dhow mast
+donor (see the capacity limitation below), at least two per bounded
 surface donor, reservation lifecycle and invariance of mast attachment radius/facing.
 Assembly checks verify structural clone and teardown wiring; they do not simulate
 Unity Awake/Start, previews, handles or
-outlines. The user reported improved placement; full coverage on all seven
+outlines. The user reported improved placement; full coverage on all eight
 boats remains pending. Follow the winch validation scenarios in
 [AGENTS.md](../AGENTS.md). No game assets or DLLs are included in the fixture.
 
@@ -687,3 +691,48 @@ of this change. Runtime validation remains pending: start on Brig, then Sanbuq;
 load existing sails and fit new examples of all four types, confirm no
 `SailFlapAudio` exceptions, listen for flapping/snapping when applicable, and check
 resizing, partial/full reefing or hoisting, redeployment, propulsion and save/reload.
+
+### Sailwind 0.39 large dhow profile (2026-09-25)
+
+[`LargeDhow.cs`](../src/BoatRigs/LargeDhow.cs) matches the installed native
+`BOAT dhow large (30)` from `Sailwind_Data/level24`. The asset name is used until
+the new ship's display name is confirmed. This appends the eighth profile;
+existing boat definitions and save IDs retain their order and values.
+
+The ship has two foremast choices, two mainmast positions with optional matching
+topmasts, and three mizzen choices. Ten Flying Sail support mappings and fourteen
+stay variants cover both adjacent mast pairs. The eight fore/main variants meet
+the shorter foremast's physical head; the six main/mizzen variants use the preferred
+70° angle. Topmast IDs 3 and 5 require bases 2 and 4 respectively. Their native
+halyard references point to the lower mainmast guide, so the authored anchors
+retain that height on the topmast's overlapping physical section. Main/mizzen
+stays remain attached to the lower mainmast with or without its topmast.
+
+Twenty sheet mappings use measured finite faces from permanent hull meshes
+`Cube_001` and `Cube_008`: lower rail caps, forward sloped caps, raised aft caps
+and inboard aft rail faces. The larger aft fittings face inward with their measured
+base depth against the inner rail. Nine reef mappings follow physical mast axes,
+including the raked foremast and mizzen, and mount topmast controls on their bases.
+Numeric mast, winch and surface fixtures accompany the profile; no meshes or
+other extracted assets are included.
+
+The new mast winches have mesh interaction colliders rather than the older
+spherical colliders. With the existing conservative mesh-radius calculation and
+bounded placement band, checks establish room for at least one extra reef
+control per donor. Multiple custom sails sharing a mast may exhaust that space; existing
+hide/diagnostic/retry behavior remains in effect. The older three-control checks
+remain intact. Mainmast controls otherwise lose all regular candidates beside
+their native topmast controls. The shared placement helper now tries the upper
+1.4 m band end after its regular grid; it preserves the existing candidate order,
+attachment radius, facing, clearance checks and travel limits. New checks require
+a free slot for all nine reef donors against every measured native donor variant.
+
+Release build, formatting, GeometryChecks and AssemblyChecks passed. Checks cover
+all 24 native mast combinations, measured endpoints, guide heights, ancestry,
+control references and supported sheet placements. Unity construction and Cloth
+are not simulated. Start runtime regression on Brig, then test the new ship:
+both mast positions, raked alternatives, topmast addition/removal, both sail
+families and all three staysail marks, winch seating and mouse/VR access, crowded
+mixed-sail controls, both tacks, reefing/hoisting, resize/recolor, shipyard
+preview/cancellation, support protection and save/reload. The built DLL has not
+been installed into the game.
