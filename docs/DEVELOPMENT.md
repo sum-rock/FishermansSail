@@ -460,8 +460,8 @@ reservations without destroying the sail-owned rope controller. Native wheel
 rotation is a child of the mounting transform, so placement refreshes cannot
 be interpreted as player winch input.
 
-The seven boat classes in `src/BoatRigs/` record 151 donor/role mounting directions
-and physical mast references measured on 2026-09-24. Their shared record type is
+The seven boat classes in `src/BoatRigs/` record 151 donor/role mappings: 37 mast
+references and 114 bounded surface mappings measured on 2026-09-24. Their shared record type is
 in `src/BoatRigs/Definitions.cs`; candidate positions are calculated in
 `src/Controls/WinchPlacementGeometry.cs`. Sources are the installed
 `level24`, `shipyard_expansion.assets`, `Leopard/leopard` and
@@ -470,25 +470,29 @@ the corresponding boat model frame before comparison. Mast collider axes identif
 the spar direction; the native winch datum supplies attachment radius and facing.
 Mast fittings can sit below the native sail-space collider's axial range, so that
 range is not treated as the physical bottom of the spar. Deck-facing coils near a
-mast remain deck fittings. Other controls use the tangent to their native face,
-except Brig sheet controls, which use measured solid rail-cap segments below.
+mast use measured supporting surfaces. All non-mast controls use finite solid
+support strips; a donor's face tangent alone does not establish physical support.
 
-Spacing uses the installed interaction-sphere size, with a 0.35 m minimum and
-2 cm between reserved radii. Mast candidates prefer the native face vertically,
+Regular candidate spacing uses the installed interaction-sphere size, with a
+0.35 m minimum and 2 cm beyond the padded radii. Mast candidates prefer the native face vertically,
 then ±90° and 180° around the authored axis, rotating the face along with its
 position. Mast height stays between 0.7 m below and 1.4 m above the native datum;
-rail/deck offsets stay within 1.4 m along the tangent. Nearby native fittings and
+surface positions stay within 1.401 m of the donor, following measured surface
+height and normal. Surface candidates include both ends inset by the interaction
+radius, so nearby fittings cannot strand usable space between grid positions.
+Nearby native fittings and
 all reserved controls exclude candidates. There is no unlimited offset fallback:
 an exhausted fitting is hidden, logs once and retries, while its native controller
 stays alive. These bounds require in-game accessibility and surface-clearance
-checks; a tangent or cylindrical approximation does not model every hull detail.
+checks; numeric support strips and mast cylinders do not model every hull detail.
 
 `tests/GeometryChecks/FishermansStay/WinchMeasurements.txt` contains only numeric
 measurements: boat, source mast ID, role, donor position, face normal, support axis
 point and interaction radius. Checks cover all supported profile references,
-three extra controls per tangent/mast donor in isolation, at least two per bounded
-Brig rail donor, reservation lifecycle and invariance of mast attachment radius/facing.
-Assembly checks verify structural clone and teardown wiring; they do not simulate Unity Awake/Start, previews, handles or
+three extra controls per mast donor in isolation, at least two per bounded
+surface donor, reservation lifecycle and invariance of mast attachment radius/facing.
+Assembly checks verify structural clone and teardown wiring; they do not simulate
+Unity Awake/Start, previews, handles or
 outlines. The user reported improved placement; full coverage on all seven
 boats remains pending. Follow the winch validation scenarios in
 [AGENTS.md](../AGENTS.md). No game assets or DLLs are included in the fixture.
@@ -522,8 +526,8 @@ to align the donor face to that normal. Native donors are not moved.
 `tests/GeometryChecks/FishermansStay/BrigRailMeasurements.txt` records independent
 numeric face bounds. Checks verify seating and orientation, rail-end clearance,
 stair avoidance, rejection of the former across-boat offsets, neighboring native
-fittings, multiple controls and exhaustion. Other boats and Brig mast winches
-retain their existing placement paths; all shared consumers of a corrected Brig
+fittings, multiple controls and exhaustion. This first correction left other boats
+and Brig mast winches on their existing placement paths; all shared consumers of a corrected Brig
 sheet mapping use the same rail positions. Reservation ownership, wheel input,
 rope binding and the hide/diagnostic/retry behavior are unchanged.
 
@@ -532,3 +536,47 @@ correction. In-game confirmation remains pending: inspect both sides on Brig,
 including multiple/mixed sails, mouse/VR handles and outlines, boat movement,
 preview cancellation and save/reload. Automated geometry checks do not establish
 live Unity accessibility or appearance.
+
+### Remaining boat surfaces (2026-09-24)
+
+The subsequent Sanbuq/Junk screenshots (`screenshot_20260924_222025-region.png`
+and `screenshot_20260924_222105-region.png`) confirmed unsupported sheet placements
+outside Brig. The other 90 non-mast mappings now use the same bounded support
+approach. `WinchSurfaceSegment` accepts an explicit normal for cross-sloping rails
+and transverse beams; each donor supplies its measured face normal and mesh-base
+offset. The native donors remain unchanged, and the mounting parent carries the
+position/facing correction. Mast placement and control ownership are unchanged.
+
+Supporting meshes, measured in each boat's local frame:
+
+| Boat | Permanent support surfaces |
+| --- | --- |
+| Sanbuq | `structure/Cube_013`: forward and raised aft rail caps; lower trim faces excluded |
+| Junk | `structure/trim_001` rail caps, `Cube_035` raised handrails, `Cube_032` transverse reef beam |
+| Jong | `structure/trim_010` forward, middle and aft rail caps |
+| Cog | `structure/trim_001` aft rail caps |
+| Leopard | `structure_container/decking trim` upper rails; `mainfife back` and `mizzenfife` interiors excluding raised end posts |
+| Shroud | `Clipper_Upper_Trim` upper rails; `Halyard_Points/Cube.004` and `Cube.005` interiors excluding rounded ends |
+
+Only measured numeric bounds appear in
+`tests/GeometryChecks/FishermansStay/WinchSurfaceMeasurements.txt`. Regression
+checks compare candidate contact points against those face bounds, allowing up
+to 2 cm for slight cap-face warp, and check the expected facing, endpoint clearance
+and donor-distance limit. Each of these 90 mappings retains an available slot
+even with all measured donor variants treated as native obstructions. Reservations
+must still exhaust rather than extend beyond the physical support. A dedicated
+Leopard case checks the usable strip endpoint missed by a donor-centered grid.
+Unmeasured non-mast definitions now produce no candidates rather than tangent
+offsets with unknown support.
+
+Both runtime logs also contained a Brig `No free authored winch position` warning.
+Installed Brig fore/main sheet fittings include adjacent native stations near
+z -5.30, -5.86, -6.40 and -6.92 m; these compete with added controls for bounded
+space. The logs do not identify enough preview/ownership state to attribute that
+warning to a specific conflict. Keep the diagnostic/retry behavior and verify
+mixed-sail capacity in game rather than allowing unsupported overflow positions.
+
+Release, GeometryChecks, AssemblyChecks and formatting passed. In-game validation
+is pending: start on Brig, then reproduce the Sanbuq/Junk screenshots, then check
+Jong, Cog, Leopard and Shroud with both sides, multiple/mixed sails, mouse/VR
+handles and outlines, boat movement, previews/cancellation and save/reload.

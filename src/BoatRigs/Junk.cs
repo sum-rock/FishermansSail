@@ -48,89 +48,89 @@ namespace MoreSailwindSails.BoatRigs
                 new WinchMountDefinition(
                     5,
                     WinchRole.Left,
-                    new Vector3(0.50333f, 0f, -0.864094f),
-                    false,
-                    -1
+                    new Vector3(0.099430f, 0.993358f, 0.057917f),
+                    0.059995f,
+                    AftRail(WinchRole.Left)
                 ),
                 new WinchMountDefinition(
                     5,
                     WinchRole.Right,
-                    new Vector3(0.482513f, 0f, 0.875889f),
-                    false,
-                    -1
+                    new Vector3(-0.138346f, 0.987447f, 0.076213f),
+                    0.059995f,
+                    AftRail(WinchRole.Right)
                 ),
                 new WinchMountDefinition(
                     6,
                     WinchRole.Left,
-                    new Vector3(0.50333f, 0f, -0.864094f),
-                    false,
-                    -1
+                    new Vector3(0.099430f, 0.993358f, 0.057917f),
+                    0.059995f,
+                    AftRail(WinchRole.Left)
                 ),
                 new WinchMountDefinition(
                     6,
                     WinchRole.Right,
-                    new Vector3(0.482513f, 0f, 0.875889f),
-                    false,
-                    -1
+                    new Vector3(-0.138346f, 0.987447f, 0.076213f),
+                    0.059995f,
+                    AftRail(WinchRole.Right)
                 ),
                 new WinchMountDefinition(
                     7,
                     WinchRole.Left,
-                    new Vector3(0.414732f, 0f, -0.909944f),
-                    false,
-                    -1
+                    new Vector3(0.088613f, 0.995247f, 0.040388f),
+                    0.059995f,
+                    MainRail(WinchRole.Left)
                 ),
                 new WinchMountDefinition(
                     7,
                     WinchRole.Right,
-                    new Vector3(0.68046f, 0f, 0.732785f),
-                    false,
-                    -1
+                    new Vector3(-0.041909f, 0.998363f, 0.038916f),
+                    0.059995f,
+                    MainRail(WinchRole.Right)
                 ),
                 new WinchMountDefinition(9, WinchRole.Reef, new Vector3(0f, 1f, 0f), true, 9),
                 new WinchMountDefinition(
                     10,
                     WinchRole.Reef,
-                    new Vector3(-0.942643f, 0f, 0.333801f),
-                    false,
-                    -1
+                    new Vector3(-0.057545f, 0.985028f, -0.162504f),
+                    0.055177f,
+                    ReefBeam()
                 ),
                 new WinchMountDefinition(
                     11,
                     WinchRole.Reef,
-                    new Vector3(-0.942643f, 0f, 0.333801f),
-                    false,
-                    -1
+                    new Vector3(-0.057545f, 0.985028f, -0.162504f),
+                    0.055177f,
+                    ReefBeam()
                 ),
                 new WinchMountDefinition(12, WinchRole.Reef, new Vector3(0f, 1f, 0f), true, 12),
                 new WinchMountDefinition(13, WinchRole.Reef, new Vector3(0f, 1f, 0f), true, 13),
                 new WinchMountDefinition(
                     16,
                     WinchRole.Left,
-                    new Vector3(-0.087094f, 0f, -0.9962f),
-                    false,
-                    -1
+                    new Vector3(0.067725f, 0.997686f, -0.005921f),
+                    0.059995f,
+                    ForeRail(WinchRole.Left)
                 ),
                 new WinchMountDefinition(
                     16,
                     WinchRole.Right,
-                    new Vector3(0.149905f, 0f, 0.9887f),
-                    false,
-                    -1
+                    new Vector3(-0.059001f, 0.998218f, 0.008946f),
+                    0.059995f,
+                    ForeRail(WinchRole.Right)
                 ),
                 new WinchMountDefinition(
                     52,
                     WinchRole.Left,
-                    new Vector3(0.414732f, 0f, -0.909944f),
-                    false,
-                    -1
+                    new Vector3(0.088613f, 0.995247f, 0.040388f),
+                    0.059995f,
+                    MainRail(WinchRole.Left)
                 ),
                 new WinchMountDefinition(
                     52,
                     WinchRole.Right,
-                    new Vector3(0.680461f, 0f, 0.732785f),
-                    false,
-                    -1
+                    new Vector3(-0.041909f, 0.998363f, 0.038916f),
+                    0.059995f,
+                    MainRail(WinchRole.Right)
                 ),
                 new WinchMountDefinition(
                     53,
@@ -150,44 +150,180 @@ namespace MoreSailwindSails.BoatRigs
                 new WinchMountDefinition(
                     61,
                     WinchRole.Left,
-                    new Vector3(-0.087092f, 0f, -0.9962f),
-                    false,
-                    -1
+                    new Vector3(0.067725f, 0.997686f, -0.005921f),
+                    0.059995f,
+                    ForeRail(WinchRole.Left)
                 ),
                 new WinchMountDefinition(
                     61,
                     WinchRole.Right,
-                    new Vector3(0.149906f, 0f, 0.9887f),
-                    false,
-                    -1
+                    new Vector3(-0.059001f, 0.998218f, 0.008946f),
+                    0.059995f,
+                    ForeRail(WinchRole.Right)
                 ),
                 new WinchMountDefinition(
                     65,
                     WinchRole.Left,
-                    new Vector3(0.50333f, 0f, -0.864094f),
-                    false,
-                    -1
+                    new Vector3(0.099430f, 0.993358f, 0.057917f),
+                    0.059995f,
+                    AftRail(WinchRole.Left)
                 ),
                 new WinchMountDefinition(
                     65,
                     WinchRole.Right,
-                    new Vector3(0.482512f, 0f, 0.87589f),
-                    false,
-                    -1
+                    new Vector3(-0.138347f, 0.987447f, 0.076213f),
+                    0.059995f,
+                    AftRail(WinchRole.Right)
                 ),
                 new WinchMountDefinition(
                     66,
                     WinchRole.Left,
-                    new Vector3(0.50333f, 0f, -0.864094f),
-                    false,
-                    -1
+                    new Vector3(0.099430f, 0.993358f, 0.057917f),
+                    0.059995f,
+                    AftRail(WinchRole.Left)
                 ),
                 new WinchMountDefinition(
                     66,
                     WinchRole.Right,
-                    new Vector3(0.482512f, 0f, 0.87589f),
-                    false,
-                    -1
+                    new Vector3(-0.138347f, 0.987447f, 0.076213f),
+                    0.059995f,
+                    AftRail(WinchRole.Right)
+                ),
+            };
+
+        // Measured solid support: trim_001.
+        private static WinchSurfaceSegment[] ForeRail(WinchRole role) =>
+            role == WinchRole.Left
+                ? new[]
+                {
+                    new WinchSurfaceSegment(
+                        new Vector3(-2.628225f, 2.397060f, 5.002665f),
+                        new Vector3(-2.753665f, 2.371230f, 2.825295f),
+                        new Vector3(-0.000111f, 0.999930f, -0.011856f)
+                    ),
+                    new WinchSurfaceSegment(
+                        new Vector3(-2.755235f, 2.370960f, 2.781305f),
+                        new Vector3(-2.798305f, 2.370960f, -0.293320f),
+                        new Vector3(0.000000f, 1.000000f, 0.000000f)
+                    ),
+                }
+                : new[]
+                {
+                    new WinchSurfaceSegment(
+                        new Vector3(2.755245f, 2.370960f, 2.781295f),
+                        new Vector3(2.798300f, 2.370960f, -0.293335f),
+                        new Vector3(0.000000f, 1.000000f, 0.000000f)
+                    ),
+                    new WinchSurfaceSegment(
+                        new Vector3(2.628245f, 2.397060f, 5.002655f),
+                        new Vector3(2.753675f, 2.371220f, 2.825285f),
+                        new Vector3(0.000111f, 0.999930f, -0.011860f)
+                    ),
+                };
+
+        // Measured solid support: Cube_035.
+        private static WinchSurfaceSegment[] MainRail(WinchRole role) =>
+            role == WinchRole.Left
+                ? new[]
+                {
+                    new WinchSurfaceSegment(
+                        new Vector3(-2.718665f, 3.429095f, -3.021380f),
+                        new Vector3(-2.687885f, 3.426800f, -3.669960f),
+                        new Vector3(-0.025734f, 0.999657f, -0.004759f)
+                    ),
+                    new WinchSurfaceSegment(
+                        new Vector3(-2.686300f, 3.426850f, -3.691960f),
+                        new Vector3(-2.604715f, 3.433735f, -4.537545f),
+                        new Vector3(-0.011194f, 0.999912f, 0.007062f)
+                    ),
+                    new WinchSurfaceSegment(
+                        new Vector3(-2.601785f, 3.433650f, -4.559580f),
+                        new Vector3(-2.471120f, 3.421210f, -5.345955f),
+                        new Vector3(0.016242f, 0.999782f, -0.013117f)
+                    ),
+                    new WinchSurfaceSegment(
+                        new Vector3(-2.768610f, 2.922770f, -1.349910f),
+                        new Vector3(-2.719500f, 3.425925f, -2.999850f),
+                        new Vector3(-0.024620f, 0.956427f, 0.290933f)
+                    ),
+                }
+                : new[]
+                {
+                    new WinchSurfaceSegment(
+                        new Vector3(2.768600f, 2.922770f, -1.349920f),
+                        new Vector3(2.719485f, 3.425925f, -2.999865f),
+                        new Vector3(0.024629f, 0.956427f, 0.290932f)
+                    ),
+                    new WinchSurfaceSegment(
+                        new Vector3(2.718650f, 3.429095f, -3.021390f),
+                        new Vector3(2.687875f, 3.426800f, -3.669970f),
+                        new Vector3(0.025734f, 0.999658f, -0.004758f)
+                    ),
+                    new WinchSurfaceSegment(
+                        new Vector3(2.686285f, 3.426850f, -3.691970f),
+                        new Vector3(2.604700f, 3.433735f, -4.537555f),
+                        new Vector3(0.011194f, 0.999912f, 0.007061f)
+                    ),
+                    new WinchSurfaceSegment(
+                        new Vector3(2.601765f, 3.433645f, -4.559590f),
+                        new Vector3(2.471100f, 3.421205f, -5.345965f),
+                        new Vector3(-0.016242f, 0.999782f, -0.013117f)
+                    ),
+                };
+
+        // Measured solid support: trim_001.
+        private static WinchSurfaceSegment[] AftRail(WinchRole role) =>
+            role == WinchRole.Left
+                ? new[]
+                {
+                    new WinchSurfaceSegment(
+                        new Vector3(-1.995125f, 3.657265f, -8.089520f),
+                        new Vector3(-1.596100f, 3.695950f, -9.326365f),
+                        new Vector3(0.174253f, 0.980859f, 0.086895f)
+                    ),
+                    new WinchSurfaceSegment(
+                        new Vector3(-1.582010f, 3.697260f, -9.371070f),
+                        new Vector3(-1.218625f, 3.730990f, -10.573880f),
+                        new Vector3(0.153202f, 0.985426f, 0.073918f)
+                    ),
+                    new WinchSurfaceSegment(
+                        new Vector3(-1.186505f, 3.734195f, -10.603405f),
+                        new Vector3(-0.624895f, 3.789535f, -10.696625f),
+                        new Vector3(-0.062395f, 0.976966f, 0.204070f)
+                    ),
+                }
+                : new[]
+                {
+                    new WinchSurfaceSegment(
+                        new Vector3(1.995085f, 3.657265f, -8.089530f),
+                        new Vector3(1.596065f, 3.695950f, -9.326370f),
+                        new Vector3(-0.174251f, 0.980860f, 0.086894f)
+                    ),
+                    new WinchSurfaceSegment(
+                        new Vector3(1.581975f, 3.697260f, -9.371080f),
+                        new Vector3(1.218580f, 3.730990f, -10.573885f),
+                        new Vector3(-0.153194f, 0.985428f, 0.073918f)
+                    ),
+                    new WinchSurfaceSegment(
+                        new Vector3(1.186460f, 3.734195f, -10.603410f),
+                        new Vector3(0.624850f, 3.789535f, -10.696630f),
+                        new Vector3(0.062394f, 0.976965f, 0.204076f)
+                    ),
+                };
+
+        // Measured solid support: Cube_032.
+        private static WinchSurfaceSegment[] ReefBeam() =>
+            new[]
+            {
+                new WinchSurfaceSegment(
+                    new Vector3(-1.476270f, 3.329240f, -3.722440f),
+                    new Vector3(-0.655040f, 3.314270f, -3.722440f),
+                    new Vector3(0.018226f, 0.999834f, 0.000000f)
+                ),
+                new WinchSurfaceSegment(
+                    new Vector3(-0.655000f, 3.314300f, -3.722450f),
+                    new Vector3(-0.110300f, 3.329200f, -3.722450f),
+                    new Vector3(-0.027344f, 0.999626f, -0.000000f)
                 ),
             };
 

@@ -114,15 +114,15 @@ namespace MoreSailwindSails.BoatRigs
                 normal,
                 // Installed winch mesh base z = -0.095856, at scale 0.8.
                 0.0766848f,
-                new WinchRailSegment(
+                new WinchSurfaceSegment(
                     Point(-3.16415f, 5.1307f, -4.2071f),
                     Point(-3.1002f, 5.2706f, -8.3161f)
                 ),
-                new WinchRailSegment(
+                new WinchSurfaceSegment(
                     Point(-3.0983f, 5.2719f, -8.3493f),
                     Point(-2.754f, 5.4098f, -11.7052f)
                 ),
-                new WinchRailSegment(
+                new WinchSurfaceSegment(
                     Point(-2.71175f, 5.4507f, -12.083f),
                     Point(-2.5748f, 5.6009f, -13.006f)
                 )

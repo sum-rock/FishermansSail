@@ -16,17 +16,15 @@ namespace MoreSailwindSails.Controls
         )
         {
             float spacing = Math.Max(0.35f, radius * 2f + 0.02f);
-            if (definition.RailSegments != null)
-                return RailCandidates(definition, origin, radius, spacing);
-            var result = new System.Collections.Generic.List<WinchPlacement>();
-            var offsets = definition.OnMast
-                ? new[] { 1, -1, 2, 3 }
-                : new[] { 1, -1, 2, -2, 3, -3, 4, -4 };
+            if (definition.SurfaceSegments != null)
+                return SurfaceCandidates(definition, origin, radius, spacing);
+            // An unmeasured deck/rail direction cannot establish physical support.
+            if (!definition.OnMast)
+                return Array.Empty<WinchPlacement>();
+            var result = new List<WinchPlacement>();
+            var offsets = new[] { 1, -1, 2, 3 };
             foreach (int offset in offsets)
-                if (
-                    Math.Abs(offset * spacing) <= 1.401f
-                    && (!definition.OnMast || offset * spacing >= -0.701f)
-                )
+                if (Math.Abs(offset * spacing) <= 1.401f && offset * spacing >= -0.701f)
                     result.Add(
                         new WinchPlacement(
                             origin + definition.Direction * (offset * spacing),
@@ -59,7 +57,7 @@ namespace MoreSailwindSails.Controls
             return result.ToArray();
         }
 
-        private static WinchPlacement[] RailCandidates(
+        private static WinchPlacement[] SurfaceCandidates(
             WinchMountDefinition definition,
             Vector3 origin,
             float radius,
@@ -67,7 +65,7 @@ namespace MoreSailwindSails.Controls
         )
         {
             var result = new List<WinchPlacement>();
-            foreach (var segment in definition.RailSegments)
+            foreach (var segment in definition.SurfaceSegments)
             {
                 var travel = segment.End - segment.Start;
                 float length = travel.magnitude;
@@ -79,9 +77,13 @@ namespace MoreSailwindSails.Controls
                     Math.Min(length - radius, Vector3.Dot(origin - segment.Start, direction))
                 );
                 var rotation = Align(definition.SourceNormal, segment.Normal);
+                // A neighboring native fitting can block the regular spacing grid.
+                // Include both safe ends so a short strip does not lose usable space.
+                var distances = new List<float> { radius, length - radius };
                 foreach (int offset in new[] { 0, 1, -1, 2, -2, 3, -3, 4, -4 })
+                    distances.Add(nearest + offset * spacing);
+                foreach (float along in distances)
                 {
-                    float along = nearest + offset * spacing;
                     if (along < radius || along > length - radius)
                         continue;
                     var position =

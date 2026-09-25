@@ -16,6 +16,10 @@
     />
     <None Update="FishermansStay/WinchMeasurements.txt" CopyToOutputDirectory="PreserveNewest" />
     <None Update="FishermansStay/BrigRailMeasurements.txt" CopyToOutputDirectory="PreserveNewest" />
+    <None
+      Update="FishermansStay/WinchSurfaceMeasurements.txt"
+      CopyToOutputDirectory="PreserveNewest"
+    />
     <Compile
       Include="../../src/Stays/FishermansStay/FishermansStaySaveState.cs"
       Link="FishermansStay/FishermansStaySaveState.cs"
