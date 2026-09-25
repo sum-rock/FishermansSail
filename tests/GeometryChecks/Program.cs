@@ -14,6 +14,7 @@ internal static class Program
         OrderTextChecks.Run();
         FlyingSailChecks.Run();
         RopeChecks.Run();
+        KnotChecks.Run();
         TravelChecks.Run();
         MastInstallationChecks.Run();
         BillowChecks.Run();

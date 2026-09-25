@@ -11,6 +11,7 @@ namespace MoreSailwindSails.Sails.FishermansFlyingSail
         public LineRenderer[] SharedSpans;
         public RopeEffect[] NativeSheets;
         public FishermansFlyingSailLuffTies LuffTies;
+        public FishermansFlyingSailKnots Knots;
         private readonly Vector3[] points = new Vector3[33];
 
         internal static FishermansFlyingSailSupportLine Create(
@@ -107,49 +108,42 @@ namespace MoreSailwindSails.Sails.FishermansFlyingSail
             var clew = bones[3].position;
             var top = bones[0].position;
             var tack = bones[2].position;
-            var headTangent = FishermansFlyingSailRopeGeometry.Tangent(top, head, aftGuide);
-            var guideTangent = FishermansFlyingSailRopeGeometry.Tangent(head, aftGuide, controls);
-            var clewTangent = FishermansFlyingSailRopeGeometry.Tangent(tack, clew, controls);
+            var headDirection = head - top;
+            var footDirection = clew - tack;
             float headLength = (head - top).magnitude;
-            float guideLength = (aftGuide - head).magnitude;
             float footLength = (clew - tack).magnitude;
             if (struck)
             {
                 LuffTies.Hide();
+                if (Knots)
+                    Knots.Hide();
                 foreach (var span in SharedSpans)
                     span.enabled = false;
             }
             else
             {
                 LuffTies.Draw(aftDirection);
+                if (Knots)
+                    Knots.Draw(bones, aftGuide, controls, aftDirection);
                 DrawSpan(
                     SharedSpans[0],
                     top,
                     head,
                     aftDirection,
-                    headTangent,
+                    headDirection,
                     FishermansFlyingSailFrameGeometry.TieLength,
-                    guideLength,
-                    sharedSlack
-                );
-                DrawSpan(
-                    SharedSpans[1],
-                    head,
-                    aftGuide,
-                    headTangent,
-                    guideTangent,
                     headLength,
-                    (controls - aftGuide).magnitude,
                     sharedSlack
                 );
+                DrawDirectSpan(SharedSpans[1], head, aftGuide, sharedSlack);
                 DrawSpan(
                     SharedSpans[2],
                     tack,
                     clew,
                     aftDirection,
-                    clewTangent,
+                    footDirection,
                     FishermansFlyingSailFrameGeometry.TieLength,
-                    (controls - clew).magnitude,
+                    footLength,
                     sharedSlack
                 );
             }
@@ -162,27 +156,11 @@ namespace MoreSailwindSails.Sails.FishermansFlyingSail
                     continue;
                 }
                 var control = source.transform.position;
-                var upperChord = control - aftGuide;
-                var lowerStart = struck ? foreGuide : clew;
-                var lowerChord = control - lowerStart;
-                DrawSpan(
-                    UpperSheets[side],
-                    aftGuide,
-                    control,
-                    struck ? upperChord : guideTangent,
-                    upperChord,
-                    struck ? upperChord.magnitude : guideLength,
-                    upperChord.magnitude,
-                    Slack(source)
-                );
-                DrawSpan(
+                DrawDirectSpan(UpperSheets[side], aftGuide, control, Slack(source));
+                DrawDirectSpan(
                     LowerSheets[side],
-                    lowerStart,
+                    struck ? foreGuide : clew,
                     control,
-                    struck ? lowerChord : clewTangent,
-                    lowerChord,
-                    struck ? lowerChord.magnitude : footLength,
-                    lowerChord.magnitude,
                     Slack(source)
                 );
             }
@@ -193,6 +171,19 @@ namespace MoreSailwindSails.Sails.FishermansFlyingSail
                 source.currentRopeLength,
                 source.totalRopeLength
             );
+
+        private void DrawDirectSpan(LineRenderer rope, Vector3 start, Vector3 end, float slack)
+        {
+            for (int i = 0; i < points.Length; i++)
+                points[i] = FishermansFlyingSailRopeGeometry.DirectPoint(
+                    start,
+                    end,
+                    slack,
+                    (float)i / (points.Length - 1)
+                );
+            rope.SetPositions(points);
+            rope.enabled = true;
+        }
 
         private void DrawSpan(
             LineRenderer rope,
@@ -238,6 +229,8 @@ namespace MoreSailwindSails.Sails.FishermansFlyingSail
             foreach (var span in SharedSpans)
                 span.enabled = false;
             LuffTies.Hide();
+            if (Knots)
+                Knots.Hide();
         }
 
         private void OnDisable()

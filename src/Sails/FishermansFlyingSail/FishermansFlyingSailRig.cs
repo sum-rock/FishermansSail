@@ -140,7 +140,7 @@ namespace MoreSailwindSails.Sails.FishermansFlyingSail
             cloth = clothObject.AddComponent<Cloth>();
             cloth.enabled = false;
             sail.cloth = cloth;
-            cloth.bendingStiffness = 0.4f;
+            cloth.bendingStiffness = 0.15f;
             cloth.stretchingStiffness = 0.99f;
             cloth.damping = damping;
             cloth.friction = friction;
@@ -159,8 +159,8 @@ namespace MoreSailwindSails.Sails.FishermansFlyingSail
             {
                 // Keep the donor's serialized wind response (5 on the brig
                 // jib). The previous 0.6 override let gravity dominate it.
-                wind.minClothDamping = 0.25f;
-                wind.maxClothDamping = 0.8f;
+                wind.minClothDamping = 0.08f;
+                wind.maxClothDamping = 0.45f;
             }
 
             var connections = sail.GetComponent<SailConnections>();

@@ -82,7 +82,9 @@ the aft mast. Two short ropes hold its luff corners 18 inches from the mast;
 that gap stays constant while resizing or trimming. The luff arches inward
 toward the mast while the sail billows. Smooth head and foot ropes continue
 through those ties to the fore mast, while the fabric arches away in a fuller,
-rounded billow. The upper sheets still pass through the aft masthead guide,
+rounded billow. Native-style knots mark all four corners, and the external
+control lines hang directly between attachments with slight sag. The upper
+sheets still pass through the aft masthead guide,
 and the lower sheets run directly to their winches. Leave room for the higher
 aft head below its supporting pulley when positioning the sail.
 

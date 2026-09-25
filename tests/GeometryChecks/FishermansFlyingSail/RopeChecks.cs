@@ -81,78 +81,90 @@ internal static class RopeChecks
                     "Rope handles escaped the local span."
                 );
             }
-        var reversal = FishermansFlyingSailRopeGeometry.Tangent(
-            Vector3.zero,
-            Vector3.forward,
-            Vector3.zero
-        );
-        Check(reversal.sqrMagnitude > 0, "A reversed route lost its join direction.");
         Console.WriteLine(
-            "PASS: sheet anchors, continuous join tangents, bounded handles, native-slack sag, degenerate spans and moved/heeled routes."
+            "PASS: direct external sheets, gravity-only sag, local tie easing, bounded handles, degenerate spans and moved/heeled routes."
         );
     }
 
     private static void CheckRoute(Vector3[] nodes, float slack)
     {
-        var directions = new Vector3[nodes.Length];
-        directions[0] = directions[1] = (nodes[1] - nodes[0]).normalized;
-        directions[nodes.Length - 1] = (
-            nodes[nodes.Length - 1] - nodes[nodes.Length - 2]
-        ).normalized;
-        for (int i = 2; i < nodes.Length - 1; i++)
-            directions[i] = FishermansFlyingSailRopeGeometry.Tangent(
-                nodes[i - 1],
-                nodes[i],
-                nodes[i + 1]
-            );
         var shift = new Vector3(19, -8, 31);
-        Vector3 previousDirection = directions[1];
         for (int span = 1; span < nodes.Length - 1; span++)
         {
             var start = nodes[span];
             var end = nodes[span + 1];
             float length = (end - start).magnitude;
-            float before = (start - nodes[span - 1]).magnitude;
-            float after = span + 2 < nodes.Length ? (nodes[span + 2] - end).magnitude : length;
-            var a = FishermansFlyingSailRopeGeometry.Handle(directions[span], before, length);
-            var b = FishermansFlyingSailRopeGeometry.Handle(directions[span + 1], after, length);
+            var a = FishermansFlyingSailRopeGeometry.Handle(nodes[1] - nodes[0], 0.4572f, length);
+            var b = (end - start) / 3;
             Vector3 Point(float t) =>
-                FishermansFlyingSailRopeGeometry.Point(start, end, a, b, slack, t);
+                span == 1
+                    ? FishermansFlyingSailRopeGeometry.Point(start, end, a, b, slack, t)
+                    : FishermansFlyingSailRopeGeometry.DirectPoint(start, end, slack, t);
             Near(Point(0), start, 0.0001f);
             Near(Point(1), end, 0.0001f);
-            var departing = (Point(0.001f) - start).normalized;
-            var arriving = (end - Point(0.999f)).normalized;
-            Check(
-                Vector3.Dot(previousDirection, departing) > 0.98f,
-                "Adjacent spans form a sharp corner."
-            );
-            Check(
-                Vector3.Dot(arriving, directions[span + 1]) > 0.98f,
-                "Rope missed its arrival tangent."
-            );
-            previousDirection = arriving;
+            if (span == 1)
+                Check(
+                    Vector3.Dot(
+                        (Point(0.001f) - start).normalized,
+                        (nodes[1] - nodes[0]).normalized
+                    ) > 0.98f,
+                    "The fabric-edge extension must ease into the short straight mast tie."
+                );
             for (int sample = 0; sample <= 32; sample++)
             {
                 float t = sample / 32f;
-                Near(
-                    FishermansFlyingSailRopeGeometry.Point(
-                        start + shift,
-                        end + shift,
-                        a,
-                        b,
-                        slack,
-                        t
-                    ),
-                    Point(t) + shift,
-                    0.0001f
-                );
+                var moved =
+                    span == 1
+                        ? FishermansFlyingSailRopeGeometry.Point(
+                            start + shift,
+                            end + shift,
+                            a,
+                            b,
+                            slack,
+                            t
+                        )
+                        : FishermansFlyingSailRopeGeometry.DirectPoint(
+                            start + shift,
+                            end + shift,
+                            slack,
+                            t
+                        );
+                Near(moved, Point(t) + shift, 0.0001f);
                 var delta = Point(t) - Vector3.Lerp(start, end, t);
-                Check(
-                    delta.magnitude <= length * 0.36f,
-                    "A smoothed rope looped away from its attachments."
-                );
+                if (span == 1)
+                    Check(delta.magnitude <= length * 0.36f, "Tie easing escaped its local span.");
+                else
+                {
+                    Check(
+                        Math.Abs(delta.x) < 1e-5f && Math.Abs(delta.z) < 1e-5f,
+                        "External ropes must not bow sideways or inherit a corner tangent."
+                    );
+                    Check(
+                        delta.y <= 1e-5f && delta.y >= -length * 0.025f - 1e-5f,
+                        "External rope must sag down by at most 2.5 percent of span length."
+                    );
+                    var tight = FishermansFlyingSailRopeGeometry.DirectPoint(start, end, 0, t);
+                    var eased = FishermansFlyingSailRopeGeometry.DirectPoint(start, end, 1, t);
+                    Check(eased.y <= tight.y + 1e-5f, "Easing a sheet must increase downward sag.");
+                }
             }
         }
+        foreach (float amount in new[] { 0f, 1f })
+        {
+            var midpoint = FishermansFlyingSailRopeGeometry.DirectPoint(
+                nodes[1],
+                nodes[2],
+                amount,
+                0.5f
+            );
+            float expectedSag = (nodes[2] - nodes[1]).magnitude * (amount == 0 ? 0.005f : 0.025f);
+            Near(midpoint, (nodes[1] + nodes[2]) / 2 + Vector3.down * expectedSag, 0.0001f);
+        }
+        Near(
+            FishermansFlyingSailRopeGeometry.DirectPoint(nodes[1], nodes[1], slack, 0.5f),
+            nodes[1],
+            0.0001f
+        );
     }
 
     private static void Near(Vector3 a, Vector3 b, float tolerance) =>

@@ -5,13 +5,14 @@ namespace MoreSailwindSails.Sails.FishermansFlyingSail
 {
     internal static class FishermansFlyingSailRopeGeometry
     {
-        // All adjacent spans use this same direction at their shared attachment.
-        internal static Vector3 Tangent(Vector3 before, Vector3 at, Vector3 after)
+        // Guides and knots terminate a span: they do not impose a tangent on
+        // the next span. Gravity supplies the only bow in these external ropes.
+        internal static Vector3 DirectPoint(Vector3 start, Vector3 end, float slack, float t)
         {
-            var incoming = (at - before).normalized;
-            var outgoing = (after - at).normalized;
-            var sum = incoming + outgoing;
-            return sum.sqrMagnitude > 1e-8f ? sum.normalized : incoming;
+            t = Math.Max(0, Math.Min(1, t));
+            float sag =
+                (end - start).magnitude * (0.005f + 0.02f * Math.Max(0, Math.Min(1, slack)));
+            return Vector3.Lerp(start, end, t) + Vector3.down * (sag * 4 * t * (1 - t));
         }
 
         internal static Vector3 Handle(Vector3 direction, float adjacentLength, float length) =>

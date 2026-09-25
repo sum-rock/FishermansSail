@@ -21,6 +21,7 @@ internal static class SheetVisualChecks
         var patch = assembly.GetType(prefix + "Patches.FishermansFlyingSailSheetVisualPatch", true);
         var marker = assembly.GetType(prefix + "FishermansFlyingSailNativeSheetVisual", true);
         var route = assembly.GetType(prefix + "FishermansFlyingSailSupportLine", true);
+        var knots = assembly.GetType(prefix + "FishermansFlyingSailKnots", true);
         var rig = assembly.GetType(prefix + "FishermansFlyingSailRig", true);
         var target = patch.GetCustomAttribute<HarmonyPatch>().info;
         var postfix = patch.GetMethod("Postfix", methods);
@@ -86,7 +87,7 @@ internal static class SheetVisualChecks
                         "Sheet visuals must not alter cloth topology, bone orientation or hinge physics."
                     );
         }
-        foreach (var type in new[] { marker, route, rig })
+        foreach (var type in new[] { marker, route, rig, knots })
             if (!CalledMethods(type.GetMethod("OnDisable", methods)).Any(m => m.Name == "Hide"))
                 throw new Exception("Disabling a sail or its visual owner must hide its ropes.");
         var hide = CalledMethods(marker.GetMethod("Hide", methods)).ToArray();
@@ -98,8 +99,60 @@ internal static class SheetVisualChecks
             <= lateCalls.FindIndex(m => m.Name == "UpdateShapeBones")
         )
             throw new Exception("Rope drawing must follow the final sail pose.");
+        var routeDraw = CalledMethods(route.GetMethod("Draw", methods)).ToArray();
+        if (
+            routeDraw.Count(m => m.Name == "DrawDirectSpan") != 3
+            || !routeDraw.Any(m => m.DeclaringType == knots && m.Name == "Draw")
+            || !routeDraw.Any(m => m.DeclaringType == knots && m.Name == "Hide")
+            || !CalledMethods(route.GetMethod("Hide", methods))
+                .Any(m => m.DeclaringType == knots && m.Name == "Hide")
+        )
+            throw new Exception(
+                "External sheets must use direct spans and share knot visibility/parking."
+            );
+        var create = knots.GetMethod("TryCreate", methods);
+        var creationCalls = CalledMethods(create).ToList();
+        int bake = creationCalls.FindIndex(m => m.Name == "BakeMesh");
+        if (
+            bake < 0
+            || bake >= creationCalls.FindIndex(m => m.Name == "get_vertices")
+            || !creationCalls.Any(m =>
+                m.DeclaringType.Name == "FishermansFlyingSailKnotGeometry" && m.Name == "Select"
+            )
+            || !creationCalls.Any(m => m.Name == "set_sharedMaterial")
+            || !create
+                .GetMethodBody()
+                .ExceptionHandlingClauses.Any(c =>
+                    c.Flags == ExceptionHandlingClauseOptions.Finally
+                )
+        )
+            throw new Exception(
+                "Knot creation must bake a private copy, isolate the knot, reuse material and clean up temporary assets."
+            );
+        if (
+            !Instructions(create)
+                .Any(i => i.Operand is FieldInfo field && field.Name == "clothRopeJibSheetPrefab")
+        )
+            throw new Exception(
+                "Knot appearance must come from the installed native jib-sheet prefab."
+            );
+        foreach (var method in knots.GetMethods(methods).Where(m => !m.IsStatic))
+        foreach (var called in CalledMethods(method))
+            if (
+                called.DeclaringType.Name is "Cloth" or "ClothRope" or "RopeEffect" or "HingeJoint"
+                || called.Name
+                    is "BakeMesh"
+                        or "set_sharedMesh"
+                        or "set_bones"
+                        or "set_bindposes"
+                        or "Destroy"
+                        or "DestroyImmediate"
+            )
+                throw new Exception(
+                    "Live knot callbacks must only pose/hide independent visuals; instances do not own meshes or rope physics."
+                );
         Console.WriteLine(
-            "PASS (IL): scoped sheet visual postfix, installed line/ClothRope fields, preserved native rope state, post-pose drawing and disable cleanup. Rendering remains a runtime check."
+            "PASS (IL): scoped native sheet suppression, direct external spans, private native-knot baking, material reuse and knot lifecycle; live cloth and rope physics preserved. Rendering remains a runtime check."
         );
     }
 }
