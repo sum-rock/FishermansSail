@@ -56,8 +56,11 @@ internal static class PatchChecks
                     )
             )
                 throw new Exception("Missing physical mast fit guard: " + patch);
-        if (!Patch("Controls", "Finalizer").IsDefined(typeof(HarmonyFinalizer)))
-            throw new Exception("Mk.A native list restoration is not exception-safe.");
+        Shared.ControlRestorationChecks.Run(
+            assembly,
+            family + "Patches.FishermansStaysailControlsPatch",
+            "Staysail family (Mk.A/Mk.B)"
+        );
         if (!CalledMethods(Patch("Travel", "Postfix")).Any(m => m.Name == "ConstrainHinge"))
             throw new Exception("Mk.A travel is not constrained after native sway.");
         if (
@@ -127,13 +130,10 @@ internal static class PatchChecks
         var lateUpdate = CalledMethods(Method("FishermansStaysailRig", "LateUpdate")).ToArray();
         if (
             !lateUpdate.Any(m =>
-                m.DeclaringType.Name == "FishermansStaysailUpperTrim" && m.Name == "Fit"
-            )
-            || !lateUpdate.Any(m =>
-                m.DeclaringType.Name == "FishermansStaysailShape" && m.Name == "get_UpperCornerTrim"
+                m.DeclaringType.Name == "FishermansStaysailEdgeFit" && m.Name == "Fit"
             )
         )
-            throw new Exception("Upper trim must be fitted using the mark's tuning.");
+            throw new Exception("The family rig must retain active edge fitting.");
         if (
             !lateUpdate.Any(m =>
                 m.DeclaringType.Name == "FishermansStaysailFixedHead" && m.Name == "Update"
@@ -145,9 +145,14 @@ internal static class PatchChecks
             || Type("MkA.FishermansStaysailMkAShape")
                 .GetProperty("FixedUpperHeadAngle", all)
                 .DeclaringType != Type("MkA.FishermansStaysailMkAShape")
-            || Type("MkA.FishermansStaysailMkAShape")
-                .GetProperty("UpperCornerTrim", all)
-                .DeclaringType != Type("FishermansStaysailShape")
+            || Type("FishermansStaysailShape").GetProperty("FixedUpperHeadAngle", all).PropertyType
+                != typeof(float)
+            || !Type("FishermansStaysailShape")
+                .GetProperty("FixedUpperHeadAngle", all)
+                .GetMethod.IsAbstract
+            || Type("FishermansStaysailShape").GetProperty("UpperCornerTrim", all) != null
+            || Type("FishermansStaysailFrameGeometry").GetMethod("UpperHead", all) != null
+            || assembly.GetType(family + "FishermansStaysailUpperTrim") != null
             || (float)
                 Type("MkA.FishermansStaysailMkAGeometry")
                     .GetField("FixedUpperHeadAngle", all)

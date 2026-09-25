@@ -8,7 +8,9 @@ internal static class Program
     private static void Main()
     {
         RigChecks.Run();
+        ProfileChecks.Run();
         StayChecks.Run();
+        WinchChecks.Run();
         OrderTextChecks.Run();
         FlyingSailChecks.Run();
         TravelChecks.Run();
@@ -21,8 +23,8 @@ internal static class Program
         FishermansStaysail.MkB.CutChecks.Run();
         FishermansStaysail.ReefingChecks.Run();
         FishermansStaysail.SheetChecks.Run();
-        FishermansStaysail.MkA.UpperTrimChecks.Run();
-        FishermansStaysail.MkA.BillowChecks.Run();
-        FishermansStaysail.MkA.FixedHeadChecks.Run();
+        FishermansStaysail.EdgeFitChecks.Run();
+        FishermansStaysail.BillowChecks.Run();
+        FishermansStaysail.FixedHeadChecks.Run();
     }
 }

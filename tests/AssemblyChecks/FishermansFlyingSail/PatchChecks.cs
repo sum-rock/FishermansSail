@@ -188,17 +188,10 @@ internal static class PatchChecks
             "PASS: actual order-text prefix, NANDFixes ordering, safe input for later HarmonyX prefixes, and native-list preservation."
         );
 
-        var controlsPatch = assembly.GetType(
-            "FishermansSail.Sails.FishermansFlyingSail.Patches.FishermansFlyingSailControlsPatch"
+        Shared.ControlRestorationChecks.Run(
+            assembly,
+            "FishermansSail.Sails.FishermansFlyingSail.Patches.FishermansFlyingSailControlsPatch",
+            "Flying Sail"
         );
-        if (
-            !controlsPatch
-                .GetMethod("Finalizer", BindingFlags.NonPublic | BindingFlags.Static)
-                .IsDefined(typeof(HarmonyFinalizer))
-        )
-            throw new Exception(
-                "Mast sail-list restoration must run even when native binding throws."
-            );
-        Console.WriteLine("PASS: independent-control restoration and native mast integration.");
     }
 }

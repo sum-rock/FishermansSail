@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using FishermansSail.BoatRigs;
+using FishermansSail.Controls;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
@@ -26,8 +28,8 @@ namespace FishermansSail.Stays.FishermansStay
         private bool fits;
         private readonly List<Tuple<Transform, Transform>> anchors =
             new List<Tuple<Transform, Transform>>();
-        private readonly List<Tuple<GPButtonRopeWinch, GPButtonRopeWinch>> controls =
-            new List<Tuple<GPButtonRopeWinch, GPButtonRopeWinch>>();
+        private readonly List<FishermanWinchControls.OwnedWinch> controls =
+            new List<FishermanWinchControls.OwnedWinch>();
 
         internal FishermansStay(BoatRefs boat, FishermansStayReferences references)
         {
@@ -57,10 +59,10 @@ namespace FishermansSail.Stays.FishermansStay
                 .Where(c => c)
                 .ToArray();
             Mount.startingSailColor = source.startingSailColor;
-            Mount.leftAngleWinch = CloneWinches(source.leftAngleWinch, "Port sheet");
-            Mount.rightAngleWinch = CloneWinches(source.rightAngleWinch, "Starboard sheet");
-            Mount.midAngleWinch = CloneWinches(source.midAngleWinch, "Sheet");
-            Mount.reefWinch = CloneWinches(references.Aft.reefWinch, "Halyard");
+            Mount.leftAngleWinch = CloneWinches(source, WinchRole.Left, "Port sheet");
+            Mount.rightAngleWinch = CloneWinches(source, WinchRole.Right, "Starboard sheet");
+            Mount.midAngleWinch = CloneWinches(source, WinchRole.Mid, "Sheet");
+            Mount.reefWinch = CloneWinches(references.Aft, WinchRole.Reef, "Halyard");
             if (
                 Mount.reefWinch.Length == 0
                 || (
@@ -136,7 +138,6 @@ namespace FishermansSail.Stays.FishermansStay
                 FishermansStayGeometry.FrameUp(source.transform.up, forward)
             );
             bool moved = Mount.transform.position != aft || Mount.transform.rotation != rotation;
-            var controlRotations = controls.Select(p => p.Item2.transform.rotation).ToArray();
             Mount.transform.SetPositionAndRotation(aft, rotation);
             Mount.transform.localScale = Vector3.one;
             Mount.mastHeight = span;
@@ -153,13 +154,6 @@ namespace FishermansSail.Stays.FishermansStay
             FitGeometry(walkVisual, walkMin, walkMax, span);
             foreach (var pair in anchors)
                 pair.Item2.SetPositionAndRotation(pair.Item1.position, pair.Item1.rotation);
-            var towardsFore = Vector3.ProjectOnPlane(fore - aft, boat.transform.up).normalized;
-            for (int i = 0; i < controls.Count; i++)
-                controls[i]
-                    .Item2.transform.SetPositionAndRotation(
-                        controls[i].Item1.transform.position + towardsFore * 0.35f,
-                        controlRotations[i]
-                    );
             if (moved && Mount.sails.Count > 0)
                 Mount.UpdateControllerAttachments();
             fits = true;
@@ -208,6 +202,9 @@ namespace FishermansSail.Stays.FishermansStay
 
         internal void Destroy()
         {
+            foreach (var control in controls)
+                control.Dispose();
+            controls.Clear();
             if (Mount)
             {
                 Mount.gameObject.SetActive(false);
@@ -217,43 +214,21 @@ namespace FishermansSail.Stays.FishermansStay
                 Object.Destroy(WalkObject);
         }
 
-        private GPButtonRopeWinch[] CloneWinches(GPButtonRopeWinch[] sources, string label)
+        private GPButtonRopeWinch[] CloneWinches(Mast donor, WinchRole role, string label)
         {
-            if (sources == null || sources.Length == 0)
+            var sourceWinch = FishermanWinchControls.Source(donor, role);
+            if (!sourceWinch)
                 return new GPButtonRopeWinch[0];
-            var sourceWinch = sources[0];
-            if (
-                !sourceWinch
-                || !sourceWinch.GetComponent<Renderer>()
-                || !sourceWinch.GetComponent<Collider>()
-            )
-                throw new InvalidOperationException(
-                    "A source winch has no usable renderer/collider."
-                );
-            var clone = Object.Instantiate(sourceWinch.gameObject, Mount.transform, false);
-            clone.name = "FishermansStay " + label;
-            // Keep the new controls beside their donor controls on deck. The
-            // inactive mount prevents Awake from seeing the donor's live rope.
-            var towardsFore =
-                references.Fore.transform.position - references.Aft.transform.position;
-            towardsFore = Vector3.ProjectOnPlane(towardsFore, boat.transform.up).normalized;
-            clone.transform.SetPositionAndRotation(
-                sourceWinch.transform.position + towardsFore * 0.35f,
-                sourceWinch.transform.rotation
+            var control = FishermanWinchControls.Create(
+                boat,
+                Mount.gameObject,
+                Mount.transform,
+                donor,
+                role,
+                "FishermansStay " + label
             );
-            clone.transform.localScale = sourceWinch.transform.lossyScale;
-            var winch = clone.GetComponent<GPButtonRopeWinch>();
-            winch.rope = null;
-            controls.Add(Tuple.Create(sourceWinch, winch));
-            if (winch.rotHandle && !winch.rotHandle.transform.IsChildOf(clone.transform))
-            {
-                winch.rotHandle = Object.Instantiate(winch.rotHandle, clone.transform, false);
-                winch.rotHandle.transform.localPosition = Vector3.zero;
-            }
-            if (winch.rotHandle)
-                winch.rotHandle.rotatable = clone.transform;
-            clone.SetActive(true);
-            return new[] { winch };
+            controls.Add(control);
+            return new[] { control.Winch };
         }
 
         private Transform[] CloneAnchors(Transform[] sources, string label)

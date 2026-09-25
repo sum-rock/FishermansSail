@@ -7,8 +7,7 @@ namespace FishermansSail.Sails.FishermansStaysail
     internal abstract class FishermansStaysailShape : MonoBehaviour
     {
         internal abstract string ObjectPrefix { get; }
-        internal virtual float UpperCornerTrim => 0;
-        internal virtual float? FixedUpperHeadAngle => null;
+        internal abstract float FixedUpperHeadAngle { get; }
         internal abstract FishermansStaysailMeshData Create(float width, float headSlope);
     }
 }

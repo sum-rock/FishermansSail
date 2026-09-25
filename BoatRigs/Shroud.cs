@@ -1,11 +1,213 @@
+using System.Collections.Generic;
+using UnityEngine;
+
 namespace FishermansSail.BoatRigs
 {
-    internal static partial class BoatRigCatalog
+    internal static class Shroud
     {
-        private static readonly BoatRigDefinition Shroud = new BoatRigDefinition(
+        internal static readonly BoatRigDefinition Definition = new BoatRigDefinition(
             "BOAT Shroud Large",
-            ShroudStays(),
-            new MastSupportDefinition(25, new[] { 7 }, new[] { 9 })
+            Supports(),
+            Stays(),
+            MastParents(),
+            WinchMounts()
         );
+
+        private static MastSupportDefinition[] Supports() =>
+            new[] { new MastSupportDefinition(25, new[] { 7 }, new[] { 9 }) };
+
+        // Installed mast ancestry: -1 marks a physical base section.
+        private static Dictionary<int, int> MastParents() =>
+            new Dictionary<int, int>
+            {
+                { 6, -1 },
+                { 5, -1 },
+                { 8, -1 },
+                { 7, -1 },
+                { 10, -1 },
+                { 9, -1 },
+            };
+
+        // Installed donor directions in boat space; provenance and numeric fixtures
+        // are documented in docs/DEVELOPMENT.md under shared winch placement.
+        private static WinchMountDefinition[] WinchMounts() =>
+            new[]
+            {
+                new WinchMountDefinition(
+                    7,
+                    WinchRole.Reef,
+                    new Vector3(-0.121869f, 0f, -0.992546f),
+                    false,
+                    -1
+                ),
+                new WinchMountDefinition(
+                    8,
+                    WinchRole.Reef,
+                    new Vector3(-0.121869f, 0f, -0.992546f),
+                    false,
+                    -1
+                ),
+                new WinchMountDefinition(
+                    9,
+                    WinchRole.Reef,
+                    new Vector3(-0.121869f, 0f, -0.992546f),
+                    false,
+                    -1
+                ),
+                new WinchMountDefinition(
+                    10,
+                    WinchRole.Reef,
+                    new Vector3(-0.121869f, 0f, -0.992546f),
+                    false,
+                    -1
+                ),
+                new WinchMountDefinition(24, WinchRole.Left, new Vector3(0f, 0f, 1f), false, -1),
+                new WinchMountDefinition(24, WinchRole.Right, new Vector3(0f, 0f, 1f), false, -1),
+                new WinchMountDefinition(
+                    25,
+                    WinchRole.Left,
+                    new Vector3(0.99572f, 0f, 0.092419f),
+                    false,
+                    -1
+                ),
+                new WinchMountDefinition(
+                    25,
+                    WinchRole.Right,
+                    new Vector3(0.99572f, 0f, 0.092419f),
+                    false,
+                    -1
+                ),
+            };
+
+        // Authored from installed Shroud and Shipyard Expansion assets.
+        // Endpoint vectors are local to the named physical mast section.
+        private static FishermansStayGroupDefinition[] Stays() =>
+            new[]
+            {
+                new FishermansStayGroupDefinition(
+                    "Foremast / mainmast",
+                    new[]
+                    {
+                        // 70.00 degrees at aft mast.
+                        new FishermansStayVariantDefinition(
+                            128,
+                            24,
+                            "Foremast 1 / Mainmast 1",
+                            6,
+                            new Vector3(0.00000f, -0.00682f, -1.26976f),
+                            8,
+                            new Vector3(0.00000f, -0.00928f, -0.42400f),
+                            false,
+                            0,
+                            new[] { 6, 8 },
+                            new int[0]
+                        ),
+                        // 70.00 degrees at aft mast.
+                        new FishermansStayVariantDefinition(
+                            129,
+                            24,
+                            "Foremast 1 Tall / Mainmast 1",
+                            5,
+                            new Vector3(-0.00291f, 0.00006f, -11.85458f),
+                            8,
+                            new Vector3(0.00000f, -0.00928f, -0.42400f),
+                            false,
+                            0,
+                            new[] { 5, 8 },
+                            new int[0]
+                        ),
+                        // 42.20 degrees at aft mast; forward masthead fallback.
+                        new FishermansStayVariantDefinition(
+                            130,
+                            24,
+                            "Foremast 1 / Mainmast 1 Tall",
+                            6,
+                            new Vector3(0.00000f, -0.00682f, 0.50000f),
+                            7,
+                            new Vector3(-0.00537f, -0.00391f, -0.46400f),
+                            false,
+                            0,
+                            new[] { 6, 7 },
+                            new int[0]
+                        ),
+                        // 70.00 degrees at aft mast.
+                        new FishermansStayVariantDefinition(
+                            131,
+                            24,
+                            "Foremast 1 Tall / Mainmast 1 Tall",
+                            5,
+                            new Vector3(-0.00291f, 0.00006f, -2.44452f),
+                            7,
+                            new Vector3(-0.00537f, -0.00391f, -0.46400f),
+                            false,
+                            0,
+                            new[] { 5, 7 },
+                            new int[0]
+                        ),
+                    }
+                ),
+                new FishermansStayGroupDefinition(
+                    "Mainmast / mizzenmast",
+                    new[]
+                    {
+                        // 70.00 degrees at aft mast.
+                        new FishermansStayVariantDefinition(
+                            132,
+                            25,
+                            "Mainmast 1 / Mizzen 1",
+                            8,
+                            new Vector3(0.00000f, -0.00928f, -6.67603f),
+                            10,
+                            new Vector3(0.00000f, -0.00365f, -0.51800f),
+                            false,
+                            0,
+                            new[] { 8, 10 },
+                            new int[0]
+                        ),
+                        // 70.00 degrees at aft mast.
+                        new FishermansStayVariantDefinition(
+                            133,
+                            25,
+                            "Mainmast 1 Tall / Mizzen 1",
+                            7,
+                            new Vector3(-0.00537f, -0.00391f, -16.12609f),
+                            10,
+                            new Vector3(0.00000f, -0.00365f, -0.51800f),
+                            false,
+                            0,
+                            new[] { 7, 10 },
+                            new int[0]
+                        ),
+                        // 55.88 degrees at aft mast; forward masthead fallback.
+                        new FishermansStayVariantDefinition(
+                            134,
+                            25,
+                            "Mainmast 1 / Mizzenmast 1 Tall",
+                            8,
+                            new Vector3(0.00000f, -0.00928f, 0.50000f),
+                            9,
+                            new Vector3(0.00025f, -0.00391f, -0.12789f),
+                            false,
+                            0,
+                            new[] { 8, 9 },
+                            new int[0]
+                        ),
+                        // 70.00 degrees at aft mast.
+                        new FishermansStayVariantDefinition(
+                            135,
+                            25,
+                            "Mainmast 1 Tall / Mizzenmast 1 Tall",
+                            7,
+                            new Vector3(-0.00537f, -0.00391f, -5.67900f),
+                            9,
+                            new Vector3(0.00025f, -0.00391f, -0.12789f),
+                            false,
+                            0,
+                            new[] { 7, 9 },
+                            new int[0]
+                        ),
+                    }
+                ),
+            };
     }
 }

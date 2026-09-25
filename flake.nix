@@ -1,5 +1,5 @@
 {
-  description = "Development environment for the Fisherman's Sail Sailwind mod";
+  description = "Development environment for the MoreSailwindSails mod";
 
   inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-26.05";
 

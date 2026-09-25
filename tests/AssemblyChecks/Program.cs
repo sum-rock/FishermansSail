@@ -38,12 +38,14 @@ internal static class Program
             return null;
         };
         var assembly = Assembly.LoadFrom(
-            Path.Combine(AppContext.BaseDirectory, "FishermansSail.dll")
+            Path.Combine(AppContext.BaseDirectory, "MoreSailwindSails.dll")
         );
 
         HarmonySignatureChecks.Run(assembly);
         FlyingSailChecks.Run(assembly);
         StayChecks.Run(assembly);
+        FishermansStay.WinchChecks.Run(assembly);
+        FishermansStaysail.RegistrationChecks.Run(assembly);
         FishermansStaysail.MkA.PatchChecks.Run(assembly);
         FishermansStaysail.MkB.PatchChecks.Run(assembly);
         FishermansStaysail.SailInfoChecks.Run(assembly, gameDir);

@@ -1,48 +1,57 @@
 using System;
 using FishermansSail.Sails.FishermansStaysail;
-using FishermansSail.Sails.FishermansStaysail.MkA;
 using UnityEngine;
 
-namespace FishermansSail.Tests.GeometryChecks.FishermansStaysail.MkA;
+namespace FishermansSail.Tests.GeometryChecks.FishermansStaysail;
 
 internal static class BillowChecks
 {
     internal static void Run()
     {
-        foreach (float width in new[] { 3f, 6.9f, 13.8f })
-        foreach (float slope in new[] { 20f, 35f, 55f })
-        {
-            var data = FishermansStaysailMkAGeometry.Create(width, slope);
-            foreach (float angle in new[] { 0f, 15f, 40f })
-            foreach (float unroll in new[] { 0f, 0.5f, 0.8f, 0.95f, 1f })
+        BehaviorCases.ForEach(
+            "weighted skin and triangle lengths mirror across tacks and reefs",
+            (mark, width, slope) =>
             {
-                var port = Pose(data, width, angle, 1, unroll);
-                var starboard = Pose(data, width, -angle, -1, unroll);
-                for (int i = 0; i < port.Length; i++)
-                    CutChecks.Near(
-                        (Mirror(port[i]) - starboard[i]).magnitude,
-                        0,
-                        width * 2e-5f,
-                        "opposite-tack weighted skin"
-                    );
-                // Check actual skin edges, including triangle diagonals, rather
-                // than just corresponding bone positions or corner spans.
-                for (int i = 0; i < data.Triangles.Length; i += 3)
-                for (int edge = 0; edge < 3; edge++)
-                {
-                    int a = data.Triangles[i + edge],
-                        b = data.Triangles[i + (edge + 1) % 3];
-                    CutChecks.Near(
-                        (port[a] - port[b]).magnitude,
-                        (starboard[a] - starboard[b]).magnitude,
-                        width * 2e-5f,
-                        "tack-invariant cloth edge lengths"
-                    );
-                }
+                var data = mark.Create(width, slope);
+                for (int angle = -40; angle <= 40; angle += 5)
+                    foreach (float unroll in BehaviorCases.Reefs)
+                        BehaviorCases.Check(
+                            $"sheet {angle}, unroll {unroll}",
+                            () =>
+                            {
+                                var port = Pose(data, mark.HeadAngle, width, angle, 1, unroll);
+                                var starboard = Pose(
+                                    data,
+                                    mark.HeadAngle,
+                                    width,
+                                    -angle,
+                                    -1,
+                                    unroll
+                                );
+                                for (int i = 0; i < port.Length; i++)
+                                    BehaviorCases.Near(
+                                        (Mirror(port[i]) - starboard[i]).magnitude,
+                                        0,
+                                        width * 2e-5f,
+                                        "opposite-tack weighted skin"
+                                    );
+                                // Check actual skin edges, including triangle diagonals, rather
+                                // than just corresponding bone positions or corner spans.
+                                for (int i = 0; i < data.Triangles.Length; i += 3)
+                                for (int edge = 0; edge < 3; edge++)
+                                {
+                                    int a = data.Triangles[i + edge],
+                                        b = data.Triangles[i + (edge + 1) % 3];
+                                    BehaviorCases.Near(
+                                        (port[a] - port[b]).magnitude,
+                                        (starboard[a] - starboard[b]).magnitude,
+                                        width * 2e-5f,
+                                        "tack-invariant cloth edge lengths"
+                                    );
+                                }
+                            }
+                        );
             }
-        }
-        Console.WriteLine(
-            "PASS: Mk.A complete weighted skin and triangle lengths mirror across tacks, including fixed upper corners and reefs."
         );
 
         const float sampleWidth = 6.9f;
@@ -59,7 +68,7 @@ internal static class BillowChecks
             float travel = FishermansStaysailBillow.ClothTravel(sampleWidth, u, v);
             if (travel >= camber)
                 throw new Exception(
-                    $"Mk.A interior can cross its neutral plane: u={u}, v={v}, camber={camber:F3}m, travel={travel:F3}m."
+                    $"Family interior can cross its neutral plane: u={u}, v={v}, camber={camber:F3}m, travel={travel:F3}m."
                 );
             if (travel <= 0)
                 throw new Exception("The sail belly must retain some free cloth motion.");
@@ -69,10 +78,10 @@ internal static class BillowChecks
             FishermansStaysailGeometry.RestCamber(sampleWidth, 0.25f, 0) < center * 0.65f
             || FishermansStaysailGeometry.RestCamber(sampleWidth, 0.5f, 0.5f) < center * 0.6f
         )
-            throw new Exception("Mk.A billow must have rounded shoulders and a fuller middle.");
+            throw new Exception("Family billow must have rounded shoulders and a fuller middle.");
         CheckTransitions();
         Console.WriteLine(
-            "PASS: Mk.A rounded billow, bounded interior cloth motion and smooth repeated camber reversals."
+            "PASS (executed): family rounded billow, bounded interior cloth motion and smooth repeated camber reversals."
         );
     }
 
@@ -80,6 +89,7 @@ internal static class BillowChecks
 
     private static Vector3[] Pose(
         FishermansStaysailMeshData data,
+        float headAngle,
         float width,
         float angle,
         int side,
@@ -93,7 +103,7 @@ internal static class BillowChecks
             c[0],
             Vector3.right,
             -side,
-            FishermansStaysailMkAGeometry.FixedUpperHeadAngle,
+            headAngle,
             unroll
         );
         var tack = FishermansStaysailReefingGeometry.Pose(c[2], c[0], c[1], unroll, unroll);
@@ -102,19 +112,12 @@ internal static class BillowChecks
             clew,
             c[0],
             Vector3.right,
-            FishermansStaysailFixedHead.LowerAngle(
-                angle,
-                -side * FishermansStaysailMkAGeometry.FixedUpperHeadAngle,
-                unroll
-            )
+            FishermansStaysailFixedHead.LowerAngle(angle, -side * headAngle, unroll)
         );
-        var pulley = c[0] + (c[1] - c[0]) * 1.5f + Vector3.right * (width * 0.03f);
         var leech = new Vector3[FishermansStaysailGeometry.Rows + 1];
         if (
-            !FishermansStaysailUpperTrim.Fit(
+            !FishermansStaysailEdgeFit.Fit(
                 head,
-                c[0],
-                pulley,
                 clew,
                 tack,
                 Vector3.up,
@@ -122,11 +125,9 @@ internal static class BillowChecks
                 width,
                 side,
                 unroll,
-                0,
                 (c[1] - c[3]).magnitude * Math.Max(0.015f, unroll),
                 (clew - tack).magnitude,
-                leech,
-                out head
+                leech
             )
         )
             throw new Exception("Mirrored-pose fixture must fit.");
@@ -175,7 +176,7 @@ internal static class BillowChecks
                         throw new Exception("Billow jumps or overshoots on a tack.");
                     camber = next;
                 }
-                CutChecks.Near(camber, desired, 0.001f, "new tack settles");
+                BehaviorCases.Near(camber, desired, 0.001f, "new tack settles");
             }
         }
     }

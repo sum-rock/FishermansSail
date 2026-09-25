@@ -75,8 +75,24 @@ internal static class RigChecks
             brig.Single(s => s.SheetControlSource == 62).AftSections.SequenceEqual(new[] { 58, 4 }),
             "Alternate Brig topmast uses wrong lower section."
         );
-        Reject(() => new BoatRigDefinition("duplicate", brig[0], brig[0]));
-        Reject(() => new BoatRigDefinition("empty"));
+        Reject(() =>
+            new BoatRigDefinition(
+                "duplicate",
+                new[] { brig[0], brig[0] },
+                Brig.Definition.Stays,
+                Brig.Definition.MastParents,
+                Brig.Definition.WinchMounts
+            )
+        );
+        Reject(() =>
+            new BoatRigDefinition(
+                "empty",
+                Array.Empty<MastSupportDefinition>(),
+                Brig.Definition.Stays,
+                Brig.Definition.MastParents,
+                Brig.Definition.WinchMounts
+            )
+        );
         Reject(() => new MastSupportDefinition(1, new[] { 2 }, new[] { 2 }));
         Reject(() => new MastSupportDefinition(-1, new[] { 2 }, new[] { 3 }));
         Reject(() => new MastSupportDefinition(1, Array.Empty<int>(), new[] { 3 }));

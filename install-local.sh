@@ -3,8 +3,8 @@ set -euo pipefail
 
 repo_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 game_dir="${1:-$HOME/.local/share/Steam/steamapps/common/Sailwind}"
-dll="$repo_dir/bin/Release/netstandard2.0/FishermansSail.dll"
-destination="$game_dir/BepInEx/plugins/FishermansSail/FishermansSail.dll"
+dll="$repo_dir/bin/Release/netstandard2.0/MoreSailwindSails.dll"
+destination="$game_dir/BepInEx/plugins/MoreSailwindSails/MoreSailwindSails.dll"
 
 if [[ ! -f "$dll" ]]; then
     printf 'Release DLL not found. Build first: nix develop -c dotnet build -c Release\n' >&2

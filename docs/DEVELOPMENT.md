@@ -1,4 +1,14 @@
-# Development
+# MoreSailwindSails development
+
+MoreSailwindSails is a collection of additional sail types for Sailwind.
+Fisherman's Staysails (Mk.A/Mk.B) and Fisherman's Flying Sails are the two
+current sail families; Fisherman's Stays supply supporting rigging. Additional
+families can be developed within the same mod as their own features.
+
+The repository and local checkout are named `MoreSailwindSails`. The project
+file is `MoreSailwindSails.csproj` and its assembly is `MoreSailwindSails.dll`.
+The mod is unreleased. The C# namespace remains `FishermansSail`, with plugin
+GUID `com.august.moresailwindsails` and BepInEx display name `MoreSailwindSails`.
 
 ## Environment and build
 
@@ -32,7 +42,7 @@ nix develop -c dotnet build -c Release -p:SailwindDir="/path/to/Sailwind"
 
 The build references the installed BepInEx, HarmonyX, Shipyard Expansion, game
 and Unity assemblies. They are not bundled with the plugin or committed to Git.
-The output is `bin/Release/netstandard2.0/FishermansSail.dll`.
+The output is `bin/Release/netstandard2.0/MoreSailwindSails.dll`.
 
 ## Automated checks
 
@@ -49,10 +59,13 @@ It changes files; `check` only reports differences.
 - **GeometryChecks** covers mesh and skinning geometry, coupled tension, shaping,
   travel limits, wind frames, boat profiles, collision bounds, hoisting and text
   wrapping, authored stay endpoints, topmast exclusions, shorter-foremast
-  fallbacks, geometry alignment and older shipyard snapshots.
+  fallbacks, geometry alignment and older shipyard snapshots. Both staysail
+  marks run the same fixed-head, sheet, reef and mirrored-skin behavior matrix.
 - **AssemblyChecks** validates Harmony targets against installed assemblies,
-  texture load paths, patch ordering, control-list restoration and restrictions
+  texture load paths, patch ordering, control-list restoration structure and restrictions
   on the live Cloth lifecycle, plus stay registration ordering and save capacity.
+  Control-finalizer checks inspect the saved-list assignment and native order
+  refresh; they do not execute exception recovery against live Unity objects.
 
 For a custom game directory, pass `-p:SailwindDir` to the test builds too.
 AssemblyChecks also needs that directory as a runtime argument:
@@ -74,10 +87,14 @@ Close Sailwind, build, then run from the repository root:
 
 Use `./install-local.sh "/path/to/Sailwind"` for another installation. This
 script copies only the built DLL; it does not build it. Builds and checks do
-not replace the installed plugin or change saves.
+not replace the installed plugin or change saves. Before installing this renamed
+build, remove any old `FishermansSail.dll` from the game's plugin directory to
+avoid loading both assemblies.
 
-Confirm `Fisherman's Sail 0.1.0 loaded!` in `BepInEx/LogOutput.log`. Registration
-should report donor index **110**, sail index **400** and **825** vertices. Read
+Confirm the startup message `MoreSailwindSails 0.1.0 loaded!` in
+`BepInEx/LogOutput.log`. Flying Sail registration should report donor index
+**110**, sail index **400** and **825** vertices. Staysail registrations use
+indices **401** (Mk.A) and **402** (Mk.B). Read
 Unity's `Player.log` as well when diagnosing warnings or cloth problems; this
 machine's paths are recorded in [AGENTS.md](../AGENTS.md).
 
@@ -106,9 +123,9 @@ checks.
 
 ## Source organization
 
-`Plugin.cs` owns the plugin metadata and assembly-wide Harmony registration.
-The plugin identity and output remain `FishermansSail`; the existing sail is
-named **Fisherman's Flying Sail** in game.
+`Plugin.cs` owns the plugin metadata and assembly-wide Harmony registration for
+MoreSailwindSails. Each sail family owns its mechanics and game-facing names;
+the project rename does not change existing menus or saved sail identities.
 
 - `Sails/FishermansFlyingSail/` contains the mast-mounted sail's registration,
   geometry, appearance, cloth rig and controls, using the namespace
@@ -116,25 +133,34 @@ named **Fisherman's Flying Sail** in game.
 - Its `Patches/` subdirectory contains all feature-specific Harmony patches in
   the corresponding `.Patches` namespace, including registration, appearance
   and the order-text freeze guard.
-- `BoatRigs/` contains boat definitions in `FishermansSail.BoatRigs`.
+- `BoatRigs/` contains one static class/file per boat in `FishermansSail.BoatRigs`.
+  Each exposes a complete `BoatRigDefinition` through `Definition`, with private
+  factories for Flying Sail supports, stay variants, mast ancestry and winch mounts.
+  `Definitions.cs` holds the shared data types, validation and `BoatRigCatalog`.
+  Resolve ancestry and winches through the selected profile (`Sections`, `Base`,
+  `WinchMount`); individual winch records inherit boat identity from that profile.
+- `Controls/` owns shared winch allocation, cloning and placement calculations.
+  `WinchPlacementGeometry.cs` uses the authored mounting data without owning any
+  boat tables.
 - `Stays/FishermansStay/` owns the new stays, their independent controls, native
   mount registration, save handling and patches. The namespace is
   `FishermansSail.Stays.FishermansStay`, with `.Patches` for Harmony patches.
-- `BoatRigs/Stays/` contains authored stay variants. Other sail types belong in
-  sibling directories under `Sails/`.
 - `Sails/FishermansStaysail/` owns the staysail family's rig, reefing adapter,
   controls, prefab builder and patches. `MkA/` contains the original 110° cut;
   `MkB/` keeps its head and has a 90° foot. Each mark supplies its own
   `FishermansStaysailShape` and save identity.
-- `BoatRigs/FishermansStaysailDefinitions.cs` holds authored fore-mast ancestry
-  for selecting both physical mast chains and the aft-base halyard source.
+
+Add future sail families under their own `Sails/<Family>/` directory with
+corresponding feature tests. Reuse existing mechanics only when their behavior
+fits the new sail; the deferred shared-helper cleanup is not a prerequisite.
 
 The geometry checks link feature sources directly; update their project includes
 when moving files. The assembly checks resolve internal types by full name;
 update those references when renaming types or namespaces. Runtime object and
-mesh labels use `FishermansFlyingSail`; donor hierarchy names remain unchanged.
-Prefab index **400**, native mast save slots and version **0.1.0** are unchanged.
-The new menu name and loading existing sails still need in-game verification.
+mesh labels use each family's or mark's prefix; donor hierarchy names remain
+unchanged. Prefab IDs **400/401/402**, native save slots and version **0.1.0**
+are unchanged. Existing-save reload after registration cleanup still needs
+in-game verification.
 
 ### Test organization
 
@@ -144,6 +170,11 @@ The latter has `MkA/` and `MkB/` for variant checks. Put each feature's
 checks and helpers in its directory, using the namespace
 `FishermansSail.Tests.<Suite>.<Feature>`. Flying-sail rig-profile checks belong
 with the flying sail; authored stay-profile checks belong with the stay.
+Shared staysail geometry behavior lives at the family level, parameterized by
+`BehaviorCases` over both mark factories. Keep cut and prefab identity checks
+under their marks. Family edge-fit checks cover the active support bow and
+finite failure fallback. Test output labels executed behavior and
+structural control-finalizer inspection separately.
 
 Root `Program.cs` files handle setup and run the checks. Shared Harmony signature
 validation and IL decoding live in `tests/AssemblyChecks/Shared/`, using the
@@ -183,8 +214,12 @@ stay's forward endpoint, with 15 cm head and aft-mast clearances.
 Native collision checks remain active; custom fit checks use forward spar
 length and mast separation. The deployed luff must fit its selected section.
 
-Each mark provides a cut through `FishermansStaysailShape`. The shared prefab
-builder gives each mark its own cloth and shadow meshes. On first binding,
+Each mark provides its cut and owned-asset prefix through
+`FishermansStaysailShape`. Registration attaches that shape to the clone under
+an inactive container and uses it for template geometry and asset naming;
+callers supply only the selected shape type, prefab identity and current prefab.
+The family prefab builder owns brig-jib donor index **110** and the **20°**
+template head slope, giving each mark its own cloth and shadow meshes. On first binding,
 each creates an owned mesh for the actual stay angle before enabling Cloth.
 The mesh and bind poses then remain fixed. Its luff is straight and fully
 pinned; the current experiment holds the aft head at 14° while retaining the
@@ -201,9 +236,9 @@ The user reported that the fixed 20° experiment appeared to work and requested
 a further 6° inward adjustment. The user then found the 14° setting pretty good. The current change adds an
 aft halyard and proportional reef-angle transition, which await in-game validation.
 
-Mk.A selects a nullable mark-level `FixedUpperHeadAngle` of 14°. The family
-default is null, retaining its existing 85% head policy and optional trim for
-other marks. Mk.A bypasses both of those responses. The fixed target rotates
+Each mark supplies a required `FixedUpperHeadAngle`, currently 14° for both.
+The dormant staysail sheet-following policy and optional inward trim were
+removed in CLEANUP-3. The fixed target rotates
 the neutral head around the fore-mast axis, retaining height and head span.
 The angle is multiplied directly by clamped `currentUnroll`: 14° at full
 hoist, 7° at half reef, and 0° fully furled. The lower corner blends from its
@@ -217,9 +252,10 @@ apparent wind projected onto `Cross(mastAxis, neutralAftDirection)`. This frame
 is independent of the sheet-rotated body and cloth. A ±0.6 m/s deadband retains
 the prior side; initial indeterminate wind defaults to +14°. Subsequent tack
 changes use the existing smoothing rate, settling exactly at ±14°. Wind strength
-and lower-sheet travel cannot trim the settled upper position. The fixed mode
-passes zero additional trim to the coupled solver, which adjusts the lower clew
-and leech without moving the upper corner. Invalid fits retain finite fallback
+and lower-sheet travel cannot trim the settled upper position.
+`FishermansStaysailEdgeFit` retains the load-dependent support bow and calls
+the coupled solver, which adjusts the lower clew and leech without moving the
+upper corner. Invalid fits retain finite fallback
 points and the existing warning.
 
 The functional halyard is now cloned from the supporting aft base's reef winch,
@@ -310,12 +346,12 @@ stale full-size cloth; test recoloring, cancellation and save/reload. Repeat on
 a steeper fallback stay and an offset topmast, then the other supported boats.
 The first in-game pass reported unwanted furling on deck, excessive initial
 size and incorrect SailInfo degrees. These revisions address those observations;
-upward reefing, bundle alignment, default sizing and angle reporting await the
-next in-game pass. The user found the initial Mk.A upper trim generally good, with the port/starboard
-appearance difference described above. The rounded profile and cloth bounds remain in the fixed-14° experiment;
-the 2.5% trim is bypassed. The user found the 14° setting pretty good; the aft
-halyard and proportional reefing revision await in-game validation. Passing
-length constraints and mirrored skin tests does not establish stable Unity Cloth.
+the rounded profile and cloth bounds remain with the fixed 14° head policy.
+The earlier 2.5% trim was removed in CLEANUP-3. The user found the 14° setting
+pretty good and reported favorable initial validation after that cleanup,
+without itemizing boats or scenarios. Full reefing, bundle alignment, sizing,
+angle reporting and save/reload coverage remain pending. Passing length
+constraints and mirrored skin tests does not establish stable Unity Cloth.
 
 ## Fisherman's Stay profiles and verification
 
@@ -388,3 +424,56 @@ examples consistent. The first release version is **0.1.0**; earlier development
 version numbers are not the public release sequence. Version changes must not
 change the plugin GUID or prefab index. Distribute only the plugin DLL, without
 game assemblies or extracted assets.
+
+
+## Shared winch placement (CLEANUP-1)
+
+Version **0.1.0** uses `Controls/FishermanWinchControls.cs` for inactive cloning,
+owned rotation handles, outline reset and boat-level reservations. Flying Sails,
+Mk.A/Mk.B and stay-owned vanilla controls keep their existing bindings and rope
+routes. Only active owners with a bound rope reserve space; registration-only and
+empty stay variants do not. Donor changes replace affected clones and release old
+reservations without destroying the sail-owned rope controller. Native wheel
+rotation is a child of the mounting transform, so placement refreshes cannot
+be interpreted as player winch input.
+
+The seven boat classes in `BoatRigs/` record 151 donor/role mounting directions
+and physical mast references measured on 2026-09-24. Their shared record type is
+in `BoatRigs/Definitions.cs`; candidate positions are calculated in
+`Controls/WinchPlacementGeometry.cs`. Sources are the installed
+`level24`, `shipyard_expansion.assets`, `Leopard/leopard` and
+`ShatteredSeasExpansion/veil piercer`. Expansion transforms were converted through
+the corresponding boat model frame before comparison. Mast collider axes identify
+the spar direction; the native winch datum supplies attachment radius and facing.
+Mast fittings can sit below the native sail-space collider's axial range, so that
+range is not treated as the physical bottom of the spar. Deck-facing coils near a
+mast remain deck fittings. Other controls use the tangent to their native face.
+
+Spacing uses the installed interaction-sphere size, with a 0.35 m minimum and
+2 cm between reserved radii. Mast candidates prefer the native face vertically,
+then ±90° and 180° around the authored axis, rotating the face along with its
+position. Mast height stays between 0.7 m below and 1.4 m above the native datum;
+rail/deck offsets stay within 1.4 m along the tangent. Nearby native fittings and
+all reserved controls exclude candidates. There is no unlimited offset fallback:
+an exhausted fitting is hidden, logs once and retries, while its native controller
+stays alive. These bounds require in-game accessibility and surface-clearance
+checks; a tangent or cylindrical approximation does not model every hull detail.
+
+`tests/GeometryChecks/FishermansStay/WinchMeasurements.txt` contains only numeric
+measurements: boat, source mast ID, role, donor position, face normal, support axis
+point and interaction radius. Checks cover all supported profile references,
+three extra controls per donor in isolation, reservation lifecycle and invariance
+of mast attachment radius/facing. Assembly checks verify structural clone and
+teardown wiring; they do not simulate Unity Awake/Start, previews, handles or
+outlines. The user reported improved placement; full coverage on all seven
+boats remains pending. Follow the winch validation scenarios in
+[AGENTS.md](../AGENTS.md). No game assets or DLLs are included in the fixture.
+
+
+The 2026-09-24 organizational follow-up consolidated the boat tables without
+changing their authored values or ordering. Before/after canonical snapshots
+matched exactly for seven boats, 97 stay variants, 151 winch mappings, 69 mast
+section chains and 453 placement cases. The full Release build, formatting,
+geometry and assembly checks passed. Profile checks also cover missing entries,
+Leopard's three-section chain and rejection of cyclic ancestry. This refactor
+adds no new in-game validation; the outstanding winch scenarios above still apply.

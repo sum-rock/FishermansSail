@@ -7,6 +7,15 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile
+      Include="../../Controls/WinchPlacementGeometry.cs"
+      Link="FishermansStay/WinchPlacementGeometry.cs"
+    />
+    <Compile
+      Include="../../Controls/WinchReservations.cs"
+      Link="FishermansStay/WinchReservations.cs"
+    />
+    <None Update="FishermansStay/WinchMeasurements.txt" CopyToOutputDirectory="PreserveNewest" />
+    <Compile
       Include="../../Stays/FishermansStay/FishermansStaySaveState.cs"
       Link="FishermansStay/FishermansStaySaveState.cs"
     />
@@ -100,8 +109,8 @@
       Link="FishermansStaysail/MkB/FishermansStaysailMkBGeometry.cs"
     />
     <Compile
-      Include="../../Sails/FishermansStaysail/FishermansStaysailUpperTrim.cs"
-      Link="FishermansStaysail/FishermansStaysailUpperTrim.cs"
+      Include="../../Sails/FishermansStaysail/FishermansStaysailEdgeFit.cs"
+      Link="FishermansStaysail/FishermansStaysailEdgeFit.cs"
     />
     <Compile
       Include="../../Sails/FishermansStaysail/FishermansStaysailFixedHead.cs"
