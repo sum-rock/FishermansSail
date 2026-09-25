@@ -82,10 +82,10 @@ shipyard. Passing checks do not establish stable in-game cloth motion.
 Close Sailwind, build, then run from the repository root:
 
 ```sh
-./install-local.sh
+./scripts/install-local.sh
 ```
 
-Use `./install-local.sh "/path/to/Sailwind"` for another installation. This
+Use `./scripts/install-local.sh "/path/to/Sailwind"` for another installation. This
 script copies only the built DLL; it does not build it. Builds and checks do
 not replace the installed plugin or change saves. Before installing this renamed
 build, remove any old `FishermansSail.dll` from the game's plugin directory to
@@ -424,6 +424,13 @@ examples consistent. The first release version is **0.1.0**; earlier development
 version numbers are not the public release sequence. Version changes must not
 change the plugin GUID or prefab index. Distribute only the plugin DLL, without
 game assemblies or extracted assets.
+
+After updating the version and merging the release commit to `master`, run
+`./scripts/tag-release.sh` from a clean checkout. It switches to `master`, fast-forwards
+from `origin/master`, checks that `Plugin.cs` and the project agree on the
+version, then creates and pushes an annotated `v<version>` tag. It stops if that
+tag already exists locally or on GitHub. This script does not build or publish
+a release asset.
 
 
 ## Shared winch placement (CLEANUP-1)
