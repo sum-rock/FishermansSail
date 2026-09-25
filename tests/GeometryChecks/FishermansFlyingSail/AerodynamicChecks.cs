@@ -11,12 +11,14 @@ internal static class AerodynamicChecks
         foreach (float width in new[] { 0.25f, 6f, 13.8f, 40f })
         foreach (float trim in new[] { -70f, -40f, -15f, 15f, 40f, 70f })
         {
-            var foreHead = Vector3.zero;
-            var foreTack = Vector3.down * (width * FishermansFlyingSailGeometry.ForeDepthRatio);
+            var cut = FishermansFlyingSailGeometry.Create(width).Corners;
+            Vector3 World(Vector3 point) => new Vector3(0, point.x, point.z + width);
+            var foreHead = World(cut[0]);
+            var foreTack = World(cut[2]);
             var aftHead = FishermansFlyingSailFrameGeometry.UpperHead(
-                Vector3.forward * width,
+                World(cut[1]),
                 FishermansFlyingSailFrameGeometry.RotateAroundMast(
-                    Vector3.forward * width,
+                    World(cut[1]),
                     foreHead,
                     Vector3.up,
                     trim
@@ -26,7 +28,7 @@ internal static class AerodynamicChecks
                 1
             );
             var requestedClew = FishermansFlyingSailFrameGeometry.RotateAroundMast(
-                new Vector3(0, -width, width),
+                World(cut[3]),
                 Vector3.zero,
                 Vector3.up,
                 trim
@@ -38,8 +40,8 @@ internal static class AerodynamicChecks
                     aftHead,
                     foreTack,
                     Vector3.zero,
-                    width,
-                    (new Vector3(0, -width, width) - foreTack).magnitude,
+                    (cut[1] - cut[3]).magnitude,
+                    (World(cut[3]) - foreTack).magnitude,
                     1,
                     leech
                 ),

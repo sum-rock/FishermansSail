@@ -189,14 +189,44 @@ remain unchanged.
 - Only the four corners are pinned. Shaping moves existing bones without
   replacing the live Cloth mesh. Partial hoists use a procedural renderer;
   fully raised sails use Unity Cloth.
-- The neutral cut has a horizontal head, forward depth about 1.692 times its
-  width and aft depth equal to its width. The upper aft corner follows 85% of
-  the sheet angle. The tension solver fits foot and leech together.
-- Shipyard collision checks use a thin neutral panel, excluding the supporting
-  mast radius plus 2 cm at the luff. Collision bounds remain separate from billow.
+- The nominal cut is an isosceles trapezoid: luff `2 × width`, head rising 20°
+  aft and foot falling 20° aft, giving an aft edge about `2.728 × width`.
+  Width measures fore-to-aft fabric span. Edge budgets come from the actual
+  corners. The upper aft corner retains 85% of the sheet angle, with foot and
+  leech fitted together.
+- The hinge runs through the offset luff, parallel to the fore mast. Each
+  corner sits 0.4572 m beyond the mast capsule's surface, connected by its own
+  native-styled straight line and separate leaf endpoints. The ropes keep their
+  length through sheeting and scaling; mast ends follow the hoisting corners
+  vertically. Ties hide when struck, unsupported, loading or disabled.
+- The rest mesh includes spare fabric for a mastward luff arc, capped at
+  0.2286 m before scaling. Bone targets retain that inward direction on both
+  tacks, reduce it with the smallest scale when shrinking, and cap enlargement
+  at nine inches. Partial hoists gather the arc using the existing deployment
+  curve. Signed head/interior camber still changes smoothly with the tack.
+  Scale-dependent Cloth coefficients reserve at least a quarter of the mast
+  gap beyond the luff arch and its travel sphere. Coefficients update during
+  fitting/scaling; tack changes move bones without resetting Cloth.
+- Shipyard collision uses thin strips inscribed between the rising head and
+  falling foot, swept around the offset luff. The first strip is retained
+  because the whole neutral panel clears the mast. Bounds remain separate
+  from billow. Fit checks include the mast radius and tie gap in the required
+  span and compare each head with its own active supporting guide.
+- Existing prefab-400 saves retain their scale, installation coordinate and
+  color, and use the new cut on load. No save rewrite or identity change is
+  required; older fits may need resizing/repositioning for the taller aft edge.
 - Native palette entry 11 and Shipyard Expansion texture index 0 supply the
   white/plain defaults. Scoped patches limit textures and sheet travel only for
   this sail.
+
+Flying Sail trapezoid/tie revision: Release, GeometryChecks, AssemblyChecks and
+formatting passed. Automated checks cover the cut, edge
+budgets, weighted skin, constant tie lengths across trim/hoist/scale and boat
+motion, bounded inward arch, support heights and neutral collision strips.
+Runtime validation is pending on Brig, then Sanbuq: check both tacks, eased
+and tight sheets, weak wind, partial/full lowering and redeployment, mast
+clearance, rope seating, resizing/recoloring, mixed sails, previews/cancellation,
+support removal and save/reload. These checks do not simulate Unity Cloth.
 
 See [AGENTS.md](../AGENTS.md) for the code map, installed-assembly inspection
 tools and regression lessons, including approaches that failed in game.

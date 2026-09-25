@@ -151,7 +151,7 @@ namespace MoreSailwindSails.Sails.FishermansFlyingSail
 
                 string registrationMessage =
                     $"Registered {DisplayName}: source={SourceIndex}, index={PrefabIndex}, "
-                    + $"vertices={mesh.vertexCount}, corners=4, aftDepthRatio=1, headCamber=0.12, "
+                    + $"vertices={mesh.vertexCount}, corners=4, luffWidthRatio=2, edgeSlope=20, mastTies=0.4572m, headCamber=0.12, "
                     + $"area={sourceSail.GetSailArea():F2}->{sail.sailArea:F2}. Original brig jib preserved.";
 
                 if (directory.sails.Length <= PrefabIndex)

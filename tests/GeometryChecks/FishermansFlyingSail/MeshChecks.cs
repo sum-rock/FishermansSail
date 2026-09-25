@@ -54,14 +54,26 @@ internal static class MeshChecks
             "Sails share mutable geometry."
         );
         var c = d.Corners;
-        Angle(c[2], c[0], c[1], 90);
-        Angle(c[0], c[1], c[3], 90);
-        Require(Math.Abs(c[3].x / width + 1f) < 1e-5, "Wrong revised aft depth.");
+        Angle(c[2], c[0], c[1], 110);
+        Angle(c[0], c[1], c[3], 70);
+        Angle(c[0], c[2], c[3], 110);
+        Angle(c[2], c[3], c[1], 70);
         Require(
-            Math.Abs(c[2].x / width + 1.6917536f) < 1e-5,
-            "The original forward depth changed."
+            Math.Abs((c[2] - c[0]).magnitude / width - 2) < 1e-5,
+            "The luff must be twice the fabric span."
         );
-        Require(c[2].x < c[3].x && c[2].z == -width, "The lowest corner must be forward.");
+        Require(
+            Math.Abs((c[1] - c[0]).magnitude - (c[3] - c[2]).magnitude) < width * 1e-5,
+            "Isosceles trapezoid must have equal sloping edges."
+        );
+        Require(
+            Math.Abs((c[1] - c[3]).magnitude / width - 2.7279405f) < 1e-5,
+            "The longer aft edge has the wrong length."
+        );
+        Require(
+            c[3].x < c[2].x && c[1].x > c[0].x,
+            "The head must rise and the foot fall toward the aft mast."
+        );
         double area = 0,
             projectedArea = 0;
         var centroid = Vector3.zero;
@@ -76,12 +88,30 @@ internal static class MeshChecks
             projectedArea += cross.y * 0.5;
             centroid += (a + b + e) * (cross.magnitude / 6);
         }
-        double expected = width * -(c[2].x + c[3].x) / 2;
-        Require(Math.Abs(projectedArea / expected - 1) < 1e-5, "Projected cut area is wrong.");
+        double expected = width * ((c[0] - c[2]).magnitude + (c[1] - c[3]).magnitude) / 2;
         Require(
-            area > expected * 1.005 && area < expected * 1.05,
-            "Camber must add actual cloth area."
+            Math.Abs(expected / (width * width) - (2 + Math.Tan(20 * Math.PI / 180))) < 1e-5,
+            "The nominal trapezoid area is wrong."
         );
+        // The inward luff arc adds a narrow strip to the projected fabric area.
+        for (int row = 1; row <= FishermansFlyingSailGeometry.Rows; row++)
+            expected +=
+                width
+                / FishermansFlyingSailGeometry.Rows
+                * (
+                    FishermansFlyingSailGeometry.RestLuffBow(
+                        width,
+                        0,
+                        (float)(row - 1) / FishermansFlyingSailGeometry.Rows
+                    )
+                    + FishermansFlyingSailGeometry.RestLuffBow(
+                        width,
+                        0,
+                        (float)row / FishermansFlyingSailGeometry.Rows
+                    )
+                );
+        Require(Math.Abs(projectedArea / expected - 1) < 1e-5, "Projected cut area is wrong.");
+        Require(area > expected && area < expected * 1.05, "Camber must add actual cloth area.");
         Require(
             (centroid / (float)area - d.Center).magnitude < width * 1e-5f,
             "Wind center must use the revised surface centroid."
@@ -90,7 +120,7 @@ internal static class MeshChecks
         for (int col = 1; col <= FishermansFlyingSailGeometry.Columns; col++)
             topLength += (d.Vertices[col] - d.Vertices[col - 1]).magnitude;
         Require(
-            topLength > width * 1.03 && topLength < width * 1.04,
+            topLength > (c[1] - c[0]).magnitude && topLength < (c[1] - c[0]).magnitude * 1.05,
             "The head needs spare cloth between its fixed endpoints."
         );
         Require(
@@ -106,7 +136,7 @@ internal static class MeshChecks
             ).magnitude;
         double luffChord = (c[2] - c[0]).magnitude;
         Require(
-            luffLength > luffChord * 1.002 && luffLength < luffChord * 1.004,
+            luffLength > luffChord && luffLength < luffChord * 1.004,
             "Luff needs a small amount of actual extra cloth length, not just movement permission."
         );
         var boneSeen = new bool[FishermansFlyingSailGeometry.BoneCount];
@@ -186,8 +216,8 @@ internal static class MeshChecks
                 "Luff travel must taper symmetrically toward its fixed corners."
             );
             Require(
-                travel < d.Vertices[fore].y,
-                "Loaded forward-edge travel must stay within its moving camber target."
+                travel <= FishermansFlyingSailFrameGeometry.TieLength * 0.25f + 1e-6f,
+                "Luff travel must leave room for the inward arch and mast clearance."
             );
             int i =
                 row * (FishermansFlyingSailGeometry.Columns + 1)
@@ -204,10 +234,10 @@ internal static class MeshChecks
                     (FishermansFlyingSailGeometry.Rows / 2)
                         * (FishermansFlyingSailGeometry.Columns + 1)
                 ].maxDistance
-                    - width * 0.04f
+                    - Math.Min(width * 0.04f, FishermansFlyingSailFrameGeometry.TieLength * 0.25f)
             )
                 < width * 1e-6f,
-            "Luff travel must allow flex around the moving six-percent curve."
+            "Luff flex must respect the fixed mast gap at every width."
         );
         float leechMiddle = d.Constraints[
             (FishermansFlyingSailGeometry.Rows / 2) * (FishermansFlyingSailGeometry.Columns + 1)

@@ -206,39 +206,78 @@ namespace MoreSailwindSails.Sails.FishermansFlyingSail
             var head = mast.transform.TransformPoint(
                 new Vector3(0, 0, sail.GetCurrentInstallHeight() - mast.mastHeight)
             );
-            float foreHeight = pair.Boat.transform.InverseTransformPoint(head).y;
-            float maxHeight = Math.Min(
-                pair.Boat.transform.InverseTransformPoint(pair.ForeGuide.position).y,
-                pair.Boat.transform.InverseTransformPoint(pair.AftGuide.position).y
+            MastFrame(pair, head, out var mastPoint, out var axis);
+            var aft = FishermansFlyingSailFrameGeometry.AftDirection(
+                mastPoint,
+                axis,
+                pair.AftGuide.position
             );
-            float span = Vector3
-                .ProjectOnPlane(pair.AftGuide.position - head, pair.Boat.transform.up)
-                .magnitude;
+            var foreHead = FishermansFlyingSailFrameGeometry.LuffPivot(
+                mastPoint,
+                axis,
+                pair.AftGuide.position,
+                MastRadius(mast)
+            );
+            var aftHead =
+                foreHead
+                + axis * ((rig.Corners[1].x - rig.Corners[0].x) * scale.x)
+                + aft * ((rig.Corners[1].z - rig.Corners[0].z) * scale.z);
+            float span = Vector3.Dot(pair.AftGuide.position - mastPoint, aft);
             return FishermansFlyingSailMastInstallationGeometry.FitError(
-                -rig.Corners[0].z * scale.z,
-                foreHeight,
-                maxHeight,
+                Vector3.Dot(aftHead - mastPoint, aft),
+                pair.Boat.transform.InverseTransformPoint(foreHead).y,
+                pair.Boat.transform.InverseTransformPoint(aftHead).y,
+                pair.Boat.transform.InverseTransformPoint(pair.ForeGuide.position).y,
+                pair.Boat.transform.InverseTransformPoint(pair.AftGuide.position).y,
                 span
             );
         }
 
-        internal void ForeSailFrame(out Vector3 point, out Vector3 axis)
+        internal static float MastRadius(Mast mast)
+        {
+            var collider = mast.GetComponent<CapsuleCollider>();
+            var scale = collider.transform.lossyScale;
+            return collider.radius
+                * Mathf.Max(
+                    Mathf.Abs(collider.direction == 0 ? scale.y : scale.x),
+                    Mathf.Abs(collider.direction == 2 ? scale.y : scale.z)
+                );
+        }
+
+        internal void LuffSailFrame(out Vector3 point, out Vector3 axis)
         {
             var mast = Pair.Fore;
-            point = mast.transform.TransformPoint(
+            var heightPoint = mast.transform.TransformPoint(
                 new Vector3(0, 0, sail.GetCurrentInstallHeight() - mast.mastHeight)
             );
+            MastFrame(Pair, heightPoint, out point, out axis);
+            point = FishermansFlyingSailFrameGeometry.LuffPivot(
+                point,
+                axis,
+                AftReference,
+                MastRadius(mast)
+            );
+        }
+
+        private static void MastFrame(
+            MountPair pair,
+            Vector3 heightPoint,
+            out Vector3 point,
+            out Vector3 axis
+        )
+        {
+            var mast = pair.Fore;
             var collider = mast.GetComponent<CapsuleCollider>();
             var localAxis =
                 collider.direction == 0 ? Vector3.right
                 : collider.direction == 1 ? Vector3.up
                 : Vector3.forward;
-            var bottom = Pair.Boat.transform.InverseTransformPoint(
+            var bottom = pair.Boat.transform.InverseTransformPoint(
                 collider.transform.TransformPoint(
                     collider.center - localAxis * collider.height * 0.5f
                 )
             );
-            var top = Pair.Boat.transform.InverseTransformPoint(
+            var top = pair.Boat.transform.InverseTransformPoint(
                 collider.transform.TransformPoint(
                     collider.center + localAxis * collider.height * 0.5f
                 )
@@ -249,14 +288,14 @@ namespace MoreSailwindSails.Sails.FishermansFlyingSail
                 bottom = top;
                 top = swap;
             }
-            point = Pair.Boat.transform.TransformPoint(
+            point = pair.Boat.transform.TransformPoint(
                 FishermansFlyingSailMastInstallationGeometry.AtHeight(
                     bottom,
                     top,
-                    Pair.Boat.transform.InverseTransformPoint(point).y
+                    pair.Boat.transform.InverseTransformPoint(heightPoint).y
                 )
             );
-            axis = Pair.Boat.transform.TransformDirection((top - bottom).normalized);
+            axis = pair.Boat.transform.TransformDirection((top - bottom).normalized);
         }
 
         internal Vector3 AftReference => Pair.AftGuide.position;
@@ -265,7 +304,7 @@ namespace MoreSailwindSails.Sails.FishermansFlyingSail
         {
             get
             {
-                ForeSailFrame(out var top, out var axis);
+                LuffSailFrame(out var top, out var axis);
                 // Native mastHeight ends at the usable mast base. The hoist winch
                 // supplies the deck datum even when fitting to a topmast section.
                 float y =

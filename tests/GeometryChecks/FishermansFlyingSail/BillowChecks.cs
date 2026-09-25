@@ -112,7 +112,8 @@ internal static class BillowChecks
         Check(
             Math.Abs(
                 (head - HoistPose.Corner(rest, 0, unroll)).magnitude
-                    - width * FishermansFlyingSailMastInstallationGeometry.HoistScale(unroll)
+                    - (rest[1] - rest[0]).magnitude
+                        * FishermansFlyingSailMastInstallationGeometry.HoistScale(unroll)
             )
                 < width * 1e-5f,
             "Moving the head stretched the top span."
@@ -126,7 +127,9 @@ internal static class BillowChecks
             load
         );
         bow *= FishermansFlyingSailBillow.Deployment(unroll);
-        float restLength = width * FishermansFlyingSailMastInstallationGeometry.HoistScale(unroll);
+        float restLength =
+            (rest[1] - rest[3]).magnitude
+            * FishermansFlyingSailMastInstallationGeometry.HoistScale(unroll);
         var points = new Vector3[FishermansFlyingSailGeometry.Rows + 1];
         var tack = HoistPose.Corner(rest, 2, unroll);
         float footLength = (HoistPose.Corner(rest, 3, unroll) - tack).magnitude;
@@ -266,7 +269,9 @@ internal static class BillowChecks
                 width,
                 (float)col / FishermansFlyingSailGeometry.ShapeColumns,
                 v,
-                camber * deployment
+                camber * deployment,
+                Vector3.back,
+                deployment
             );
         }
         var vertices = new Vector3[data.Vertices.Length];
@@ -292,13 +297,13 @@ internal static class BillowChecks
             float v = (float)row / FishermansFlyingSailGeometry.Rows;
             var expectedFore =
                 Vector3.Lerp(bones[0], bones[2], v)
-                + camberNormal
-                    * (FishermansFlyingSailGeometry.RestCamber(width, 0, v) * camber * deployment);
+                + Vector3.back
+                    * (FishermansFlyingSailGeometry.RestLuffBow(width, 0, v) * deployment);
             Near(
                 vertices[row * (FishermansFlyingSailGeometry.Columns + 1)],
                 expectedFore,
                 width,
-                "Forward-edge camber must follow the selected side and gather through furling."
+                "The luff must bow toward the mast on both tacks and gather through furling."
             );
             Near(
                 vertices[
@@ -371,7 +376,8 @@ internal static class BillowChecks
                         head,
                         tack,
                         bow,
-                        width * FishermansFlyingSailMastInstallationGeometry.HoistScale(unroll),
+                        (rest[1] - rest[3]).magnitude
+                            * FishermansFlyingSailMastInstallationGeometry.HoistScale(unroll),
                         footLength,
                         deployment,
                         points
@@ -429,7 +435,8 @@ internal static class BillowChecks
                         head,
                         tack,
                         bow * deployment,
-                        width * FishermansFlyingSailMastInstallationGeometry.HoistScale(unroll),
+                        (rest[1] - rest[3]).magnitude
+                            * FishermansFlyingSailMastInstallationGeometry.HoistScale(unroll),
                         footLength,
                         deployment,
                         points

@@ -24,6 +24,29 @@ namespace MoreSailwindSails.Sails.FishermansFlyingSail
 
     internal static class FishermansFlyingSailFrameGeometry
     {
+        internal const float TieLength = 0.4572f;
+
+        internal static Vector3 LuffPivot(
+            Vector3 mastPoint,
+            Vector3 mastAxis,
+            Vector3 aftReference,
+            float mastRadius
+        ) => mastPoint + AftDirection(mastPoint, mastAxis, aftReference) * (mastRadius + TieLength);
+
+        internal static Vector3 AftDirection(
+            Vector3 mastPoint,
+            Vector3 mastAxis,
+            Vector3 aftReference
+        )
+        {
+            var axis = mastAxis.normalized;
+            var aft = aftReference - mastPoint;
+            return (aft - axis * Vector3.Dot(aft, axis)).normalized;
+        }
+
+        internal static Vector3 TieAnchor(Vector3 corner, Vector3 aftDirection) =>
+            corner - aftDirection * TieLength;
+
         internal static Vector3 ModelOffset(Vector3 pivot, Vector3 alignedHead) =>
             pivot - alignedHead;
 

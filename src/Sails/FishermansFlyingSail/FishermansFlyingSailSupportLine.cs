@@ -38,7 +38,7 @@ namespace MoreSailwindSails.Sails.FishermansFlyingSail
             return route;
         }
 
-        private static LineRenderer CreateRenderer(
+        internal static LineRenderer CreateRenderer(
             Transform parent,
             string name,
             RopeEffect source,

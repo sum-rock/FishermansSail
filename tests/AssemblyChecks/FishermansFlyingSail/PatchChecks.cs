@@ -149,6 +149,35 @@ internal static class PatchChecks
             "PASS: billow update only moves existing shaping transforms; cloth lifecycle and transform scales remain untouched."
         );
 
+        var tiesType = assembly.GetType(
+            "MoreSailwindSails.Sails.FishermansFlyingSail.FishermansFlyingSailLuffTies"
+        );
+        foreach (
+            var method in tiesType.GetMethods(
+                BindingFlags.Instance
+                    | BindingFlags.NonPublic
+                    | BindingFlags.Public
+                    | BindingFlags.DeclaredOnly
+            )
+        )
+        foreach (var called in CalledMethods(method))
+            if (
+                called.DeclaringType.FullName is "UnityEngine.Cloth" or "UnityEngine.HingeJoint"
+                || called.Name
+                    is "set_sharedMesh"
+                        or "set_localRotation"
+                        or "set_localScale"
+                        or "set_rotation"
+                        or "set_bones"
+                        or "set_bindposes"
+            )
+                throw new Exception(
+                    "Visual luff ties must not alter cloth, bone rotation, scaling or sheet physics."
+                );
+        Console.WriteLine(
+            "PASS (IL): fixed luff tie callbacks only draw/hide endpoints; no cloth, hinge or skin-orientation mutation. Unity rope rendering remains a runtime check."
+        );
+
         // Run the actual text prefix without Unity objects. HarmonyX runs later
         // prefixes even when this one returns false, so their input must be safe too.
         var textPrefix = assembly

@@ -35,6 +35,7 @@ namespace MoreSailwindSails.Sails.FishermansFlyingSail
         public Vector3 OriginalHingeAnchor;
         public bool OriginalAutoAnchor;
         public FishermansFlyingSailSupportLine SupportLine;
+        public FishermansFlyingSailLuffTies LuffTies;
         public Transform Shadow;
         private float clothLoad;
         private float camber = 1;
@@ -166,6 +167,7 @@ namespace MoreSailwindSails.Sails.FishermansFlyingSail
             var left = connections.angleControllerLeft.GetComponent<RopeEffect>();
             var right = connections.angleControllerRight.GetComponent<RopeEffect>();
             rig.SupportLine = FishermansFlyingSailSupportLine.Create(sail.transform, left, right);
+            rig.LuffTies = FishermansFlyingSailLuffTies.Create(sail.transform, rig.Bones, left);
             rig.SheetAttachment = left.attachment;
             if (!rig.SheetAttachment || right.attachment != rig.SheetAttachment)
                 throw new InvalidOperationException("Expected a shared brig jib sheet attachment.");
@@ -291,11 +293,11 @@ namespace MoreSailwindSails.Sails.FishermansFlyingSail
             if (!rigging || !rigging.Bind(mount))
                 return false;
 
-            rigging.ForeSailFrame(out var forePoint, out var foreAxis);
+            rigging.LuffSailFrame(out var forePoint, out var foreAxis);
             var scaleRoot = Sail.cloth.transform.parent;
             // Preserve the native saved installation coordinate. Offset the
-            // model so its whole luff sits on the physical forward mast even
-            // when the sail is narrower than the distance between the masts.
+            // model and hinge together onto the fixed offset luff line. Sheet
+            // rotation then leaves both short mast ties stationary.
             var origin = new Vector3(0, 0, Sail.GetCurrentInstallHeight() - mount.mastHeight);
             var nextPivot = mount.transform.InverseTransformPoint(forePoint) - origin;
             var nextAxis = mount.transform.InverseTransformDirection(foreAxis).normalized;
@@ -336,6 +338,7 @@ namespace MoreSailwindSails.Sails.FishermansFlyingSail
                     body.rotation = mount.transform.rotation;
                 body.position = forePoint - body.rotation * nextPivot;
                 RefreshCollisionStrips();
+                RefreshClothTravel();
                 // Hoisting can start well below the fully set panel's original
                 // bounds, especially after fitting a smaller sail high on a mast.
                 var clothRenderer = Sail.cloth.GetComponent<SkinnedMeshRenderer>();
@@ -369,18 +372,8 @@ namespace MoreSailwindSails.Sails.FishermansFlyingSail
 
         private void RefreshCollisionStrips()
         {
-            // Cloth attaches to the supporting mast's axis. Its contact with the
-            // mast and the roots of its fittings is intentional, not obstruction.
-            var mastCollider = lastMount.GetComponent<CapsuleCollider>();
-            var mastScale = mastCollider.transform.lossyScale;
-            float radius =
-                mastCollider.radius
-                * Mathf.Max(
-                    mastCollider.direction == 0 ? mastScale.y : mastScale.x,
-                    mastCollider.direction == 2 ? mastScale.y : mastScale.z
-                );
-            float widthScale = Sail.cloth.transform.TransformVector(Vector3.forward).magnitude;
-            float clearance = (radius + 0.02f) / Mathf.Max(0.0001f, widthScale);
+            // The entire neutral panel is outside the mast rim. Keep its first
+            // strip: clipping a mast radius here would hide real obstructions.
             var boxes = Sail.GetComponent<SailConnections>()
                 .colChecker.GetComponentsInChildren<BoxCollider>(true);
             for (int i = 0; i < boxes.Length; i++)
@@ -388,13 +381,51 @@ namespace MoreSailwindSails.Sails.FishermansFlyingSail
                 boxes[i].enabled = FishermansFlyingSailMastInstallationGeometry.CollisionStrip(
                     -Corners[0].z,
                     i,
-                    clearance,
+                    0,
                     out var center,
                     out var size
                 );
                 boxes[i].center = center;
                 boxes[i].size = size;
             }
+        }
+
+        private void ClothScales(out float minimum, out float maximum)
+        {
+            var scale = Sail.cloth.transform.lossyScale;
+            minimum = Mathf.Max(
+                0.0001f,
+                Mathf.Min(Mathf.Abs(scale.x), Mathf.Min(Mathf.Abs(scale.y), Mathf.Abs(scale.z)))
+            );
+            maximum = Mathf.Max(
+                minimum,
+                Mathf.Max(Mathf.Abs(scale.x), Mathf.Max(Mathf.Abs(scale.y), Mathf.Abs(scale.z)))
+            );
+        }
+
+        // Only fitting/scaling updates coefficients; tacks move existing bones.
+        private void RefreshClothTravel()
+        {
+            ClothScales(out var minimum, out var maximum);
+            var coefficients = Sail.cloth.coefficients;
+            for (int row = 0; row <= FishermansFlyingSailGeometry.Rows; row++)
+            for (int col = 0; col <= FishermansFlyingSailGeometry.Columns; col++)
+            {
+                bool pinned =
+                    (row == 0 || row == FishermansFlyingSailGeometry.Rows)
+                    && (col == 0 || col == FishermansFlyingSailGeometry.Columns);
+                coefficients[row * (FishermansFlyingSailGeometry.Columns + 1) + col].maxDistance =
+                    pinned
+                        ? 0
+                        : FishermansFlyingSailBillow.ClothTravel(
+                            -Corners[0].z,
+                            (float)col / FishermansFlyingSailGeometry.Columns,
+                            (float)row / FishermansFlyingSailGeometry.Rows,
+                            minimum,
+                            maximum
+                        );
+            }
+            Sail.cloth.coefficients = coefficients;
         }
 
         internal bool PositionCollisionChecker(
@@ -450,7 +481,7 @@ namespace MoreSailwindSails.Sails.FishermansFlyingSail
             return true;
         }
 
-        private void UpdateShapeBones()
+        private void UpdateShapeBones(bool supported)
         {
             var normal = FishermansFlyingSailBillow.CamberNormal(
                 Bones[0].localPosition,
@@ -466,6 +497,21 @@ namespace MoreSailwindSails.Sails.FishermansFlyingSail
             camber = FishermansFlyingSailBillow.SmoothLoad(camber, camberSide, Time.deltaTime);
             float deployedCamber =
                 camber * FishermansFlyingSailBillow.Deployment(Sail.currentUnroll);
+            var mastward = Vector3.back;
+            float minimumScale = 1;
+            if (supported)
+            {
+                rigging.LuffSailFrame(out var luffPoint, out var axis);
+                var aft = FishermansFlyingSailFrameGeometry.AftDirection(
+                    luffPoint,
+                    axis,
+                    rigging.AftReference
+                );
+                ClothScales(out minimumScale, out _);
+                // Never ask for more luff arc length than the scaled rest mesh
+                // contains, and never scale the inward arch beyond nine inches.
+                mastward = Sail.cloth.transform.InverseTransformVector(-aft);
+            }
             for (int row = 0; row <= FishermansFlyingSailGeometry.Rows; row++)
             {
                 float v = (float)row / FishermansFlyingSailGeometry.Rows;
@@ -483,7 +529,10 @@ namespace MoreSailwindSails.Sails.FishermansFlyingSail
                         -Corners[0].z,
                         (float)column / FishermansFlyingSailGeometry.ShapeColumns,
                         v,
-                        deployedCamber
+                        deployedCamber,
+                        mastward,
+                        FishermansFlyingSailBillow.Deployment(Sail.currentUnroll),
+                        minimumScale
                     );
                 }
             }
@@ -556,7 +605,7 @@ namespace MoreSailwindSails.Sails.FishermansFlyingSail
                             )
                 );
                 var clothTransform = Sail.cloth.transform;
-                rigging.ForeSailFrame(out var forePoint, out var mastAxis);
+                rigging.LuffSailFrame(out var forePoint, out var mastAxis);
                 var head = FishermansFlyingSailFrameGeometry.UpperHead(
                     neutralHead,
                     clothTransform.TransformPoint(Corners[1]),
@@ -581,7 +630,7 @@ namespace MoreSailwindSails.Sails.FishermansFlyingSail
                     localHead,
                     tack,
                     bow * FishermansFlyingSailBillow.Deployment(Sail.currentUnroll),
-                    -Corners[3].x
+                    (Corners[1] - Corners[3]).magnitude
                         * FishermansFlyingSailMastInstallationGeometry.HoistScale(
                             Sail.currentUnroll
                         ),
@@ -617,7 +666,7 @@ namespace MoreSailwindSails.Sails.FishermansFlyingSail
             {
                 SupportLine.Hide();
             }
-            UpdateShapeBones();
+            UpdateShapeBones(supported);
             RefreshAerodynamics();
             if (refreshRequested || state != lastRenderState)
             {
@@ -630,6 +679,19 @@ namespace MoreSailwindSails.Sails.FishermansFlyingSail
             Sail.cloth.enabled = supported && state == 2;
             var clothRenderer = Sail.cloth.GetComponent<SkinnedMeshRenderer>();
             bool visible = supported && !GameState.currentlyLoading;
+            if (visible && state != 0)
+            {
+                rigging.LuffSailFrame(out var luffPoint, out var axis);
+                LuffTies.Draw(
+                    FishermansFlyingSailFrameGeometry.AftDirection(
+                        luffPoint,
+                        axis,
+                        rigging.AftReference
+                    )
+                );
+            }
+            else
+                LuffTies.Hide();
             // WindCloth writes renderer.enabled in Update; select the correct
             // renderer here in LateUpdate so the disabled solver cannot leave
             // stale full-size triangles visible when the sail is struck.

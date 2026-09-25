@@ -36,20 +36,40 @@ internal static class MastInstallationChecks
             "The last mast and unknown mast IDs must not invent an aft support."
         );
         Require(
-            FishermansFlyingSailMastInstallationGeometry.FitError(8, 18, 22, 10) == null,
+            FishermansFlyingSailMastInstallationGeometry.FitError(8, 18, 20, 22, 22, 10) == null,
             "A supported mast installation was rejected."
         );
         Require(
-            FishermansFlyingSailMastInstallationGeometry.FitError(10, 18, 22, 10) != null,
+            FishermansFlyingSailMastInstallationGeometry.FitError(10, 18, 20, 22, 22, 10) != null,
             "The sail must leave clearance at the aft mast."
         );
         Require(
-            FishermansFlyingSailMastInstallationGeometry.FitError(8, 23, 22, 10) != null,
+            FishermansFlyingSailMastInstallationGeometry.FitError(8, 23, 20, 22, 22, 10) != null,
             "A sail above its supporting pulley was accepted."
+        );
+        Require(
+            FishermansFlyingSailMastInstallationGeometry.FitError(8, 18, 23, 22, 22, 10) != null,
+            "Rising aft head above its own guide was accepted."
+        );
+        Require(
+            FishermansFlyingSailMastInstallationGeometry.FitError(8, 18, 23, 20, 24, 10) == null,
+            "The aft head should use its own guide rather than the shorter fore guide."
+        );
+        Require(
+            FishermansFlyingSailMastInstallationGeometry.FitError(
+                9.7f + 0.4572f,
+                18,
+                20,
+                22,
+                22,
+                10
+            ) != null,
+            "The mast gap must count toward available span."
         );
         foreach (float invalid in new[] { float.NaN, float.PositiveInfinity, -1f, 0f })
             Require(
-                FishermansFlyingSailMastInstallationGeometry.FitError(invalid, 18, 22, 10) != null,
+                FishermansFlyingSailMastInstallationGeometry.FitError(invalid, 18, 20, 22, 22, 10)
+                    != null,
                 "Invalid fitting geometry was accepted."
             );
 
@@ -60,7 +80,7 @@ internal static class MastInstallationChecks
                 .Create(width)
                 .Corners.Select(c => c * scale)
                 .ToArray();
-            var deck = cut[0] - Vector3.right * (width * scale * 2.2f);
+            var deck = cut[0] - Vector3.right * (width * scale * 2.6f);
             var previous = cut.Select(c =>
                     FishermansFlyingSailMastInstallationGeometry.HoistCorner(c, cut[0], deck, 0)
                 )
@@ -220,7 +240,7 @@ internal static class MastInstallationChecks
         foreach (float scale in new[] { 0.3f, 0.5f, 0.65f, 1f, 1.5f })
         {
             const float width = 13.8f;
-            float clearance = 0.42f / scale; // Brig mast radius + contact allowance.
+            float clearance = 0; // The entire panel is beyond the mast surface.
             int enabled = 0;
             for (int i = 0; i < FishermansFlyingSailGeometry.Columns; i++)
             {
@@ -238,12 +258,24 @@ internal static class MastInstallationChecks
                 if (!active)
                     continue;
                 enabled++;
-                float near = (center.z - size.z * 0.5f + width) * scale;
+                float near =
+                    (center.z - size.z * 0.5f + width) * scale
+                    + FishermansFlyingSailFrameGeometry.TieLength;
                 Require(
-                    near >= 0.42f - 0.00001f,
+                    near >= FishermansFlyingSailFrameGeometry.TieLength - 0.00001f,
                     "Collision envelope includes intentional mast attachment contact."
                 );
-                Require(center.x + size.x * 0.5f < 0, "Collision strip protrudes above the head.");
+                float stripStart = center.z - size.z * 0.5f + width;
+                float head = stripStart * FishermansFlyingSailGeometry.EdgeSlope;
+                float foot = -2 * width - head;
+                Require(
+                    center.x + size.x * 0.5f <= head,
+                    "Collision strip protrudes above the rising head."
+                );
+                Require(
+                    center.x - size.x * 0.5f >= foot,
+                    "Collision strip protrudes below the falling foot."
+                );
                 Require(center.z + size.z * 0.5f < 0, "Collision strip protrudes aft of the sail.");
                 Require(
                     size.y * scale <= 0.0751f,
@@ -251,44 +283,25 @@ internal static class MastInstallationChecks
                 );
             }
             Require(
-                enabled >= 20,
+                enabled == FishermansFlyingSailGeometry.Columns,
                 "Mast clearance removed too much of the sail's collision envelope."
             );
         }
 
-        // Regression: the old full-height first strip reached into the Brig's
-        // shrouds, while the spreader root only touched the intentional mast rim.
+        // With the eighteen-inch mast gap, even the first strip must detect obstacles.
         const float testScale = 0.65f;
-        float oldHalfThickness = 0.025f * testScale;
-        for (int row = 0; row <= FishermansFlyingSailGeometry.Rows; row++)
-            oldHalfThickness = Math.Max(
-                oldHalfThickness,
-                testScale
-                    * (
-                        0.025f
-                        + FishermansFlyingSailGeometry.RestCamber(
-                            13.8f,
-                            0.5f / FishermansFlyingSailGeometry.Columns,
-                            (float)row / FishermansFlyingSailGeometry.Rows
-                        )
-                    )
-            );
-        Require(
-            oldHalfThickness > 0.45f,
-            "Old shroud false-positive reproducer no longer reaches the rigging."
-        );
         bool first = FishermansFlyingSailMastInstallationGeometry.CollisionStrip(
             13.8f,
             0,
-            0.42f / testScale,
+            0,
             out _,
             out _
         );
-        Require(!first, "The first strip still checks inside the supporting mast.");
+        Require(first, "The offset panel must retain its first collision strip.");
         bool next = FishermansFlyingSailMastInstallationGeometry.CollisionStrip(
             13.8f,
             2,
-            0.42f / testScale,
+            0,
             out var c,
             out var sz
         );
@@ -298,7 +311,7 @@ internal static class MastInstallationChecks
             "Clear lateral shroud still intersects neutral panel."
         );
         Console.WriteLine(
-            "PASS: thin neutral collision envelope, scaled mast clearance, shroud regression and retained panel obstruction."
+            "PASS: thin trapezoid collision envelope, fixed mast gap, lateral shroud clearance and retained panel obstruction."
         );
     }
 
