@@ -147,7 +147,7 @@ internal static class SurfaceWinchChecks
             Check(allocator.Count == count, "Surface exhaustion leaked a reservation.");
             measured++;
         }
-        Check(measured == 90, "Expected 90 surface mappings beyond the 24 Brig sheet mappings.");
+        Check(measured == 110, "Expected 110 surface mappings beyond the 24 Brig sheet mappings.");
 
         // Leopard's neighboring reef coils leave a safe strip end between the
         // native controls and the raised post, outside the donor-centered spacing grid.
@@ -185,7 +185,7 @@ internal static class SurfaceWinchChecks
             "Unmeasured surface must not fall back to floating tangent positions."
         );
         Console.WriteLine(
-            "PASS: 90 additional measured deck/rail mappings, native-neighbor clearance, support normals, bounded ends and finite reservations; all seven boats have authored surface support."
+            "PASS: 110 additional measured deck/rail mappings, native-neighbor clearance, support normals, bounded ends and finite reservations; all eight boats have authored surface support."
         );
     }
 }

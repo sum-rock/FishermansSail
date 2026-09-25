@@ -274,6 +274,7 @@ namespace MoreSailwindSails.BoatRigs
                 Cog.Definition,
                 Leopard.Definition,
                 Shroud.Definition,
+                LargeDhow.Definition,
             };
 
         internal static BoatRigDefinition Find(string boatName)

@@ -179,6 +179,10 @@ namespace MoreSailwindSails.Sails.FishermansFlyingSail
             rig.SheetAttachment.localPosition = Vector3.zero;
             sail.windcenter.SetParent(scaleRoot, false);
             sail.windcenter.localPosition = data.Center;
+            // The donor windcenter also carries SailFlapAudio, whose Awake only
+            // searches two parents up for Sail. Keep its initial world pose;
+            // RefreshAerodynamics supplies the posed center after scaling/hoisting.
+            sail.windcenter.SetParent(rig.FlyingFrame, true);
             connections.colChecker.transform.SetParent(scaleRoot, false);
             ConfigureCollision(connections.colChecker, width);
             foreach (var visual in scaleRoot.GetComponentsInChildren<MeshRenderer>(true))

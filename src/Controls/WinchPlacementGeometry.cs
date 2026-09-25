@@ -53,6 +53,20 @@ namespace MoreSailwindSails.Controls
                                 )
                             );
                 }
+                // Large fittings can leave no free point on the regular grid,
+                // especially beside a topmast's native control. Try the finite
+                // upper band end last, preserving the existing preferred placements.
+                // Do not add a lower endpoint: low native fittings can be near deck level.
+                foreach (float degrees in new[] { 0f, 90f, -90f, 180f })
+                {
+                    var rotation = WinchPlacement.Turn(definition.Direction, degrees);
+                    result.Add(
+                        new WinchPlacement(
+                            center + rotation * radial + definition.Direction * 1.4f,
+                            rotation
+                        )
+                    );
+                }
             }
             return result.ToArray();
         }
