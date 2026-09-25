@@ -662,3 +662,28 @@ Release, GeometryChecks, AssemblyChecks and formatting passed. In-game validatio
 is pending: start on Brig, then reproduce the Sanbuq/Junk screenshots, then check
 Jong, Cog, Leopard and Shroud with both sides, multiple/mixed sails, mouse/VR
 handles and outlines, boat movement, previews/cancellation and save/reload.
+
+### Sailwind 0.39 audio hierarchy (2026-09-25)
+
+The user confirmed that updating ShipShape from **1.3.0 to 1.3.1** resolved the
+movement-triggered freeze. The subsequent logs contain no missing-camera errors
+or ocean viewpoint warnings, but still contain six `SailFlapAudio.Awake` failures
+while loading the Flying Sail and all three staysail marks. Treat these as
+separate issues.
+
+Installed donor 110 carries `SailFlapAudio` on its wind-center object. Native
+initialization searches only its parent and grandparent for `Sail`; the custom
+pivot frame had put the sail three ancestors above that object. Both family rigs
+now move the wind-center/audio object beneath their pivot frame during inactive
+template construction, preserving its initial world pose. Existing aerodynamic
+refreshes continue to set the world-space center and orientation from the posed
+corners. Native audio components, clips, unmute delay and snap-sound initialization
+remain in use; no native audio methods are patched.
+
+Version **0.1.0** builds against the installed 0.39 assemblies. Release,
+GeometryChecks, AssemblyChecks, formatting and diff checks passed. Neither suite
+executes Unity audio initialization. The built DLL has not been installed as part
+of this change. Runtime validation remains pending: start on Brig, then Sanbuq;
+load existing sails and fit new examples of all four types, confirm no
+`SailFlapAudio` exceptions, listen for flapping/snapping when applicable, and check
+resizing, partial/full reefing or hoisting, redeployment, propulsion and save/reload.

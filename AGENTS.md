@@ -56,6 +56,9 @@ implementation notes, asset provenance and verification procedures.
   retain the donor Animator as SE's scaling reference and preserve the hierarchy
   expected by `SailShadowCol`. Template-owned meshes and instance-owned meshes
   have distinct lifetimes. Do not mirror collider transforms with negative scale.
+- The donor wind-center object also carries `SailFlapAudio`, which searches only
+  two parents up for its Sail. Keep it beneath the family pivot frame, preserving
+  its initial world pose and the existing posed aerodynamic refresh.
 - Rope endpoints must be separate leaf transforms, never skin bones:
   native `RopeEffect` rotates endpoints with `LookAt`.
 - Preserve coupled foot/leech fitting and finite failure handling. Keep corner
@@ -216,6 +219,11 @@ The subsequent Sanbuq/Junk screenshots confirmed the same unsupported-surface
 problem beyond Brig. The remaining 90 surface mappings now use measured rail,
 handrail, fife-rail or halyard-beam strips. Release, both suites and formatting
 passed across all seven profiles; runtime seating and accessibility remain pending.
+The 2026-09-25 Sailwind 0.39 movement-triggered freeze was resolved by the user's
+ShipShape update from 1.3.0 to 1.3.1. The follow-up logs contain no missing-camera
+spam, but still showed six custom-sail `SailFlapAudio.Awake` errors. The audio
+hierarchy correction requires in-game loading and sound validation; see
+[DEVELOPMENT.md](docs/DEVELOPMENT.md).
 
 ## Local investigation and handoff
 
