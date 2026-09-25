@@ -21,6 +21,8 @@ internal static class Program
         MeshChecks.Run();
         FishermansStaysail.MkA.CutChecks.Run();
         FishermansStaysail.MkB.CutChecks.Run();
+        FishermansStaysail.MkC.CutChecks.Run();
+        FishermansStaysail.CollisionChecks.Run();
         FishermansStaysail.ReefingChecks.Run();
         FishermansStaysail.SheetChecks.Run();
         FishermansStaysail.EdgeFitChecks.Run();

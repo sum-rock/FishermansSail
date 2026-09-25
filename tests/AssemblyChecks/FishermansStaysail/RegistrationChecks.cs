@@ -34,7 +34,7 @@ internal static class RegistrationChecks
                 "Staysail registration must own the donor and template slope, accepting only the mark's identity and shape."
             );
 
-        foreach (string mark in new[] { "MkA", "MkB" })
+        foreach (string mark in new[] { "MkA", "MkB", "MkC" })
         {
             var definition = Type(mark + ".FishermansStaysail" + mark);
             var shape = Type(mark + ".FishermansStaysail" + mark + "Shape");
@@ -134,7 +134,7 @@ internal static class RegistrationChecks
                 "Installed cuts and asset names must use the same shape definition as templates."
             );
         Console.WriteLine(
-            "PASS (structural): both staysail registrations select their own shape/cut/prefix, share donor 110 and retain inactive template construction; installed cuts use the same shape interface. Unity registration is not executed."
+            "PASS (structural): all three staysail registrations select their own shape/cut/prefix, share donor 110 and retain inactive template construction; installed cuts use the same shape interface. Unity registration is not executed."
         );
     }
 }

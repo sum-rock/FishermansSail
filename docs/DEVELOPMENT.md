@@ -1,7 +1,7 @@
 # MoreSailwindSails development
 
 MoreSailwindSails is a collection of additional sail types for Sailwind.
-Fisherman's Staysails (Mk.A/Mk.B) and Fisherman's Flying Sails are the two
+Fisherman's Staysails (Mk.A/Mk.B/Mk.C) and Fisherman's Flying Sails are the two
 current sail families; Fisherman's Stays supply supporting rigging. Additional
 families can be developed within the same mod as their own features.
 
@@ -58,7 +58,7 @@ It changes files; `check` only reports differences.
 - **GeometryChecks** covers mesh and skinning geometry, coupled tension, shaping,
   travel limits, wind frames, boat profiles, collision bounds, hoisting and text
   wrapping, authored stay endpoints, topmast exclusions, shorter-foremast
-  fallbacks, geometry alignment and older shipyard snapshots. Both staysail
+  fallbacks, geometry alignment and older shipyard snapshots. All three staysail
   marks run the same fixed-head, sheet, reef and mirrored-skin behavior matrix.
 - **AssemblyChecks** validates Harmony targets against installed assemblies,
   texture load paths, patch ordering, control-list restoration structure and restrictions
@@ -91,7 +91,7 @@ not replace the installed plugin or change saves.
 Confirm the startup message `MoreSailwindSails 0.1.0 loaded!` in
 `BepInEx/LogOutput.log`. Flying Sail registration should report donor index
 **110**, sail index **400** and **825** vertices. Staysail registrations use
-indices **401** (Mk.A) and **402** (Mk.B). Read
+indices **401** (Mk.A), **402** (Mk.B) and **403** (Mk.C). Read
 Unity's `Player.log` as well when diagnosing warnings or cloth problems; this
 machine's paths are recorded in [AGENTS.md](../AGENTS.md).
 
@@ -144,7 +144,8 @@ the project rename does not change existing menus or saved sail identities.
   `MoreSailwindSails.Stays.FishermansStay`, with `.Patches` for Harmony patches.
 - `src/Sails/FishermansStaysail/` owns the staysail family's rig, reefing adapter,
   controls, prefab builder and patches. `MkA/` contains the original 110° cut;
-  `MkB/` keeps its head and has a 90° foot. Each mark supplies its own
+  `MkB/` keeps its head and has a 90° foot; `MkC/` has a foot rising 40°
+  toward the aft leech. Each mark supplies its own
   `FishermansStaysailShape` and save identity.
 
 Add future sail families under their own `src/Sails/<Family>/` directory with
@@ -155,20 +156,20 @@ The geometry checks link feature sources directly; update their project includes
 when moving files. The assembly checks resolve internal types by full name;
 update those references when renaming types or namespaces. Runtime object and
 mesh labels use each family's or mark's prefix; donor hierarchy names remain
-unchanged. Prefab IDs **400/401/402**, native save slots and version **0.1.0**
-are unchanged. Existing-save reload after registration cleanup still needs
-in-game verification.
+unchanged. Existing prefab IDs **400/401/402**, native save slots and version **0.1.0**
+are unchanged; Mk.C adds prefab **403**. Existing-save reload after registration
+cleanup still needs in-game verification.
 
 ### Test organization
 
 Both `tests/GeometryChecks/` and `tests/AssemblyChecks/` contain
 `FishermansFlyingSail/`, `FishermansStay/` and `FishermansStaysail/` directories.
-The latter has `MkA/` and `MkB/` for variant checks. Put each feature's
+The latter has `MkA/`, `MkB/` and `MkC/` for variant checks. Put each feature's
 checks and helpers in its directory, using the namespace
 `MoreSailwindSails.Tests.<Suite>.<Feature>`. Flying-sail rig-profile checks belong
 with the flying sail; authored stay-profile checks belong with the stay.
 Shared staysail geometry behavior lives at the family level, parameterized by
-`BehaviorCases` over both mark factories. Keep cut and prefab identity checks
+`BehaviorCases` over all three mark factories. Keep cut and prefab identity checks
 under their marks. Family edge-fit checks cover the active support bow and
 finite failure fallback. Test output labels executed behavior and
 structural control-finalizer inspection separately.
@@ -200,10 +201,10 @@ remain unchanged.
 See [AGENTS.md](../AGENTS.md) for the code map, installed-assembly inspection
 tools and regression lessons, including approaches that failed in game.
 
-## Mk.A implementation and verification
+## Staysail implementation and verification
 
-Mk.A registers as staysail prefab **401** and Mk.B as **402**, after Shipyard
-Expansion and before All Sails caches its inventory. Registry membership restricts fitting to an
+Mk.A registers as staysail prefab **401**, Mk.B as **402** and Mk.C as **403**,
+after Shipyard Expansion and before All Sails caches its inventory. Registry membership restricts fitting to an
 active Fisherman's Stay. The native stay slot owns the saved sail, while the
 rig places its hinge and full pinned luff on the forward physical mast.
 The saved installation coordinate measures downward displacement from the
@@ -226,14 +227,32 @@ existing saves retain their stored dimensions.
 
 Mk.B retains Mk.A's head and fixed 14° upper corner. Its foot has 90° corners
 against the luff and leech in the fore-mast frame, so it is deck-parallel on
-upright masts and tilts slightly on raked masts. Both marks use the same
+upright masts and tilts slightly on raked masts. All three marks use the same
 halyard, sheet, reefing, appearance and fitting code.
+
+Mk.C retains the same head and width, but its luff is `1.5 × width`. It raises
+its aft foot by `width × tan(40°)` from the fore foot. This is 40° above the deck
+on upright masts and tilts with fore-mast rake. The template head remains 20°
+and the installed head follows the actual stay. The longer luff needs more
+forward-mast clearance; existing fit checks measure it from the cut. Mesh,
+tension and aerodynamic calculations use the resulting geometry and area.
+Collision strips use the lowest head and highest foot across each strip,
+keeping a 5 cm margin at each edge; strips too shallow for these margins and
+a 1 cm height are disabled, as are clipped strips less than 1 mm wide. This supports rising, level and falling feet.
+
+Mk.C geometry, family behavior and registration checks cover the new cut;
+collision containment checks cover all three marks. Unity prefab construction
+and Cloth are not executed by these checks. In-game Mk.C validation remains
+pending: start on Brig, then Sanbuq, covering both tacks, eased/tight sheets,
+weak wind, partial/full furl and redeployment, resizing/recoloring, mixed marks,
+previews/cancellation, support removal and save/reload. Check rope attachment,
+propulsion, controls and collision clearance.
 
 The user reported that the fixed 20° experiment appeared to work and requested
 a further 6° inward adjustment. The user then found the 14° setting pretty good. The current change adds an
 aft halyard and proportional reef-angle transition, which await in-game validation.
 
-Each mark supplies a required `FixedUpperHeadAngle`, currently 14° for both.
+Each mark supplies a required `FixedUpperHeadAngle`, currently 14° for all three.
 The dormant staysail sheet-following policy and optional inward trim were
 removed in CLEANUP-3. The fixed target rotates
 the neutral head around the fore-mast axis, retaining height and head span.
@@ -434,7 +453,7 @@ a release asset.
 
 Version **0.1.0** uses `src/Controls/FishermanWinchControls.cs` for inactive cloning,
 owned rotation handles, outline reset and boat-level reservations. Flying Sails,
-Mk.A/Mk.B and stay-owned vanilla controls keep their existing bindings and rope
+Mk.A/Mk.B/Mk.C and stay-owned vanilla controls keep their existing bindings and rope
 routes. Only active owners with a bound rope reserve space; registration-only and
 empty stay variants do not. Donor changes replace affected clones and release old
 reservations without destroying the sail-owned rope controller. Native wheel

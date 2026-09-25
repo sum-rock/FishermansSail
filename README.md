@@ -3,7 +3,7 @@
 MoreSailwindSails adds new sail types to Sailwind, with room for more as they
 are developed. The mod currently includes two sail families:
 
-- **Fisherman's Staysails** — Mk.A and Mk.B cuts fitted to a Fisherman's Stay
+- **Fisherman's Staysails** — Mk.A, Mk.B and Mk.C cuts fitted to a Fisherman's Stay
   between two masts.
 - **Fisherman's Flying Sails** — sails fitted directly to a physical mast,
   with an active mast behind it for support.
@@ -21,6 +21,7 @@ Version **0.1.0**.
 | **Fisherman's Stay**          | A high stay between two masts, with variants for supported mast and topmast combinations.                                      |
 | **Fisherman's Staysail Mk.A** | A four-corner sail with a sloping head and a lower edge that slopes downward toward the aft mast.                              |
 | **Fisherman's Staysail Mk.B** | The same head and controls as Mk.A, with a straight lower edge perpendicular to the mast—level with the deck on upright masts. |
+| **Fisherman's Staysail Mk.C** | The same head and controls, with a 50% longer luff and a lower edge rising 40° from the forward luff toward the aft leech on upright masts. |
 | **Fisherman's Flying Sail**   | A separate sail fitted directly to a mast through the **Other** category.                                                      |
 
 Supported boats: **Brig, Junk, Jong, Sanbuq, Cog, Leopard and Shroud**.
@@ -46,17 +47,19 @@ The current build produces `MoreSailwindSails.dll`.
    the mast pair you want to use.
 2. Choose the variant matching your fitted masts and topmasts.
 3. Select that stay in the sail-fitting controls, open **Staysails**, and
-   choose **Fisherman's Staysail Mk.A** or **Fisherman's Staysail Mk.B**.
+   choose **Fisherman's Staysail Mk.A**, **Mk.B** or **Mk.C**.
 4. Resize and position the sail with the normal shipyard controls, leaving
    clearance from the deck, aft mast and other rigging.
 5. Complete the shipyard order.
 
-**Mk.A and Mk.B fit only on Fisherman's Stays.** Each stay carries one sail;
+**Mk.A, Mk.B and Mk.C fit only on Fisherman's Stays.** Each stay carries one sail;
 these stays can also carry vanilla staysails. Supported three-masted boats
 offer additional mast pairs.
 
-Both cuts start at the same size and can be resized uniformly. New sails are
-white and plain, with normal recoloring available.
+All three cuts start with the same width; Mk.C has a luff 50% longer than Mk.A
+and Mk.B and needs more room on the forward mast. They can be resized uniformly.
+New sails are white and plain, with normal recoloring available. Heads follow
+the fitted stay; foot cuts use the forward mast’s frame and tilt with mast rake.
 
 Remove a fitted sail before replacing or removing its stay. If you change a
 supporting mast or add a topmast, choose a matching stay variant as part of the

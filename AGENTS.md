@@ -7,7 +7,7 @@ editing. Check `git status --short` and preserve existing user changes.
 ## Scope and identity
 
 - MoreSailwindSails is an expandable collection of Sailwind sail types. The
-  current families are Fisherman's Staysails (Mk.A/Mk.B) and Fisherman's Flying
+  current families are Fisherman's Staysails (Mk.A/Mk.B/Mk.C) and Fisherman's Flying
   Sails, with Fisherman's Stays as supporting rigging. Future sail families
   belong to this mod without being forced into either existing family's design.
 - The repository, `src/MoreSailwindSails.csproj` and output `MoreSailwindSails.dll`
@@ -17,7 +17,8 @@ editing. Check `git status --short` and preserve existing user changes.
   The plugin targets `netstandard2.0`; executable checks use .NET 8.
 - The mod is unreleased; **0.1.0** is the planned first release. Keep GUID
   `com.august.moresailwindsails`, DLL name `MoreSailwindSails.dll` and prefab IDs
-  **400** (Flying Sail), **401** (Staysail Mk.A), **402** (Staysail Mk.B) stable.
+  **400** (Flying Sail), **401** (Staysail Mk.A), **402** (Staysail Mk.B) and
+  **403** (Staysail Mk.C) stable.
   For releases, keep plugin/project versions and documented startup examples consistent.
 - Keep Flying Sail and staysail mechanics independently editable. Shared-helper
   extraction is deferred in [CLEANUP.md](docs/CLEANUP.md); do not resume it
@@ -34,7 +35,7 @@ editing. Check `git status --short` and preserve existing user changes.
 | --- | --- |
 | Plugin | [src/Plugin.cs](src/Plugin.cs): identity, dependencies and Harmony discovery |
 | Flying Sail | [src/Sails/FishermansFlyingSail/](src/Sails/FishermansFlyingSail/): registration, rig, geometry, billow, tension, aerodynamics and mast installation |
-| Staysails | [src/Sails/FishermansStaysail/](src/Sails/FishermansStaysail/): family rig, prefab builder, reefing, fixed head and edge fitting; `MkA/` and `MkB/` hold mark definitions |
+| Staysails | [src/Sails/FishermansStaysail/](src/Sails/FishermansStaysail/): family rig, prefab builder, reefing, fixed head and edge fitting; `MkA/`, `MkB/` and `MkC/` hold mark definitions |
 | Fisherman's Stays | [src/Stays/FishermansStay/](src/Stays/FishermansStay/): independent mounts, registration, previews and save compatibility |
 | Boat profiles | [src/BoatRigs/](src/BoatRigs/): one class per boat owns supports, stays, mast ancestry and winch mounts; `Definitions.cs` owns shared types/catalog |
 | Winch controls | [src/Controls/](src/Controls/): boat-owned cloning/reservations and placement calculations |
@@ -100,12 +101,14 @@ implementation notes, asset provenance and verification procedures.
   snapshot entries to None. Protect occupied stays/supports during invalid
   previews, restore preview state in a finalizer, validate profiles first, and
   roll back a boat's new stays if construction fails.
-- Both marks fit registered Fisherman's Stays. Mk.A has a downward-sloping foot;
-  Mk.B has a 90° foot cut. Each mark's shape component supplies geometry and asset
-  prefixes for both template and instance creation. The family prefab builder
+- All three marks fit registered Fisherman's Stays. Mk.A has a downward-sloping foot;
+  Mk.B has a 90° foot cut; Mk.C has a foot rising 40° toward the aft leech
+  in the fore-mast frame, with the same width and a 50% longer luff. Each mark's
+  shape component supplies geometry and asset prefixes for both template and
+  instance creation. The family prefab builder
   owns donor **110** and template slope **20°**; installed cuts use actual stay
   slopes. Do not reintroduce separate geometry/prefix registration arguments.
-- Both marks hold the upper aft corner at **14° × clamped currentUnroll** on the
+- All three marks hold the upper aft corner at **14° × clamped currentUnroll** on the
   leeward side: 14° deployed, 7° half reefed, 0° furled. Select tacks in the neutral
   mast/stay frame with a **0.6 m/s** deadband, retaining the prior side in weak
   wind and defaulting positive on indeterminate initialization. Smooth changes;
@@ -160,9 +163,9 @@ argument. Output: `src/bin/Release/netstandard2.0/MoreSailwindSails.dll`.
 Documentation-only changes normally require diff/link/path review, not a build.
 
 Tests mirror feature directories and namespaces. Staysail behavior checks cover
-both cuts at family level; mark-specific cut/identity checks stay under `MkA/`
-and `MkB/`. Root `Program.cs` files only arrange execution. Shared Harmony and
-IL helpers live in `tests/AssemblyChecks/Shared/`; measurement fixtures stay
+all three cuts at family level; mark-specific cut/identity checks stay under
+`MkA/`, `MkB/` and `MkC/`. Root `Program.cs` files only arrange execution.
+Shared Harmony and IL helpers live in `tests/AssemblyChecks/Shared/`; measurement fixtures stay
 with their feature checks. Geometry checks execute pure calculations. Assembly
 checks inspect installed signatures, Harmony wiring and lifecycle structure;
 control exception recovery and Unity prefab construction are not executed.
@@ -179,9 +182,11 @@ mouse/VR handles, outlines and clearance after boat movement for winch changes.
 Known status: the user approved Flying Sail mast/guide placement, collision
 clearance and travel limits, reported improved winch placement, and gave favorable
 initial feedback after the staysail fixed-head cleanup. This is not exhaustive
-validation. Both-mark fitting/save reload after registration cleanup, all-boat
+validation. All-mark fitting/save reload after registration cleanup, all-boat
 winch coverage, appearance and full cloth/reefing scenarios remain pending.
-The last code handoff (CLEANUP-5) passed Release, both suites and formatting checks.
+The CLEANUP-5 handoff passed Release, both suites and formatting checks.
+Mk.C’s rising foot and revised collision strips still require in-game validation
+on Brig, then Sanbuq; automated checks do not establish Cloth behavior.
 
 ## Local investigation and handoff
 

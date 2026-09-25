@@ -59,7 +59,7 @@ internal static class PatchChecks
         Shared.ControlRestorationChecks.Run(
             assembly,
             family + "Patches.FishermansStaysailControlsPatch",
-            "Staysail family (Mk.A/Mk.B)"
+            "Staysail family (Mk.A/Mk.B/Mk.C)"
         );
         if (!CalledMethods(Patch("Travel", "Postfix")).Any(m => m.Name == "ConstrainHinge"))
             throw new Exception("Mk.A travel is not constrained after native sway.");

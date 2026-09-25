@@ -48,6 +48,7 @@ internal static class Program
         FishermansStaysail.RegistrationChecks.Run(assembly);
         FishermansStaysail.MkA.PatchChecks.Run(assembly);
         FishermansStaysail.MkB.PatchChecks.Run(assembly);
+        FishermansStaysail.MkC.PatchChecks.Run(assembly);
         FishermansStaysail.SailInfoChecks.Run(assembly, gameDir);
     }
 }
