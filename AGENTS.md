@@ -1,7 +1,7 @@
 # Working on MoreSailwindSails
 
 Current user instructions take precedence over historical design choices.
-Read [README.md](README.md), [Plugin.cs](Plugin.cs) and the relevant code before
+Read [README.md](README.md), [src/Plugin.cs](src/Plugin.cs) and the relevant code before
 editing. Check `git status --short` and preserve existing user changes.
 
 ## Scope and identity
@@ -10,7 +10,7 @@ editing. Check `git status --short` and preserve existing user changes.
   current families are Fisherman's Staysails (Mk.A/Mk.B) and Fisherman's Flying
   Sails, with Fisherman's Stays as supporting rigging. Future sail families
   belong to this mod without being forced into either existing family's design.
-- The repository, `MoreSailwindSails.csproj` and output `MoreSailwindSails.dll`
+- The repository, `src/MoreSailwindSails.csproj` and output `MoreSailwindSails.dll`
   use the project name, as does the BepInEx display name `MoreSailwindSails`.
   The C# namespace remains `FishermansSail`.
 - This is a C# Sailwind mod using BepInEx 5, HarmonyX and Shipyard Expansion.
@@ -32,12 +32,12 @@ editing. Check `git status --short` and preserve existing user changes.
 
 | Area | Location and responsibilities |
 | --- | --- |
-| Plugin | [Plugin.cs](Plugin.cs): identity, dependencies and Harmony discovery |
-| Flying Sail | [Sails/FishermansFlyingSail/](Sails/FishermansFlyingSail/): registration, rig, geometry, billow, tension, aerodynamics and mast installation |
-| Staysails | [Sails/FishermansStaysail/](Sails/FishermansStaysail/): family rig, prefab builder, reefing, fixed head and edge fitting; `MkA/` and `MkB/` hold mark definitions |
-| Fisherman's Stays | [Stays/FishermansStay/](Stays/FishermansStay/): independent mounts, registration, previews and save compatibility |
-| Boat profiles | [BoatRigs/](BoatRigs/): one class per boat owns supports, stays, mast ancestry and winch mounts; `Definitions.cs` owns shared types/catalog |
-| Winch controls | [Controls/](Controls/): boat-owned cloning/reservations and placement calculations |
+| Plugin | [src/Plugin.cs](src/Plugin.cs): identity, dependencies and Harmony discovery |
+| Flying Sail | [src/Sails/FishermansFlyingSail/](src/Sails/FishermansFlyingSail/): registration, rig, geometry, billow, tension, aerodynamics and mast installation |
+| Staysails | [src/Sails/FishermansStaysail/](src/Sails/FishermansStaysail/): family rig, prefab builder, reefing, fixed head and edge fitting; `MkA/` and `MkB/` hold mark definitions |
+| Fisherman's Stays | [src/Stays/FishermansStay/](src/Stays/FishermansStay/): independent mounts, registration, previews and save compatibility |
+| Boat profiles | [src/BoatRigs/](src/BoatRigs/): one class per boat owns supports, stays, mast ancestry and winch mounts; `Definitions.cs` owns shared types/catalog |
+| Winch controls | [src/Controls/](src/Controls/): boat-owned cloning/reservations and placement calculations |
 | Checks | [tests/GeometryChecks/](tests/GeometryChecks/), [tests/AssemblyChecks/](tests/AssemblyChecks/) |
 
 Feature namespaces follow their directories under `FishermansSail`; Harmony
@@ -130,7 +130,7 @@ implementation notes, asset provenance and verification procedures.
 
 - Seven profiles contain **97 stay variants** and **151 donor/role winch mappings**.
   Keep authored values in the corresponding boat class, shared types in
-  `BoatRigs/Definitions.cs` and placement math in `Controls/WinchPlacementGeometry.cs`.
+  `src/BoatRigs/Definitions.cs` and placement math in `src/Controls/WinchPlacementGeometry.cs`.
 - All three control paths use boat-owned reservations keyed by actual donor
   identity. Release unused reservations and refresh/rebind when donors change;
   preserve sail-owned controllers. Unbound stay variants consume no slots.
@@ -156,7 +156,7 @@ Use `dotnet csharpier check .` instead of formatting during read-only work.
 First-time Nix/NuGet operations may need normal network escalation; do not change
 project dependencies to bypass it. Override the game path with
 `-p:SailwindDir="/path/to/Sailwind"`; see the guide for the assembly-check runtime
-argument. Output: `bin/Release/netstandard2.0/MoreSailwindSails.dll`.
+argument. Output: `src/bin/Release/netstandard2.0/MoreSailwindSails.dll`.
 Documentation-only changes normally require diff/link/path review, not a build.
 
 Tests mirror feature directories and namespaces. Staysail behavior checks cover

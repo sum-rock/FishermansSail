@@ -19,13 +19,13 @@ if [[ "$(git rev-parse HEAD)" != "$remote_head" ]]; then
     exit 1
 fi
 
-plugin_version="$(sed -nE 's/^[[:space:]]*public[[:space:]]+const[[:space:]]+string[[:space:]]+PluginVersion[[:space:]]*=[[:space:]]*"([^"]+)"[[:space:]]*;.*/\1/p' Plugin.cs)"
+plugin_version="$(sed -nE 's/^[[:space:]]*public[[:space:]]+const[[:space:]]+string[[:space:]]+PluginVersion[[:space:]]*=[[:space:]]*"([^"]+)"[[:space:]]*;.*/\1/p' src/Plugin.cs)"
 if [[ -z "$plugin_version" || "$plugin_version" == *$'\n'* ]]; then
-    printf 'Expected exactly one PluginVersion declaration in Plugin.cs.\n' >&2
+    printf 'Expected exactly one PluginVersion declaration in src/Plugin.cs.\n' >&2
     exit 1
 fi
 
-project_version="$(sed -nE 's/^[[:space:]]*<Version>([^<]+)<\/Version>[[:space:]]*$/\1/p' MoreSailwindSails.csproj)"
+project_version="$(sed -nE 's/^[[:space:]]*<Version>([^<]+)<\/Version>[[:space:]]*$/\1/p' src/MoreSailwindSails.csproj)"
 if [[ "$project_version" != "$plugin_version" ]]; then
     printf 'Project version (%s) does not match PluginVersion (%s).\n' "$project_version" "$plugin_version" >&2
     exit 1

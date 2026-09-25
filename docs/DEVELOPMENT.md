@@ -6,7 +6,8 @@ current sail families; Fisherman's Stays supply supporting rigging. Additional
 families can be developed within the same mod as their own features.
 
 The repository and local checkout are named `MoreSailwindSails`. The project
-file is `MoreSailwindSails.csproj` and its assembly is `MoreSailwindSails.dll`.
+file is `src/MoreSailwindSails.csproj` and its assembly is `MoreSailwindSails.dll`.
+The root `MoreSailwindSails.sln` includes the plugin and both check projects.
 The mod is unreleased. The C# namespace remains `FishermansSail`, with plugin
 GUID `com.august.moresailwindsails` and BepInEx display name `MoreSailwindSails`.
 
@@ -23,8 +24,6 @@ For a fresh checkout:
 nix develop
 dotnet tool restore
 dotnet restore
-dotnet restore tests/GeometryChecks
-dotnet restore tests/AssemblyChecks
 dotnet build -c Release --no-restore
 ```
 
@@ -42,7 +41,7 @@ nix develop -c dotnet build -c Release -p:SailwindDir="/path/to/Sailwind"
 
 The build references the installed BepInEx, HarmonyX, Shipyard Expansion, game
 and Unity assemblies. They are not bundled with the plugin or committed to Git.
-The output is `bin/Release/netstandard2.0/MoreSailwindSails.dll`.
+The output is `src/bin/Release/netstandard2.0/MoreSailwindSails.dll`.
 
 ## Automated checks
 
@@ -123,34 +122,34 @@ checks.
 
 ## Source organization
 
-`Plugin.cs` owns the plugin metadata and assembly-wide Harmony registration for
+`src/Plugin.cs` owns the plugin metadata and assembly-wide Harmony registration for
 MoreSailwindSails. Each sail family owns its mechanics and game-facing names;
 the project rename does not change existing menus or saved sail identities.
 
-- `Sails/FishermansFlyingSail/` contains the mast-mounted sail's registration,
+- `src/Sails/FishermansFlyingSail/` contains the mast-mounted sail's registration,
   geometry, appearance, cloth rig and controls, using the namespace
   `FishermansSail.Sails.FishermansFlyingSail` and `FishermansFlyingSail` type prefix.
 - Its `Patches/` subdirectory contains all feature-specific Harmony patches in
   the corresponding `.Patches` namespace, including registration, appearance
   and the order-text freeze guard.
-- `BoatRigs/` contains one static class/file per boat in `FishermansSail.BoatRigs`.
+- `src/BoatRigs/` contains one static class/file per boat in `FishermansSail.BoatRigs`.
   Each exposes a complete `BoatRigDefinition` through `Definition`, with private
   factories for Flying Sail supports, stay variants, mast ancestry and winch mounts.
   `Definitions.cs` holds the shared data types, validation and `BoatRigCatalog`.
   Resolve ancestry and winches through the selected profile (`Sections`, `Base`,
   `WinchMount`); individual winch records inherit boat identity from that profile.
-- `Controls/` owns shared winch allocation, cloning and placement calculations.
+- `src/Controls/` owns shared winch allocation, cloning and placement calculations.
   `WinchPlacementGeometry.cs` uses the authored mounting data without owning any
   boat tables.
-- `Stays/FishermansStay/` owns the new stays, their independent controls, native
+- `src/Stays/FishermansStay/` owns the new stays, their independent controls, native
   mount registration, save handling and patches. The namespace is
   `FishermansSail.Stays.FishermansStay`, with `.Patches` for Harmony patches.
-- `Sails/FishermansStaysail/` owns the staysail family's rig, reefing adapter,
+- `src/Sails/FishermansStaysail/` owns the staysail family's rig, reefing adapter,
   controls, prefab builder and patches. `MkA/` contains the original 110° cut;
   `MkB/` keeps its head and has a 90° foot. Each mark supplies its own
   `FishermansStaysailShape` and save identity.
 
-Add future sail families under their own `Sails/<Family>/` directory with
+Add future sail families under their own `src/Sails/<Family>/` directory with
 corresponding feature tests. Reuse existing mechanics only when their behavior
 fits the new sail; the deferred shared-helper cleanup is not a prerequisite.
 
@@ -427,7 +426,7 @@ game assemblies or extracted assets.
 
 After updating the version and merging the release commit to `master`, run
 `./scripts/tag-release.sh` from a clean checkout. It switches to `master`, fast-forwards
-from `origin/master`, checks that `Plugin.cs` and the project agree on the
+from `origin/master`, checks that `src/Plugin.cs` and the project agree on the
 version, then creates and pushes an annotated `v<version>` tag. It stops if that
 tag already exists locally or on GitHub. This script does not build or publish
 a release asset.
@@ -435,7 +434,7 @@ a release asset.
 
 ## Shared winch placement (CLEANUP-1)
 
-Version **0.1.0** uses `Controls/FishermanWinchControls.cs` for inactive cloning,
+Version **0.1.0** uses `src/Controls/FishermanWinchControls.cs` for inactive cloning,
 owned rotation handles, outline reset and boat-level reservations. Flying Sails,
 Mk.A/Mk.B and stay-owned vanilla controls keep their existing bindings and rope
 routes. Only active owners with a bound rope reserve space; registration-only and
@@ -444,10 +443,10 @@ reservations without destroying the sail-owned rope controller. Native wheel
 rotation is a child of the mounting transform, so placement refreshes cannot
 be interpreted as player winch input.
 
-The seven boat classes in `BoatRigs/` record 151 donor/role mounting directions
+The seven boat classes in `src/BoatRigs/` record 151 donor/role mounting directions
 and physical mast references measured on 2026-09-24. Their shared record type is
-in `BoatRigs/Definitions.cs`; candidate positions are calculated in
-`Controls/WinchPlacementGeometry.cs`. Sources are the installed
+in `src/BoatRigs/Definitions.cs`; candidate positions are calculated in
+`src/Controls/WinchPlacementGeometry.cs`. Sources are the installed
 `level24`, `shipyard_expansion.assets`, `Leopard/leopard` and
 `ShatteredSeasExpansion/veil piercer`. Expansion transforms were converted through
 the corresponding boat model frame before comparison. Mast collider axes identify

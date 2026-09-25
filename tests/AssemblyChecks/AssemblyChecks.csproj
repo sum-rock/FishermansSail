@@ -6,7 +6,7 @@
       >$(HOME)/.local/share/Steam/steamapps/common/Sailwind</SailwindDir>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="../../MoreSailwindSails.csproj" />
+    <ProjectReference Include="../../src/MoreSailwindSails.csproj" />
     <Reference Include="0Harmony">
       <HintPath>$(SailwindDir)/BepInEx/core/0Harmony.dll</HintPath>
     </Reference>
