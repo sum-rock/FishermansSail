@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace FishermansSail.Stays.FishermansStay
+namespace MoreSailwindSails.Stays.FishermansStay
 {
     internal static class FishermansStaySaveState
     {

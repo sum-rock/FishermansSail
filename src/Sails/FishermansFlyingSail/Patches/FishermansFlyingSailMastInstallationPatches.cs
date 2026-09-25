@@ -4,7 +4,7 @@ using System.Linq;
 using HarmonyLib;
 using UnityEngine;
 
-namespace FishermansSail.Sails.FishermansFlyingSail.Patches
+namespace MoreSailwindSails.Sails.FishermansFlyingSail.Patches
 {
     [HarmonyPatch(typeof(ReefEffectAnimUniversal), "RefreshCloth")]
     internal static class FishermansFlyingSailClothRefreshPatch

@@ -1,8 +1,8 @@
-using FishermansSail.Sails.FishermansStaysail.MkA;
-using FishermansSail.Sails.FishermansStaysail.MkB;
 using HarmonyLib;
+using MoreSailwindSails.Sails.FishermansStaysail.MkA;
+using MoreSailwindSails.Sails.FishermansStaysail.MkB;
 
-namespace FishermansSail.Sails.FishermansStaysail.Patches
+namespace MoreSailwindSails.Sails.FishermansStaysail.Patches
 {
     [HarmonyPatch(typeof(PrefabsDirectory), "Start")]
     internal static class FishermansStaysailRegistrationPatch

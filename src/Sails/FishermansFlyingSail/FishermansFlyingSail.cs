@@ -2,7 +2,7 @@ using System;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
-namespace FishermansSail.Sails.FishermansFlyingSail
+namespace MoreSailwindSails.Sails.FishermansFlyingSail
 {
     internal static class FishermansFlyingSail
     {

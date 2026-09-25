@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-namespace FishermansSail.Stays.FishermansStay
+namespace MoreSailwindSails.Stays.FishermansStay
 {
     internal static class FishermansStayGeometry
     {

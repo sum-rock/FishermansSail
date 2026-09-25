@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using ShipyardExpansion.Scripts;
 using UnityEngine;
 
-namespace FishermansSail.Sails.FishermansStaysail
+namespace MoreSailwindSails.Sails.FishermansStaysail
 {
     internal static class FishermansStaysailAppearance
     {

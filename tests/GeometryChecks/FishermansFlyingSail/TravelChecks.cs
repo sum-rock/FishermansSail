@@ -1,7 +1,7 @@
 using System;
-using FishermansSail.Sails.FishermansFlyingSail;
+using MoreSailwindSails.Sails.FishermansFlyingSail;
 
-namespace FishermansSail.Tests.GeometryChecks.FishermansFlyingSail;
+namespace MoreSailwindSails.Tests.GeometryChecks.FishermansFlyingSail;
 
 internal static class TravelChecks
 {

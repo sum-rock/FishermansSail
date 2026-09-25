@@ -1,6 +1,6 @@
 using HarmonyLib;
 
-namespace FishermansSail.Sails.FishermansStaysail.Patches
+namespace MoreSailwindSails.Sails.FishermansStaysail.Patches
 {
     [HarmonyPatch(typeof(ShipyardSailColChecker), "UpdateRotation")]
     internal static class FishermansStaysailCollisionPatch

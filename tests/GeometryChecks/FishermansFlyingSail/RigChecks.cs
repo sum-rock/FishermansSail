@@ -1,9 +1,9 @@
 using System;
 using System.Linq;
-using FishermansSail.BoatRigs;
-using FishermansSail.Sails.FishermansFlyingSail;
+using MoreSailwindSails.BoatRigs;
+using MoreSailwindSails.Sails.FishermansFlyingSail;
 
-namespace FishermansSail.Tests.GeometryChecks.FishermansFlyingSail;
+namespace MoreSailwindSails.Tests.GeometryChecks.FishermansFlyingSail;
 
 internal static class RigChecks
 {

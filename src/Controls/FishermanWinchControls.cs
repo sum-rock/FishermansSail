@@ -1,12 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using FishermansSail.BoatRigs;
-using FishermansSail.Sails;
+using MoreSailwindSails.BoatRigs;
+using MoreSailwindSails.Sails;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
-namespace FishermansSail.Controls
+namespace MoreSailwindSails.Controls
 {
     // One coordinator per boat; inactive clones never reserve a position.
     internal sealed class FishermanWinchControls : MonoBehaviour

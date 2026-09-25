@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using HarmonyLib;
 
-namespace FishermansSail.Sails.FishermansFlyingSail.Patches
+namespace MoreSailwindSails.Sails.FishermansFlyingSail.Patches
 {
     [HarmonyPatch(typeof(ShipyardUIOrderText), "AddLine")]
     internal static class FishermansFlyingSailOrderTextPatch

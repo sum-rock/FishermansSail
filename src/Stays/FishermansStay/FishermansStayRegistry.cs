@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using FishermansSail.BoatRigs;
+using MoreSailwindSails.BoatRigs;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
-namespace FishermansSail.Stays.FishermansStay
+namespace MoreSailwindSails.Stays.FishermansStay
 {
     internal sealed class FishermansStayRegistry : MonoBehaviour
     {

@@ -1,12 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using FishermansSail.BoatRigs;
-using FishermansSail.Controls;
+using MoreSailwindSails.BoatRigs;
+using MoreSailwindSails.Controls;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
-namespace FishermansSail.Stays.FishermansStay
+namespace MoreSailwindSails.Stays.FishermansStay
 {
     internal sealed class FishermansStay
     {

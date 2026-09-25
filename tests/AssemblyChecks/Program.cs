@@ -2,11 +2,11 @@ using System;
 using System.IO;
 using System.Reflection;
 using System.Runtime.Loader;
-using FishermansSail.Tests.AssemblyChecks.Shared;
-using FlyingSailChecks = FishermansSail.Tests.AssemblyChecks.FishermansFlyingSail.PatchChecks;
-using StayChecks = FishermansSail.Tests.AssemblyChecks.FishermansStay.PatchChecks;
+using MoreSailwindSails.Tests.AssemblyChecks.Shared;
+using FlyingSailChecks = MoreSailwindSails.Tests.AssemblyChecks.FishermansFlyingSail.PatchChecks;
+using StayChecks = MoreSailwindSails.Tests.AssemblyChecks.FishermansStay.PatchChecks;
 
-namespace FishermansSail.Tests.AssemblyChecks;
+namespace MoreSailwindSails.Tests.AssemblyChecks;
 
 internal static class Program
 {

@@ -1,6 +1,6 @@
 using HarmonyLib;
 
-namespace FishermansSail.Sails.FishermansFlyingSail.Patches
+namespace MoreSailwindSails.Sails.FishermansFlyingSail.Patches
 {
     [HarmonyPatch(typeof(JibAngleMaster), "Update")]
     internal static class FishermansFlyingSailTravelPatch

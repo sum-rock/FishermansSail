@@ -1,9 +1,9 @@
 using System;
 using System.Linq;
 using System.Reflection;
-using static FishermansSail.Tests.AssemblyChecks.Shared.IlReader;
+using static MoreSailwindSails.Tests.AssemblyChecks.Shared.IlReader;
 
-namespace FishermansSail.Tests.AssemblyChecks.FishermansStay;
+namespace MoreSailwindSails.Tests.AssemblyChecks.FishermansStay;
 
 internal static class WinchChecks
 {
@@ -14,7 +14,7 @@ internal static class WinchChecks
             | BindingFlags.NonPublic
             | BindingFlags.Static
             | BindingFlags.Instance;
-        var manager = assembly.GetType("FishermansSail.Controls.FishermanWinchControls", true);
+        var manager = assembly.GetType("MoreSailwindSails.Controls.FishermanWinchControls", true);
         var owned = manager.GetNestedType("OwnedWinch", BindingFlags.NonPublic);
         var constructor = owned.GetConstructors(all).Single();
         var cloneCalls = CalledMethods(constructor).ToArray();
@@ -43,7 +43,7 @@ internal static class WinchChecks
             throw new Exception("Unused controls must be inactive and release allocation.");
         foreach (string family in new[] { "FishermansFlyingSail", "FishermansStaysail" })
         {
-            var type = assembly.GetType($"FishermansSail.Sails.{family}.{family}Rigging", true);
+            var type = assembly.GetType($"MoreSailwindSails.Sails.{family}.{family}Rigging", true);
             if (
                 !CalledMethods(type.GetMethod("AttachControls", all))
                     .Any(m => m.DeclaringType == manager && m.Name == "Reconcile")
@@ -52,7 +52,7 @@ internal static class WinchChecks
             )
                 throw new Exception(family + " bypasses shared control ownership.");
         }
-        var stay = assembly.GetType("FishermansSail.Stays.FishermansStay.FishermansStay", true);
+        var stay = assembly.GetType("MoreSailwindSails.Stays.FishermansStay.FishermansStay", true);
         if (
             !CalledMethods(stay.GetMethod("CloneWinches", all))
                 .Any(m => m.DeclaringType == manager && m.Name == "Create")

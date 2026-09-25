@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using FishermansSail.BoatRigs;
+using MoreSailwindSails.BoatRigs;
 using UnityEngine;
 
-namespace FishermansSail.Stays.FishermansStay
+namespace MoreSailwindSails.Stays.FishermansStay
 {
     internal sealed class FishermansStayReferences
     {

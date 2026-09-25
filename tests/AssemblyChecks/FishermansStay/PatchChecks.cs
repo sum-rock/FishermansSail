@@ -2,9 +2,9 @@ using System;
 using System.Linq;
 using System.Reflection;
 using HarmonyLib;
-using static FishermansSail.Tests.AssemblyChecks.Shared.IlReader;
+using static MoreSailwindSails.Tests.AssemblyChecks.Shared.IlReader;
 
-namespace FishermansSail.Tests.AssemblyChecks.FishermansStay;
+namespace MoreSailwindSails.Tests.AssemblyChecks.FishermansStay;
 
 internal static class PatchChecks
 {
@@ -12,7 +12,7 @@ internal static class PatchChecks
     {
         // Stay integration uses native save slots; inspect and exercise the pure parts
         // without constructing Unity objects or mutating an installed save.
-        const string stayNamespace = "FishermansSail.Stays.FishermansStay.";
+        const string stayNamespace = "MoreSailwindSails.Stays.FishermansStay.";
         Type StayPatch(string name) =>
             assembly.GetType(stayNamespace + "Patches.FishermansStay" + name + "Patch", true);
         MethodInfo StayMethod(string name, string method) =>

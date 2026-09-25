@@ -2,9 +2,9 @@ using System;
 using System.Linq;
 using System.Reflection;
 using HarmonyLib;
-using static FishermansSail.Tests.AssemblyChecks.Shared.IlReader;
+using static MoreSailwindSails.Tests.AssemblyChecks.Shared.IlReader;
 
-namespace FishermansSail.Tests.AssemblyChecks.FishermansFlyingSail;
+namespace MoreSailwindSails.Tests.AssemblyChecks.FishermansFlyingSail;
 
 internal static class PatchChecks
 {
@@ -14,7 +14,7 @@ internal static class PatchChecks
         // Guarding only the selector would allow an old saved pattern to reappear.
         var textureTarget = assembly
             .GetType(
-                "FishermansSail.Sails.FishermansFlyingSail.Patches.FishermansFlyingSailPlainTexturePatch"
+                "MoreSailwindSails.Sails.FishermansFlyingSail.Patches.FishermansFlyingSailPlainTexturePatch"
             )
             .GetCustomAttribute<HarmonyPatch>()
             .info;
@@ -29,7 +29,7 @@ internal static class PatchChecks
                 throw new Exception($"SE {name} no longer passes through the plain-texture guard.");
         var textureButtonPostfix = assembly
             .GetType(
-                "FishermansSail.Sails.FishermansFlyingSail.Patches.FishermansFlyingSailTextureButtonPatch"
+                "MoreSailwindSails.Sails.FishermansFlyingSail.Patches.FishermansFlyingSailTextureButtonPatch"
             )
             .GetMethod("Postfix", BindingFlags.Static | BindingFlags.NonPublic);
         if (
@@ -43,7 +43,7 @@ internal static class PatchChecks
         );
 
         var travelPatch = assembly.GetType(
-            "FishermansSail.Sails.FishermansFlyingSail.Patches.FishermansFlyingSailTravelPatch"
+            "MoreSailwindSails.Sails.FishermansFlyingSail.Patches.FishermansFlyingSailTravelPatch"
         );
         var travelTarget = travelPatch.GetCustomAttribute<HarmonyPatch>().info;
         var travelPrefix = travelPatch.GetMethod(
@@ -70,16 +70,16 @@ internal static class PatchChecks
                 m.Name == "GetComponent"
                 && m.IsGenericMethod
                 && m.GetGenericArguments().Single().FullName
-                    == "FishermansSail.Sails.FishermansFlyingSail.FishermansFlyingSailRig"
+                    == "MoreSailwindSails.Sails.FishermansFlyingSail.FishermansFlyingSailRig"
             )
             || !prefixCalls.Any(m =>
                 m.DeclaringType.FullName
-                    == "FishermansSail.Sails.FishermansFlyingSail.FishermansFlyingSailTravel"
+                    == "MoreSailwindSails.Sails.FishermansFlyingSail.FishermansFlyingSailTravel"
                 && m.Name == "Clamp"
             )
             || !postfixCalls.Any(m =>
                 m.DeclaringType.FullName
-                    == "FishermansSail.Sails.FishermansFlyingSail.FishermansFlyingSailTravel"
+                    == "MoreSailwindSails.Sails.FishermansFlyingSail.FishermansFlyingSailTravel"
                 && m.Name == "ConstrainHinge"
             )
             || !postfixCalls.Any(m =>
@@ -103,7 +103,7 @@ internal static class PatchChecks
         // a live Cloth renderer's mesh caused the 0.7.11 detach/reset regression even
         // though the two meshes passed all pure geometry checks.
         var rigType = assembly.GetType(
-            "FishermansSail.Sails.FishermansFlyingSail.FishermansFlyingSailRig"
+            "MoreSailwindSails.Sails.FishermansFlyingSail.FishermansFlyingSailRig"
         );
         foreach (
             var method in rigType.GetMethods(
@@ -153,7 +153,7 @@ internal static class PatchChecks
         // prefixes even when this one returns false, so their input must be safe too.
         var textPrefix = assembly
             .GetType(
-                "FishermansSail.Sails.FishermansFlyingSail.Patches.FishermansFlyingSailOrderTextPatch"
+                "MoreSailwindSails.Sails.FishermansFlyingSail.Patches.FishermansFlyingSailOrderTextPatch"
             )
             .GetMethod("Prefix", BindingFlags.Static | BindingFlags.NonPublic);
         if (
@@ -190,7 +190,7 @@ internal static class PatchChecks
 
         Shared.ControlRestorationChecks.Run(
             assembly,
-            "FishermansSail.Sails.FishermansFlyingSail.Patches.FishermansFlyingSailControlsPatch",
+            "MoreSailwindSails.Sails.FishermansFlyingSail.Patches.FishermansFlyingSailControlsPatch",
             "Flying Sail"
         );
     }

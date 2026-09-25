@@ -1,6 +1,6 @@
 using HarmonyLib;
 
-namespace FishermansSail.Sails.FishermansFlyingSail.Patches
+namespace MoreSailwindSails.Sails.FishermansFlyingSail.Patches
 {
     [HarmonyPatch(typeof(PrefabsDirectory), "Start")]
     internal static class FishermansFlyingSailRegistrationPatch

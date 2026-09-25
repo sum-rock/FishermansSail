@@ -2,7 +2,7 @@ using HarmonyLib;
 using ShipyardExpansion.Scripts;
 using UnityEngine;
 
-namespace FishermansSail.Sails.FishermansFlyingSail.Patches
+namespace MoreSailwindSails.Sails.FishermansFlyingSail.Patches
 {
     [HarmonyPatch(typeof(SailTextureChanger), "UpdateMaterial")]
     internal static class FishermansFlyingSailPlainTexturePatch

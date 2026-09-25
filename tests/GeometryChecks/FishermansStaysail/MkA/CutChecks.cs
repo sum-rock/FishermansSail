@@ -3,13 +3,13 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using FishermansSail.BoatRigs;
-using FishermansSail.Sails.FishermansStaysail;
-using FishermansSail.Sails.FishermansStaysail.MkA;
-using FishermansSail.Stays.FishermansStay;
+using MoreSailwindSails.BoatRigs;
+using MoreSailwindSails.Sails.FishermansStaysail;
+using MoreSailwindSails.Sails.FishermansStaysail.MkA;
+using MoreSailwindSails.Stays.FishermansStay;
 using UnityEngine;
 
-namespace FishermansSail.Tests.GeometryChecks.FishermansStaysail.MkA;
+namespace MoreSailwindSails.Tests.GeometryChecks.FishermansStaysail.MkA;
 
 internal static class CutChecks
 {

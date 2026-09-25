@@ -4,7 +4,7 @@ using HarmonyLib;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
-namespace FishermansSail.Stays.FishermansStay.Patches
+namespace MoreSailwindSails.Stays.FishermansStay.Patches
 {
     [HarmonyPatch(typeof(SaveableBoatCustomization), "Awake")]
     internal static class FishermansStayRegistrationPatch

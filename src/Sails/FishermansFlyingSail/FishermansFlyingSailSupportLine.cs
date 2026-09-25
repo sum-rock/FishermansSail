@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace FishermansSail.Sails.FishermansFlyingSail
+namespace MoreSailwindSails.Sails.FishermansFlyingSail
 {
     // Visual running line: the existing sheet winches continue to control the
     // clew. The upper corner moves freely beneath the aft masthead pulley.

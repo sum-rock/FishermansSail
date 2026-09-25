@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-namespace FishermansSail.Sails.FishermansStaysail
+namespace MoreSailwindSails.Sails.FishermansStaysail
 {
     // Per-instance tack state in the boat's neutral frame. No sheet position,
     // rotating cloth transform or load magnitude is used to set the angle.

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
-namespace FishermansSail.Controls
+namespace MoreSailwindSails.Controls
 {
     // Pure allocation policy. Positions and radii are in the boat's local frame.
     internal sealed class WinchReservations

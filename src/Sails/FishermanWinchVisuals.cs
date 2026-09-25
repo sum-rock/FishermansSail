@@ -2,7 +2,7 @@ using cakeslice;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
-namespace FishermansSail.Sails
+namespace MoreSailwindSails.Sails
 {
     internal static class FishermanWinchVisuals
     {

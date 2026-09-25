@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace FishermansSail.Sails.FishermansFlyingSail
+namespace MoreSailwindSails.Sails.FishermansFlyingSail
 {
     internal struct FishermansFlyingSailWindFrame
     {
