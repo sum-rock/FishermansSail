@@ -146,6 +146,10 @@ implementation notes, asset provenance and verification procedures.
 
 ## Build and validation
 
+Always build the Release DLL before handing off changes that can affect the
+plugin. Never execute a file from `scripts/` or run commands with `scripts/`
+as the working directory.
+
 Use the pinned Nix environment and CSharpier tool configuration. For a fresh
 checkout, run the restore commands in [DEVELOPMENT.md](docs/DEVELOPMENT.md).
 After dependencies are restored:
