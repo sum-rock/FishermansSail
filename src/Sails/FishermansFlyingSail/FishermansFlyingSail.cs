@@ -18,6 +18,7 @@ namespace MoreSailwindSails.Sails.FishermansFlyingSail
             GameObject container = null;
             Mesh mesh = null;
             Mesh shadowMesh = null;
+            Mesh knotMesh = null;
             try
             {
                 if (
@@ -57,7 +58,8 @@ namespace MoreSailwindSails.Sails.FishermansFlyingSail
                     );
 
                 var sourceMesh = sourceRenderer.sharedMesh;
-                var geometry = FishermansFlyingSailGeometry.Create(sourceSail.installHeight);
+                // Bake the smaller size into the fabric so it is the new 100%.
+                var geometry = FishermansFlyingSailGeometry.Create(sourceSail.installHeight / 3f);
 
                 // An inactive parent prevents Awake/Start from running on our
                 // template. Installed copies retain activeSelf=true and initialize normally.
@@ -67,6 +69,7 @@ namespace MoreSailwindSails.Sails.FishermansFlyingSail
                 var clone = Object.Instantiate(source, container.transform, false);
                 clone.name = $"{PrefabIndex} SAIL {DisplayName}";
                 var sail = clone.GetComponent<Sail>();
+                sail.installHeight = geometry.Corners[0].x - geometry.Corners[2].x;
                 sail.prefabIndex = PrefabIndex;
                 sail.sailName = DisplayName;
                 sail.category = SailCategory.other;
@@ -138,6 +141,12 @@ namespace MoreSailwindSails.Sails.FishermansFlyingSail
                 };
                 shadowMesh.RecalculateBounds();
                 FishermansFlyingSailRig.Configure(sail, geometry, mesh, shadowMesh);
+                var route = sail.GetComponent<FishermansFlyingSailRig>().SupportLine;
+                route.Knots = FishermansFlyingSailKnots.TryCreate(
+                    route.transform,
+                    route.NativeSheets[0].ropeWidth,
+                    out knotMesh
+                );
                 FishermansFlyingSailAppearance.Configure(sail);
                 var renderer = sail.cloth.GetComponent<SkinnedMeshRenderer>();
                 clone.SetActive(true);
@@ -151,7 +160,8 @@ namespace MoreSailwindSails.Sails.FishermansFlyingSail
 
                 string registrationMessage =
                     $"Registered {DisplayName}: source={SourceIndex}, index={PrefabIndex}, "
-                    + $"vertices={mesh.vertexCount}, corners=4, aftDepthRatio=1, headCamber=0.12, "
+                    + $"vertices={mesh.vertexCount}, corners=4, luffWidthRatio=2, edgeSlope=20, mastTies=0.4572m, camberDepth=0.20, "
+                    + $"baseWidth={-geometry.Corners[0].z:F2}m, baseLuff={sail.installHeight:F2}m, "
                     + $"area={sourceSail.GetSailArea():F2}->{sail.sailArea:F2}. Original brig jib preserved.";
 
                 if (directory.sails.Length <= PrefabIndex)
@@ -161,6 +171,7 @@ namespace MoreSailwindSails.Sails.FishermansFlyingSail
                 {
                     mesh,
                     shadowMesh,
+                    knotMesh,
                 };
                 prefab = clone;
                 Plugin.Log.LogInfo(registrationMessage);
@@ -173,6 +184,8 @@ namespace MoreSailwindSails.Sails.FishermansFlyingSail
                     Object.Destroy(mesh);
                 if (shadowMesh)
                     Object.Destroy(shadowMesh);
+                if (knotMesh)
+                    Object.Destroy(knotMesh);
                 Plugin.Log.LogError($"Could not register {DisplayName}: {exception}");
             }
         }

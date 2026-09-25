@@ -25,30 +25,34 @@ namespace MoreSailwindSails.Sails.FishermansFlyingSail
         }
 
         internal static string FitError(
-            float width,
-            float headHeight,
-            float guideHeight,
+            float reach,
+            float foreHeadHeight,
+            float aftHeadHeight,
+            float foreGuideHeight,
+            float aftGuideHeight,
             float span
         )
         {
             if (
-                !Finite(width)
-                || !Finite(headHeight)
-                || !Finite(guideHeight)
+                !Finite(reach)
+                || !Finite(foreHeadHeight)
+                || !Finite(aftHeadHeight)
+                || !Finite(foreGuideHeight)
+                || !Finite(aftGuideHeight)
                 || !Finite(span)
-                || width <= 0
+                || reach <= 0
                 || span <= 0
             )
                 return "(INVALID MAST SUPPORT GEOMETRY)";
-            if (headHeight > guideHeight + 0.05f)
+            if (foreHeadHeight > foreGuideHeight + 0.05f || aftHeadHeight > aftGuideHeight + 0.05f)
                 return "(SAIL HEAD ABOVE SUPPORT PULLEY)";
-            if (width > span - 0.15f)
+            if (reach > span - 0.15f)
                 return "(SAIL TOO WIDE FOR MAST PAIR)";
             return null;
         }
 
         // Check the neutral sheet, not a solid volume filled to maximum billow
-        // on both tacks. Clip only the intentional luff contact inside its mast.
+        // on both tacks. The offset luff normally needs no mast clipping.
         internal static bool CollisionStrip(
             float width,
             int column,
@@ -60,17 +64,16 @@ namespace MoreSailwindSails.Sails.FishermansFlyingSail
             float step = width / FishermansFlyingSailGeometry.Columns;
             float start = Math.Max((column + 0.05f) * step, mastClearance);
             float end = (column + 0.95f) * step;
-            float depth =
-                width
-                * (
-                    FishermansFlyingSailGeometry.ForeDepthRatio
-                    + (
-                        FishermansFlyingSailGeometry.AftDepthRatio
-                        - FishermansFlyingSailGeometry.ForeDepthRatio
-                    ) * ((column + 1f) / FishermansFlyingSailGeometry.Columns)
-                );
-            center = new Vector3(-depth * 0.5f, 0, -width + (start + end) * 0.5f);
-            size = new Vector3(Math.Max(0.01f, depth - 0.1f), 0.05f, Math.Max(0.001f, end - start));
+            // Both edges expand aft: use the narrow end to keep each strip
+            // inscribed below the rising head and above the falling foot.
+            float head = start * FishermansFlyingSailGeometry.EdgeSlope;
+            float foot = -width * FishermansFlyingSailGeometry.ForeDepthRatio - head;
+            center = new Vector3((head + foot) * 0.5f, 0, -width + (start + end) * 0.5f);
+            size = new Vector3(
+                Math.Max(0.01f, head - foot - 0.1f),
+                0.05f,
+                Math.Max(0.001f, end - start)
+            );
             return end > start;
         }
 

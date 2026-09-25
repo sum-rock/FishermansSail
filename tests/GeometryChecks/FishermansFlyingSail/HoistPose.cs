@@ -9,7 +9,7 @@ internal static class HoistPose
         FishermansFlyingSailMastInstallationGeometry.HoistCorner(
             rest[index],
             rest[0],
-            rest[2] + Vector3.left * (-rest[0].z * 0.2f),
+            new Vector3(rest[3].x + rest[0].z * 0.2f, 0, rest[0].z),
             unroll
         );
 }

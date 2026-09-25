@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using HarmonyLib;
+using ShipyardExpansion;
 using UnityEngine;
 
 namespace MoreSailwindSails.Sails.FishermansFlyingSail.Patches
@@ -71,6 +72,7 @@ namespace MoreSailwindSails.Sails.FishermansFlyingSail.Patches
     internal static class FishermansFlyingSailNewSailPatch
     {
         [HarmonyPostfix]
+        [HarmonyAfter("com.nandbrew.shipyardexpansion")]
         private static void Postfix(ShipyardSailInstaller __instance, GameObject sailObject)
         {
             var rig = sailObject.GetComponent<FishermansFlyingSailRig>();
@@ -81,11 +83,15 @@ namespace MoreSailwindSails.Sails.FishermansFlyingSail.Patches
             // Native AddNewSail chooses the shipyard's first palette entry.
             // Use the existing white swatch for this sail's initial selection.
             sail.ChangeSailColor(FishermansFlyingSailAppearance.WhiteColorIndex);
+            // Start at 100% of the smaller base mesh.
+            sail.GetComponent<SailScaler>().SetScaleAbs(1f, 1f);
             sail.ChangeInstallHeight(mast.mastHeight - sail.GetCurrentInstallHeight());
             sail.UpdateInstallPosition();
             sail.currentUnroll = 1f;
             rig.RefreshFlyingFrame();
             mast.UpdateControllerAttachments();
+            ShipyardUI.instance.UpdateDescriptionText();
+            GameState.currentShipyard.UpdateOrder();
         }
     }
 

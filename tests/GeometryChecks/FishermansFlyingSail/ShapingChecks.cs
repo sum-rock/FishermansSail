@@ -8,6 +8,7 @@ internal static class ShapingChecks
 {
     internal static void Run()
     {
+        CheckLuffClearance();
         foreach (float width in new[] { 0.25f, 6f, 13.8f, 40f })
         {
             var data = FishermansFlyingSailGeometry.Create(width);
@@ -50,14 +51,25 @@ internal static class ShapingChecks
             int top = FishermansFlyingSailGeometry.Columns / 2;
             int luff =
                 FishermansFlyingSailGeometry.Rows / 2 * (FishermansFlyingSailGeometry.Columns + 1);
-            foreach (int peak in new[] { top, luff })
+            foreach (int peak in new[] { top, top + luff, top + luff * 2 })
             {
                 float travel = data.Constraints[peak].maxDistance;
                 Check(
                     positive[peak].y - travel > 0 && negative[peak].y + travel < 0,
-                    "Settled top/luff peaks can still billow on the wrong side within their travel sphere."
+                    "Settled head, middle and foot peaks can still billow on the wrong side within their travel sphere."
                 );
             }
+            Check(
+                positive[luff].z < data.Corners[0].z && positive[luff].z == negative[luff].z,
+                "The luff arch must point toward the mast independently of tack."
+            );
+            Check(
+                FishermansFlyingSailFrameGeometry.TieLength
+                    - (data.Corners[0].z - positive[luff].z)
+                    - data.Constraints[luff].maxDistance
+                    >= 0.11f,
+                "The luff travel sphere reaches the mast."
+            );
             foreach (float unroll in new[] { 0f, 0.02f, 0.5f, 0.75f, 0.9f, 0.98f, 1f })
             {
                 var a = Pose(data, width, -1, unroll);
@@ -90,7 +102,8 @@ internal static class ShapingChecks
                         var pose = Pose(data, width, camber, 1);
                         for (int i = 0; i < pose.Length; i++)
                             Check(
-                                (pose[i] - previous[i]).magnitude < width * 0.8f / fps,
+                                (pose[i] - previous[i]).magnitude
+                                    <= width * (0.4f * (1 - (float)Math.Exp(-3f / fps)) + 1e-5f),
                                 "A tack abruptly displaced the shaping surface."
                             );
                         previous = pose;
@@ -139,6 +152,96 @@ internal static class ShapingChecks
         );
     }
 
+    private static void CheckLuffClearance()
+    {
+        foreach (float width in new[] { 0.25f, 6f, 13.8f, 40f })
+        foreach (
+            var scale in new[]
+            {
+                new Vector3(0.3f, 0.3f, 0.3f),
+                Vector3.one,
+                new Vector3(2, 2, 2),
+                new Vector3(0.5f, 1, 1.5f),
+                new Vector3(2, 1, 0.3f),
+            }
+        )
+        foreach (float angle in new[] { -40f, 0f, 40f })
+        foreach (float unroll in new[] { 0.5f, 0.9f, 1f })
+        {
+            float minimum = Math.Min(scale.x, Math.Min(scale.y, scale.z));
+            float maximum = Math.Max(scale.x, Math.Max(scale.y, scale.z));
+            float deployment = FishermansFlyingSailBillow.Deployment(unroll);
+            Vector3 Rotate(Vector3 p) =>
+                FishermansFlyingSailFrameGeometry.RotateAroundMast(
+                    p,
+                    Vector3.zero,
+                    new Vector3(1, 2, 3),
+                    35
+                );
+            var axis = Rotate(Vector3.right);
+            var aft = Rotate(Vector3.forward);
+            var fore = new Vector3(10, 20, 30) + aft * FishermansFlyingSailFrameGeometry.TieLength;
+            for (int row = 1; row < FishermansFlyingSailGeometry.Rows; row++)
+            {
+                float v = (float)row / FishermansFlyingSailGeometry.Rows;
+                var baseline = fore - axis * (width * 2 * scale.x * v);
+                var aftEdge =
+                    baseline
+                    + FishermansFlyingSailFrameGeometry.RotateAroundMast(
+                        aft * (width * scale.z),
+                        Vector3.zero,
+                        axis,
+                        angle
+                    );
+                var point = FishermansFlyingSailBillow.ShapePoint(
+                    baseline,
+                    aftEdge,
+                    Rotate(Vector3.up),
+                    width,
+                    0,
+                    v,
+                    deployment,
+                    -aft,
+                    deployment,
+                    minimum
+                );
+                var opposite = FishermansFlyingSailBillow.ShapePoint(
+                    baseline,
+                    aftEdge,
+                    Rotate(Vector3.up),
+                    width,
+                    0,
+                    v,
+                    -deployment,
+                    -aft,
+                    deployment,
+                    minimum
+                );
+                Near(point, opposite, width, "Tacking changed the mastward luff arch.");
+                float inward = Vector3.Dot(baseline - point, aft);
+                float travel =
+                    FishermansFlyingSailBillow.ClothTravel(width, 0, v, minimum, maximum) * maximum;
+                Check(
+                    inward >= -0.00001f && inward <= 0.22861f,
+                    "Scaled luff arch must remain between zero and nine inches."
+                );
+                Check(
+                    inward
+                        <= FishermansFlyingSailGeometry.RestLuffBow(width, 0, v) * minimum
+                            + 0.00001f,
+                    "Scaled luff shaping asks for more spare fabric than the rest mesh."
+                );
+                Check(
+                    FishermansFlyingSailFrameGeometry.TieLength - inward - travel >= 0.11429f,
+                    "Scaled luff travel can cross the mast surface."
+                );
+            }
+        }
+        Console.WriteLine(
+            "PASS: mastward luff arch, nine-inch cap, reserved fabric and mast clearance under uniform/nonuniform scaling, trim, hoist and boat rotation."
+        );
+    }
+
     private static Vector3[] Pose(
         FishermansFlyingSailMeshData data,
         float width,
@@ -165,7 +268,9 @@ internal static class ShapingChecks
                     width,
                     u,
                     v,
-                    amount
+                    amount,
+                    Vector3.back,
+                    FishermansFlyingSailBillow.Deployment(unroll)
                 );
         }
         var result = new Vector3[data.Vertices.Length];

@@ -24,6 +24,29 @@ namespace MoreSailwindSails.Sails.FishermansFlyingSail
 
     internal static class FishermansFlyingSailFrameGeometry
     {
+        internal const float TieLength = 0.4572f;
+
+        internal static Vector3 LuffPivot(
+            Vector3 mastPoint,
+            Vector3 mastAxis,
+            Vector3 aftReference,
+            float mastRadius
+        ) => mastPoint + AftDirection(mastPoint, mastAxis, aftReference) * (mastRadius + TieLength);
+
+        internal static Vector3 AftDirection(
+            Vector3 mastPoint,
+            Vector3 mastAxis,
+            Vector3 aftReference
+        )
+        {
+            var axis = mastAxis.normalized;
+            var aft = aftReference - mastPoint;
+            return (aft - axis * Vector3.Dot(aft, axis)).normalized;
+        }
+
+        internal static Vector3 TieAnchor(Vector3 corner, Vector3 aftDirection) =>
+            corner - aftDirection * TieLength;
+
         internal static Vector3 ModelOffset(Vector3 pivot, Vector3 alignedHead) =>
             pivot - alignedHead;
 
@@ -93,28 +116,6 @@ namespace MoreSailwindSails.Sails.FishermansFlyingSail
             )
                 return 0;
             return Math.Max(0, Math.Min(1, 1 - totalLength / currentLength));
-        }
-
-        // Two spans meet exactly at the mast guide (t = 0.5). These are visual
-        // sheets driven by native slack, not additional physical constraints.
-        internal static Vector3 UpperSheetPoint(
-            Vector3 head,
-            Vector3 guide,
-            Vector3 control,
-            float slack,
-            float t
-        )
-        {
-            var from = t <= 0.5f ? head : guide;
-            var to = t <= 0.5f ? guide : control;
-            float along = t <= 0.5f ? t * 2 : (t - 0.5f) * 2;
-            float sag = (to - from).magnitude * (0.005f + 0.08f * Math.Max(0, Math.Min(1, slack)));
-            return FishermansFlyingSailBillow.SupportPoint(
-                from,
-                to,
-                new Vector3(0, -sag, 0),
-                along
-            );
         }
 
         internal static Vector3 RotateAroundMast(

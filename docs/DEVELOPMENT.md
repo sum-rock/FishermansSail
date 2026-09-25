@@ -189,14 +189,96 @@ remain unchanged.
 - Only the four corners are pinned. Shaping moves existing bones without
   replacing the live Cloth mesh. Partial hoists use a procedural renderer;
   fully raised sails use Unity Cloth.
-- The neutral cut has a horizontal head, forward depth about 1.692 times its
-  width and aft depth equal to its width. The upper aft corner follows 85% of
-  the sheet angle. The tension solver fits foot and leech together.
-- Shipyard collision checks use a thin neutral panel, excluding the supporting
-  mast radius plus 2 cm at the luff. Collision bounds remain separate from billow.
+- The nominal cut is an isosceles trapezoid: luff `2 × width`, head rising 20°
+  aft and foot falling 20° aft, giving an aft edge about `2.728 × width`.
+  Width measures fore-to-aft fabric span. Edge budgets come from the actual
+  corners. The upper aft corner retains 85% of the sheet angle, with foot and
+  leech fitted together.
+- The hinge runs through the offset luff, parallel to the fore mast. Each
+  corner sits 0.4572 m beyond the mast capsule's surface, connected by its own
+  native-styled straight line and separate leaf endpoints. The ropes keep their
+  length through sheeting and scaling; mast ends follow the hoisting corners
+  vertically. Ties hide when struck, unsupported, loading or disabled.
+- A sail-owned visual route joins each fixed mast tie to its luff corner and
+  aft corner. The shared head span continues to the aft guide, then branches to
+  the sheet controls; lower branches go directly from the clew to those controls.
+  Shared spans draw once. Head/foot extensions ease into the short straight
+  mast ties; their aft tangents follow their own fabric-edge chords. External
+  spans (head to aft guide, guide to controls, and clew to controls) follow
+  direct chords with downward parabolic sag of 0.5–2.5% of span length from
+  native sheet slack. Knots and guides permit direction changes between spans.
+  The same native rope material/width is used throughout. A marker-scoped
+  `RopeEffect.LateUpdate` postfix hides this sail's original line and optional
+  `ClothRope` visuals while leaving native tension/input calculations active.
+  Routes draw after the sail pose; striking hides extensions/ties and parks
+  the upper/lower branches at the aft/fore guides. Loading, missing supports and
+  disabling the sail hide the custom routes.
+- Each of the four corners has one native-style knot, shared by its meeting
+  ropes and visible with either rope setting. The native jib-sheet prefab's
+  unreadable mesh is baked from a private inactive renderer copy, then its
+  compact connected knot section is isolated from the rope tube. The installed
+  asset has 96 knot vertices and 66 tube vertices. Generated geometry belongs
+  to the template asset owner and shares the native rope material; temporary
+  donor/bake objects are discarded. Missing/incompatible donors produce one
+  construction warning and omit knots without disabling the sail. Knot leaves
+  live outside fabric scaling, follow corner positions and outgoing rope
+  directions, and share the route's hide/strike lifecycle. No donor scripts run
+  and no skin bones are rotated to orient knots.
+- The transverse rest section is a circular arc with depth `0.20 × width`,
+  retained through the head, middle and foot. Twelve shaping intervals smooth
+  that arc over the existing 24 × 32 mesh; topology and bind poses are created
+  under the inactive template only. Both edges contain spare fabric and only
+  the four corners are pinned, so fabric can arch away from the ropes. Interior
+  Cloth travel is bounded relative to local camber while retaining edge freedom.
+  Bending stiffness is 0.15 with stretching stiffness retained at 0.99;
+  native WindCloth damping ranges from 0.08 to 0.45. This softens physical
+  movement without changing the profile, movement limits or donor wind forcing.
+- The rest mesh includes spare fabric for a mastward luff arc, capped at
+  0.2286 m before scaling. Bone targets retain that inward direction on both
+  tacks, reduce it with the smallest scale when shrinking, and cap enlargement
+  at nine inches. Partial hoists gather the arc using the existing deployment
+  curve. Signed full-height camber changes smoothly with the tack.
+  Scale-dependent Cloth coefficients reserve at least a quarter of the mast
+  gap beyond the luff arch and its travel sphere. Coefficients update during
+  fitting/scaling; tack changes move bones without resetting Cloth.
+- Shipyard collision uses thin strips inscribed between the rising head and
+  falling foot, swept around the offset luff. The first strip is retained
+  because the whole neutral panel clears the mast. Bounds remain separate
+  from billow. Fit checks include the mast radius and tie gap in the required
+  span and compare each head with its own active supporting guide.
+- Registration generates the base mesh at one-third of the original width
+  (`sourceSail.installHeight / 3`); its luff and height shrink proportionally.
+  The clone's installation height comes from the new luff, while collision
+  strips and renderer bounds use the new fabric width. Shadow samples and sail
+  area are generated from that smaller mesh. The donor is unchanged.
+- New Flying Sail selections start at 100% through
+  `SailScaler.SetScaleAbs(1f, 1f)` after SE's shipyard initialization. The previous
+  33⅓% preset is removed; the mast ties remain 18 inches long at every scale.
 - Native palette entry 11 and Shipyard Expansion texture index 0 supply the
   white/plain defaults. Scoped patches limit textures and sheet travel only for
   this sail.
+
+Flying Sail tuning feedback: the user reported the rounded billow generally
+looked good, but the external lines looked over-arched and wire-like, the cloth
+looked starched, and the sail attachments needed native-style knots. This pass
+uses direct external spans, lower cloth bending/damping and four native knots.
+
+Release, GeometryChecks, AssemblyChecks and formatting passed. Geometry checks
+cover direct-span attachment, gravity-only sag, local tie easing, knot section
+selection/compaction and incompatible donor rejection. Existing circular-profile,
+weighted-skin, corner-pin, tack, hoist, luff-clearance and neutral collision
+checks remain in place. Assembly checks cover native rope suppression, knot
+baking/material wiring, temporary-asset cleanup and live visual lifecycle.
+A temporary check against the installed jib-sheet asset also verified that the
+production selector retains its 96 knot vertices / 192 triangles and excludes
+all 66 rope-tube vertices. Neither suite simulates Unity Cloth or executes Unity
+mesh baking/rendering.
+
+Runtime validation is pending on Brig, then Sanbuq, with both rope settings:
+confirm more flexible cloth, less arched external ropes and correctly seated
+knots at all four corners. Check both tacks, eased/tight sheets, weak/strong
+wind, partial/full lowering and redeployment, resizing/recoloring, mixed sails,
+previews/cancellation, support removal and save/reload.
 
 See [AGENTS.md](../AGENTS.md) for the code map, installed-assembly inspection
 tools and regression lessons, including approaches that failed in game.

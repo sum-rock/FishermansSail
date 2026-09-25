@@ -87,9 +87,20 @@ implementation notes, asset provenance and verification procedures.
 - Retain the **85%** upper-corner sheeting response. The attempted 60% response
   caused creases in game and was reverted.
 - Hoists from the deck; fully striking hides the cloth and parks its ropes.
-- Collision uses a thin neutral panel clipped by mast radius plus **2 cm**,
-  separate from billow bounds. Keep native overlap/obstruction rules and restore
-  the aligned neutral rotation after the collision sweep.
+- The base mesh width is **one-third of donor 110's install height**, with its
+  own installation height derived from the luff. New selections start at **100%**
+  through SE scaling after initialization. Keep the fixed 18-inch mast ties.
+- The base cut is an isosceles trapezoid with luff **2 × width**, head rising
+  **20°** aft and foot falling **20°** aft. Derive edge budgets from its corners.
+- Two **18-inch (0.4572 m)** ties hold the luff corners aft of the mast surface.
+  Pivot about the offset luff so sheeting keeps the gap fixed. Ties do not scale;
+  their mast ends follow hoisting height and hide when struck. The luff arches
+  mastward on both tacks, capped at **9 inches**, with bounded Cloth travel.
+- Collision uses a thin neutral trapezoid swept around the offset luff, separate
+  from billow bounds. Retain the first strip because the panel clears the mast.
+  Include the gap in span checks and check each head against its own guide.
+  Keep native overlap/obstruction rules and restore the aligned neutral rotation
+  after the collision sweep.
 
 ### Fisherman's Stays and staysails
 
@@ -186,8 +197,10 @@ resizing/recoloring, support removal, previews/cancellation and save/reload.
 Check rope attachment, useful propulsion and accessible controls; include
 mouse/VR handles, outlines and clearance after boat movement for winch changes.
 
-Known status: the user approved Flying Sail mast/guide placement, collision
-clearance and travel limits, reported improved winch placement, and gave favorable
+Known status: the user approved the earlier Flying Sail mast/guide placement,
+collision clearance and travel limits. The new trapezoid, offset luff, inward
+arch and fixed ties still require in-game validation on Brig, then Sanbuq.
+The user reported improved winch placement and gave favorable
 initial feedback after the staysail fixed-head cleanup. This is not exhaustive
 validation. All-mark fitting/save reload after registration cleanup, all-boat
 winch coverage, appearance and full cloth/reefing scenarios remain pending.

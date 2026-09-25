@@ -7,17 +7,38 @@ namespace MoreSailwindSails.Sails.FishermansFlyingSail
     {
         // The free leech has up to 6% width of travel about its fitted curve.
         // Reduce movement progressively through the cloth near the clew.
-        // Moving skin targets carry the top/luff camber across the sail.
-        // Their travel can remain inside the loaded curve at its peaks,
-        // while the foot, free leech and clew reinforcement retain their limits.
-        internal static float ClothTravel(float width, float u, float v) =>
-            width
-            * ClewTaper(u, v)
-            * (
-                (0.08f * (1 - v) + 0.13f * v) * (float)Math.Sin(Math.PI * u)
-                + 0.015f * u
-                + 0.045f * u * (float)Math.Sin(Math.PI * v)
-                + 0.04f * (float)Math.Pow(1 - u, 4) * (float)Math.Sin(Math.PI * v)
+        // Moving skin targets carry the circular camber through the head and foot.
+        // Bound travel near the luff by the physical mast gap. Farther aft,
+        // retain the existing foot, free leech and clew reinforcement limits.
+        internal static float ClothTravel(
+            float width,
+            float u,
+            float v,
+            float minimumScale = 1,
+            float maximumScale = 1
+        ) =>
+            Math.Min(
+                Math.Min(
+                    FishermansFlyingSailGeometry.RestCamber(width, u, v) * 0.6f
+                        + width
+                            * (
+                                0.015f * u
+                                + (0.045f * u + 0.04f * (float)Math.Pow(1 - u, 4))
+                                    * (float)Math.Sin(Math.PI * v)
+                            ),
+                    width
+                        * ClewTaper(u, v)
+                        * (
+                            (0.08f * (1 - v) + 0.13f * v) * (float)Math.Sin(Math.PI * u)
+                            + 0.015f * u
+                            + 0.045f * u * (float)Math.Sin(Math.PI * v)
+                            + 0.04f * (float)Math.Pow(1 - u, 4) * (float)Math.Sin(Math.PI * v)
+                        )
+                ),
+                (
+                    FishermansFlyingSailFrameGeometry.TieLength * 0.25f
+                    + width * u * minimumScale * 0.5f
+                ) / Math.Max(0.0001f, maximumScale)
             );
 
         internal static float ClewTaper(float u, float v)
@@ -65,10 +86,19 @@ namespace MoreSailwindSails.Sails.FishermansFlyingSail
             float width,
             float u,
             float v,
-            float camber
+            float camber,
+            Vector3 mastward,
+            float deployment,
+            float minimumScale = 1
         ) =>
             Vector3.Lerp(fore, aft, u)
-            + normal * (FishermansFlyingSailGeometry.RestCamber(width, u, v) * camber);
+            + normal * (FishermansFlyingSailGeometry.RestCamber(width, u, v) * camber)
+            + mastward
+                * (
+                    FishermansFlyingSailGeometry.RestLuffBow(width, u, v)
+                    * Math.Max(0, Math.Min(1, minimumScale))
+                    * deployment
+                );
 
         internal static Vector3 SupportPoint(Vector3 clew, Vector3 head, Vector3 bow, float t) =>
             clew + (head - clew) * t + bow * (4 * t * (1 - t));

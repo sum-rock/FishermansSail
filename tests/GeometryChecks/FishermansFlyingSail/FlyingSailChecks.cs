@@ -12,14 +12,32 @@ internal static class FlyingSailChecks
         foreach (float width in new[] { 0.25f, 6f, 13.8f, 40f })
         foreach (float scale in new[] { 0.55f, 1f, 1.5f })
         foreach (float rake in new[] { 0f, 8f, -12f })
+        foreach (float radius in new[] { 0.1f, 0.4f, 0.8f })
         {
             var data = FishermansFlyingSailGeometry.Create(width);
-            var pivot = new Vector3(0, 0, -width * 2);
+            var mastPoint = new Vector3(0, 0, -width * 2);
             var axis = FishermansFlyingSailFrameGeometry.RotateAroundMast(
                 Vector3.right,
                 Vector3.zero,
                 Vector3.up,
                 rake
+            );
+            var aft = FishermansFlyingSailFrameGeometry.RotateAroundMast(
+                Vector3.forward,
+                Vector3.zero,
+                Vector3.up,
+                rake
+            );
+            var pivot = FishermansFlyingSailFrameGeometry.LuffPivot(
+                mastPoint,
+                axis,
+                mastPoint + aft * 100 + axis * 3,
+                radius
+            );
+            Near(
+                pivot,
+                mastPoint + aft * (radius + 0.4572f),
+                "Luff offset must start at the mast surface."
             );
             var rest = data
                 .Corners.Select(c =>
@@ -33,7 +51,7 @@ internal static class FlyingSailChecks
                 .ToArray();
             var offset = FishermansFlyingSailFrameGeometry.ModelOffset(pivot, rest[0]);
             rest = rest.Select(c => offset + c).ToArray();
-            Near(rest[0], pivot, "Scaled sail head must meet the mast at every sail width.");
+            Near(rest[0], pivot, "Scaled sail head must meet the offset luff pivot.");
             foreach (float angle in new[] { -70f, -25f, 0f, 25f, 70f })
             {
                 var posed = rest.Select(c =>
@@ -98,6 +116,48 @@ internal static class FlyingSailChecks
                         reefed,
                         "Hoisting tack must follow the mast at every sheet angle."
                     );
+                    foreach (int corner in new[] { 0, 2 })
+                    {
+                        var hoisted = FishermansFlyingSailMastInstallationGeometry.HoistCorner(
+                            rest[corner],
+                            rest[0],
+                            rest[2] - axis * width,
+                            unroll
+                        );
+                        var trimmed = FishermansFlyingSailFrameGeometry.RotateAroundMast(
+                            hoisted,
+                            pivot,
+                            axis,
+                            angle
+                        );
+                        var anchor = FishermansFlyingSailFrameGeometry.TieAnchor(trimmed, aft);
+                        Near(trimmed, hoisted, "Sheeting moved a tied luff corner.");
+                        Near(
+                            anchor,
+                            mastPoint + axis * Vector3.Dot(hoisted - pivot, axis) + aft * radius,
+                            "The tie must meet the mast surface at its corner's height."
+                        );
+                        Check(
+                            Math.Abs((trimmed - anchor).magnitude - 0.4572f) < 0.001f,
+                            "Scaling or hoisting changed the eighteen-inch rope length."
+                        );
+                        var translation = new Vector3(100, -20, 80);
+                        Vector3 Turn(Vector3 p) =>
+                            FishermansFlyingSailFrameGeometry.RotateAroundMast(
+                                p,
+                                Vector3.zero,
+                                Vector3.forward,
+                                35
+                            );
+                        Near(
+                            FishermansFlyingSailFrameGeometry.TieAnchor(
+                                Turn(trimmed) + translation,
+                                Turn(aft)
+                            ),
+                            Turn(anchor) + translation,
+                            "Boat motion detached a mast tie."
+                        );
+                    }
                 }
             }
             for (int col = 1; col < FishermansFlyingSailGeometry.Columns; col++)
@@ -120,10 +180,10 @@ internal static class FlyingSailChecks
             ),
             "Actual rig changes must update the hinge."
         );
-        CheckUpperSheets();
+        CheckSheetSlack();
         CheckUpperGuideSelection();
         Console.WriteLine(
-            "PASS: mast-fixed luff, moving aft head/clew, raked masts, scaling, furling, unstretched sheeting, upper pulley routes and free top-edge cloth."
+            "PASS: fixed eighteen-inch mast ties, offset trim pivot, mast radii, rake, scaling, hoisting, boat motion, moving aft head/clew and upper pulley routes."
         );
     }
 
@@ -239,68 +299,8 @@ internal static class FlyingSailChecks
             .Select(position => new FishermansFlyingSailSheetGuideState(position, true, true))
             .ToArray();
 
-    private static void CheckUpperSheets()
+    private static void CheckSheetSlack()
     {
-        var head = new Vector3(4, 12, 7);
-        var guide = new Vector3(0, 18, 10);
-        var controls = new[] { new Vector3(-2, 1, 12), new Vector3(2, 1, 12) };
-        foreach (var control in controls)
-        foreach (float slack in new[] { 0f, 0.25f, 1f })
-        {
-            Near(
-                FishermansFlyingSailFrameGeometry.UpperSheetPoint(head, guide, control, slack, 0),
-                head,
-                "Upper sheet detached from the moving head."
-            );
-            Near(
-                FishermansFlyingSailFrameGeometry.UpperSheetPoint(
-                    head,
-                    guide,
-                    control,
-                    slack,
-                    0.5f
-                ),
-                guide,
-                "Upper sheet missed the aft mast's existing upper pulley."
-            );
-            Near(
-                FishermansFlyingSailFrameGeometry.UpperSheetPoint(head, guide, control, slack, 1),
-                control,
-                "Upper sheet failed to join its existing sheet control."
-            );
-            for (int i = 0; i <= 32; i++)
-            {
-                var point = FishermansFlyingSailFrameGeometry.UpperSheetPoint(
-                    head,
-                    guide,
-                    control,
-                    slack,
-                    i / 32f
-                );
-                Check(
-                    float.IsFinite(point.x) && float.IsFinite(point.y) && float.IsFinite(point.z),
-                    "Upper sheet generated invalid positions."
-                );
-            }
-            for (int i = 1; i <= 16; i++)
-                Check(
-                    FishermansFlyingSailFrameGeometry
-                        .UpperSheetPoint(head, guide, control, slack, i / 32f)
-                        .y
-                        > FishermansFlyingSailFrameGeometry
-                            .UpperSheetPoint(head, guide, control, slack, (i - 1) / 32f)
-                            .y,
-                    "The upper sheet must rise from the sail corner to the elevated pulley."
-                );
-            foreach (float t in new[] { 0.25f, 0.75f })
-                Check(
-                    FishermansFlyingSailFrameGeometry.UpperSheetPoint(head, guide, control, 1, t).y
-                        < FishermansFlyingSailFrameGeometry
-                            .UpperSheetPoint(head, guide, control, 0, t)
-                            .y,
-                    "Slack sheets must sag farther than tensioned sheets on both spans."
-                );
-        }
         Check(
             FishermansFlyingSailFrameGeometry.SheetSlack(1, 1) == 0
                 && Math.Abs(FishermansFlyingSailFrameGeometry.SheetSlack(1, 0.44f) - 0.56f) < 1e-6f
