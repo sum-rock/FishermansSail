@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-repo_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+repo_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 game_dir="${1:-$HOME/.local/share/Steam/steamapps/common/Sailwind}"
-dll="$repo_dir/bin/Release/netstandard2.0/MoreSailwindSails.dll"
+dll="$repo_dir/src/bin/Release/netstandard2.0/MoreSailwindSails.dll"
 destination="$game_dir/BepInEx/plugins/MoreSailwindSails/MoreSailwindSails.dll"
 
 if [[ ! -f "$dll" ]]; then
