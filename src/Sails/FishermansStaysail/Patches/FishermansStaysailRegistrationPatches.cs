@@ -1,6 +1,7 @@
 using HarmonyLib;
 using MoreSailwindSails.Sails.FishermansStaysail.MkA;
 using MoreSailwindSails.Sails.FishermansStaysail.MkB;
+using MoreSailwindSails.Sails.FishermansStaysail.MkC;
 
 namespace MoreSailwindSails.Sails.FishermansStaysail.Patches
 {
@@ -16,6 +17,7 @@ namespace MoreSailwindSails.Sails.FishermansStaysail.Patches
         {
             FishermansStaysailMkA.Register(__instance);
             FishermansStaysailMkB.Register(__instance);
+            FishermansStaysailMkC.Register(__instance);
         }
     }
 
@@ -28,6 +30,7 @@ namespace MoreSailwindSails.Sails.FishermansStaysail.Patches
         {
             FishermansStaysailMkA.AddToShipyard(__instance);
             FishermansStaysailMkB.AddToShipyard(__instance);
+            FishermansStaysailMkC.AddToShipyard(__instance);
         }
     }
 
@@ -40,6 +43,7 @@ namespace MoreSailwindSails.Sails.FishermansStaysail.Patches
         {
             FishermansStaysailMkA.AddToShipyard(__instance);
             FishermansStaysailMkB.AddToShipyard(__instance);
+            FishermansStaysailMkC.AddToShipyard(__instance);
         }
     }
 }

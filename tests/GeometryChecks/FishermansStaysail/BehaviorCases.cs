@@ -2,6 +2,7 @@ using System;
 using MoreSailwindSails.Sails.FishermansStaysail;
 using MoreSailwindSails.Sails.FishermansStaysail.MkA;
 using MoreSailwindSails.Sails.FishermansStaysail.MkB;
+using MoreSailwindSails.Sails.FishermansStaysail.MkC;
 
 namespace MoreSailwindSails.Tests.GeometryChecks.FishermansStaysail;
 
@@ -36,6 +37,11 @@ internal static class BehaviorCases
             "Mk.B",
             FishermansStaysailMkBGeometry.Create,
             FishermansStaysailMkBGeometry.FixedUpperHeadAngle
+        ),
+        new Mark(
+            "Mk.C",
+            FishermansStaysailMkCGeometry.Create,
+            FishermansStaysailMkCGeometry.FixedUpperHeadAngle
         ),
     };
 

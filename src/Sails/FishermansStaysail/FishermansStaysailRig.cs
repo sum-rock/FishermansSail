@@ -245,7 +245,7 @@ namespace MoreSailwindSails.Sails.FishermansStaysail
                 box.transform.localPosition = Vector3.zero;
                 box.transform.localRotation = Quaternion.identity;
                 box.transform.localScale = Vector3.one;
-                FishermansStaysailInstallationGeometry.CollisionStrip(
+                box.enabled = FishermansStaysailInstallationGeometry.CollisionStrip(
                     corners,
                     i,
                     0,

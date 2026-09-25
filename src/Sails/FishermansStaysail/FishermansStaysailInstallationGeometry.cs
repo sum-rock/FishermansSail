@@ -53,15 +53,22 @@ namespace MoreSailwindSails.Sails.FishermansStaysail
             float end = (column + 0.95f) * step;
             float u = (start + end) / (2 * width);
             // Inscribe in both sloping edges instead of filling the billow envelope.
-            float top = Vector3.Lerp(corners[0], corners[1], start / width).x;
-            float bottom = Vector3.Lerp(corners[2], corners[3], start / width).x;
+            float top = Math.Min(
+                Vector3.Lerp(corners[0], corners[1], start / width).x,
+                Vector3.Lerp(corners[0], corners[1], end / width).x
+            );
+            float bottom = Math.Max(
+                Vector3.Lerp(corners[2], corners[3], start / width).x,
+                Vector3.Lerp(corners[2], corners[3], end / width).x
+            );
             center = new Vector3((top + bottom) * 0.5f, 0, -width * (1 - u));
             size = new Vector3(
                 Math.Max(0.01f, top - bottom - 0.1f),
                 0.05f,
                 Math.Max(0.001f, end - start)
             );
-            return end > start;
+            // Do not inflate a clipped sliver beyond the cut's interior.
+            return end - start >= 0.001f && top - bottom >= 0.11f;
         }
 
         private static bool Finite(float value) => !float.IsNaN(value) && !float.IsInfinity(value);
