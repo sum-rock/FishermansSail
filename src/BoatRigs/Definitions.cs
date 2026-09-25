@@ -136,6 +136,9 @@ namespace MoreSailwindSails.BoatRigs
         internal readonly Vector3 Direction;
         internal readonly bool OnMast;
         internal readonly int Support;
+        internal readonly WinchSurfaceSegment[] SurfaceSegments;
+        internal readonly Vector3 SourceNormal;
+        internal readonly float BaseOffset;
 
         internal WinchMountDefinition(
             int mast,
@@ -150,6 +153,40 @@ namespace MoreSailwindSails.BoatRigs
             Direction = direction.normalized;
             OnMast = onMast;
             Support = support;
+        }
+
+        internal WinchMountDefinition(
+            int mast,
+            WinchRole role,
+            Vector3 sourceNormal,
+            float baseOffset,
+            params WinchSurfaceSegment[] railSegments
+        )
+            : this(mast, role, railSegments[0].End - railSegments[0].Start, false, -1)
+        {
+            SurfaceSegments = railSegments;
+            SourceNormal = sourceNormal.normalized;
+            BaseOffset = baseOffset;
+        }
+    }
+
+    // Solid mounting-surface centerlines in boat space. Ends are physical bounds,
+    // not permitted winch centers; placement leaves room for the fitting at each end.
+    internal readonly struct WinchSurfaceSegment
+    {
+        internal readonly Vector3 Start,
+            End,
+            Normal;
+
+        internal WinchSurfaceSegment(Vector3 start, Vector3 end)
+            : this(start, end, Vector3.Cross(Vector3.right, end - start)) { }
+
+        internal WinchSurfaceSegment(Vector3 start, Vector3 end, Vector3 normal)
+        {
+            Start = start;
+            End = end;
+            normal = normal.normalized;
+            Normal = normal.y < 0f ? -normal : normal;
         }
     }
 

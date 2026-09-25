@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using MoreSailwindSails.BoatRigs;
 using UnityEngine;
 
@@ -14,15 +16,15 @@ namespace MoreSailwindSails.Controls
         )
         {
             float spacing = Math.Max(0.35f, radius * 2f + 0.02f);
-            var result = new System.Collections.Generic.List<WinchPlacement>();
-            var offsets = definition.OnMast
-                ? new[] { 1, -1, 2, 3 }
-                : new[] { 1, -1, 2, -2, 3, -3, 4, -4 };
+            if (definition.SurfaceSegments != null)
+                return SurfaceCandidates(definition, origin, radius, spacing);
+            // An unmeasured deck/rail direction cannot establish physical support.
+            if (!definition.OnMast)
+                return Array.Empty<WinchPlacement>();
+            var result = new List<WinchPlacement>();
+            var offsets = new[] { 1, -1, 2, 3 };
             foreach (int offset in offsets)
-                if (
-                    Math.Abs(offset * spacing) <= 1.401f
-                    && (!definition.OnMast || offset * spacing >= -0.701f)
-                )
+                if (Math.Abs(offset * spacing) <= 1.401f && offset * spacing >= -0.701f)
                     result.Add(
                         new WinchPlacement(
                             origin + definition.Direction * (offset * spacing),
@@ -53,6 +55,66 @@ namespace MoreSailwindSails.Controls
                 }
             }
             return result.ToArray();
+        }
+
+        private static WinchPlacement[] SurfaceCandidates(
+            WinchMountDefinition definition,
+            Vector3 origin,
+            float radius,
+            float spacing
+        )
+        {
+            var result = new List<WinchPlacement>();
+            foreach (var segment in definition.SurfaceSegments)
+            {
+                var travel = segment.End - segment.Start;
+                float length = travel.magnitude;
+                if (length < radius * 2f)
+                    continue;
+                var direction = travel / length;
+                float nearest = Math.Max(
+                    radius,
+                    Math.Min(length - radius, Vector3.Dot(origin - segment.Start, direction))
+                );
+                var rotation = Align(definition.SourceNormal, segment.Normal);
+                // A neighboring native fitting can block the regular spacing grid.
+                // Include both safe ends so a short strip does not lose usable space.
+                var distances = new List<float> { radius, length - radius };
+                foreach (int offset in new[] { 0, 1, -1, 2, -2, 3, -3, 4, -4 })
+                    distances.Add(nearest + offset * spacing);
+                foreach (float along in distances)
+                {
+                    if (along < radius || along > length - radius)
+                        continue;
+                    var position =
+                        segment.Start + direction * along + segment.Normal * definition.BaseOffset;
+                    if ((position - origin).sqrMagnitude <= 1.401f * 1.401f)
+                        result.Add(new WinchPlacement(position, rotation));
+                }
+            }
+            return result.OrderBy(p => (p.Position - origin).sqrMagnitude).ToArray();
+        }
+
+        private static Quaternion Align(Vector3 from, Vector3 to)
+        {
+            // Managed equivalent of FromToRotation; geometry checks run without Unity.
+            float dot = Vector3.Dot(from, to);
+            if (dot < -0.999999f)
+                return WinchPlacement.Turn(
+                    Vector3
+                        .Cross(from, Math.Abs(from.x) < 0.9f ? Vector3.right : Vector3.up)
+                        .normalized,
+                    180f
+                );
+            var cross = Vector3.Cross(from, to);
+            float w = 1f + dot;
+            float magnitude = (float)Math.Sqrt(cross.sqrMagnitude + w * w);
+            return new Quaternion(
+                cross.x / magnitude,
+                cross.y / magnitude,
+                cross.z / magnitude,
+                w / magnitude
+            );
         }
     }
 

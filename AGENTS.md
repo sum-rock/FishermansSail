@@ -140,7 +140,10 @@ implementation notes, asset provenance and verification procedures.
 - Initialize clones inactive with owned external handles and fresh outlines.
   Reposition the parent mount, not the wheel whose local rotation drives input.
 - Mast positions prefer vertical stacks, then other faces with position and
-  facing rotated together. Deck/rail controls follow native surface tangents.
+  facing rotated together. All 114 deck/rail mappings use measured finite solid
+  support strips, with explicit normals and donor-specific base offsets. Never
+  restore the unsupported surface-tangent fallback. Include safe strip ends as
+  candidates; neighboring native fittings can obstruct the regular spacing grid.
   Use measured spacing and bounded travel. Exhaustion hides the control with a
   diagnostic/retry while retaining its controller; do not add unlimited offsets.
 
@@ -191,6 +194,15 @@ winch coverage, appearance and full cloth/reefing scenarios remain pending.
 The CLEANUP-5 handoff passed Release, both suites and formatting checks.
 Mk.C’s rising foot and revised collision strips still require in-game validation
 on Brig, then Sanbuq; automated checks do not establish Cloth behavior.
+The 2026-09-24 Brig screenshot showed unsupported sheet winches outside the rail
+and over the stairs. All 24 Brig sheet mappings now use measured, bounded solid
+rail-cap segments with corrected base height/facing. Release and both suites
+passed; visual seating, mouse/VR accessibility and mixed-sail/save-reload runtime
+checks remain pending.
+The subsequent Sanbuq/Junk screenshots confirmed the same unsupported-surface
+problem beyond Brig. The remaining 90 surface mappings now use measured rail,
+handrail, fife-rail or halyard-beam strips. Release, both suites and formatting
+passed across all seven profiles; runtime seating and accessibility remain pending.
 
 ## Local investigation and handoff
 
