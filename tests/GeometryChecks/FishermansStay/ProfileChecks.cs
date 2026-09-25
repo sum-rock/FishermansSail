@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using FishermansSail.BoatRigs;
+using MoreSailwindSails.BoatRigs;
 
-namespace FishermansSail.Tests.GeometryChecks.FishermansStay;
+namespace MoreSailwindSails.Tests.GeometryChecks.FishermansStay;
 
 internal static class ProfileChecks
 {

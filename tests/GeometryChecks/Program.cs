@@ -1,7 +1,7 @@
-using FishermansSail.Tests.GeometryChecks.FishermansFlyingSail;
-using FishermansSail.Tests.GeometryChecks.FishermansStay;
+using MoreSailwindSails.Tests.GeometryChecks.FishermansFlyingSail;
+using MoreSailwindSails.Tests.GeometryChecks.FishermansStay;
 
-namespace FishermansSail.Tests.GeometryChecks;
+namespace MoreSailwindSails.Tests.GeometryChecks;
 
 internal static class Program
 {

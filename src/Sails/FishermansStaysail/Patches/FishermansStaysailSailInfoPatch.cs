@@ -3,7 +3,7 @@ using System.Reflection;
 using HarmonyLib;
 using UnityEngine;
 
-namespace FishermansSail.Sails.FishermansStaysail.Patches
+namespace MoreSailwindSails.Sails.FishermansStaysail.Patches
 {
     // Optional integration: no assembly reference or replacement HUD. SailInfo
     // keeps its settings, efficiency calculations and all other sail readouts.

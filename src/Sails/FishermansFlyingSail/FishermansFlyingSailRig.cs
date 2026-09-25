@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-namespace FishermansSail.Sails.FishermansFlyingSail
+namespace MoreSailwindSails.Sails.FishermansFlyingSail
 {
     // Only the inactive template container owns meshes. Installed copies share
     // these read-only assets and must not destroy them when an individual sail is removed.

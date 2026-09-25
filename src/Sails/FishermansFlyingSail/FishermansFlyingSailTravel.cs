@@ -1,6 +1,6 @@
 using System;
 
-namespace FishermansSail.Sails.FishermansFlyingSail
+namespace MoreSailwindSails.Sails.FishermansFlyingSail
 {
     internal static class FishermansFlyingSailTravel
     {

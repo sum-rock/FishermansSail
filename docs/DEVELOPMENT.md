@@ -8,7 +8,7 @@ families can be developed within the same mod as their own features.
 The repository and local checkout are named `MoreSailwindSails`. The project
 file is `src/MoreSailwindSails.csproj` and its assembly is `MoreSailwindSails.dll`.
 The root `MoreSailwindSails.sln` includes the plugin and both check projects.
-The mod is unreleased. The C# namespace remains `FishermansSail`, with plugin
+The mod is unreleased. The C# namespace is `MoreSailwindSails`, with plugin
 GUID `com.august.moresailwindsails` and BepInEx display name `MoreSailwindSails`.
 
 ## Environment and build
@@ -86,9 +86,7 @@ Close Sailwind, build, then run from the repository root:
 
 Use `./scripts/install-local.sh "/path/to/Sailwind"` for another installation. This
 script copies only the built DLL; it does not build it. Builds and checks do
-not replace the installed plugin or change saves. Before installing this renamed
-build, remove any old `FishermansSail.dll` from the game's plugin directory to
-avoid loading both assemblies.
+not replace the installed plugin or change saves.
 
 Confirm the startup message `MoreSailwindSails 0.1.0 loaded!` in
 `BepInEx/LogOutput.log`. Flying Sail registration should report donor index
@@ -128,11 +126,11 @@ the project rename does not change existing menus or saved sail identities.
 
 - `src/Sails/FishermansFlyingSail/` contains the mast-mounted sail's registration,
   geometry, appearance, cloth rig and controls, using the namespace
-  `FishermansSail.Sails.FishermansFlyingSail` and `FishermansFlyingSail` type prefix.
+  `MoreSailwindSails.Sails.FishermansFlyingSail` and `FishermansFlyingSail` type prefix.
 - Its `Patches/` subdirectory contains all feature-specific Harmony patches in
   the corresponding `.Patches` namespace, including registration, appearance
   and the order-text freeze guard.
-- `src/BoatRigs/` contains one static class/file per boat in `FishermansSail.BoatRigs`.
+- `src/BoatRigs/` contains one static class/file per boat in `MoreSailwindSails.BoatRigs`.
   Each exposes a complete `BoatRigDefinition` through `Definition`, with private
   factories for Flying Sail supports, stay variants, mast ancestry and winch mounts.
   `Definitions.cs` holds the shared data types, validation and `BoatRigCatalog`.
@@ -143,7 +141,7 @@ the project rename does not change existing menus or saved sail identities.
   boat tables.
 - `src/Stays/FishermansStay/` owns the new stays, their independent controls, native
   mount registration, save handling and patches. The namespace is
-  `FishermansSail.Stays.FishermansStay`, with `.Patches` for Harmony patches.
+  `MoreSailwindSails.Stays.FishermansStay`, with `.Patches` for Harmony patches.
 - `src/Sails/FishermansStaysail/` owns the staysail family's rig, reefing adapter,
   controls, prefab builder and patches. `MkA/` contains the original 110° cut;
   `MkB/` keeps its head and has a 90° foot. Each mark supplies its own
@@ -167,7 +165,7 @@ Both `tests/GeometryChecks/` and `tests/AssemblyChecks/` contain
 `FishermansFlyingSail/`, `FishermansStay/` and `FishermansStaysail/` directories.
 The latter has `MkA/` and `MkB/` for variant checks. Put each feature's
 checks and helpers in its directory, using the namespace
-`FishermansSail.Tests.<Suite>.<Feature>`. Flying-sail rig-profile checks belong
+`MoreSailwindSails.Tests.<Suite>.<Feature>`. Flying-sail rig-profile checks belong
 with the flying sail; authored stay-profile checks belong with the stay.
 Shared staysail geometry behavior lives at the family level, parameterized by
 `BehaviorCases` over both mark factories. Keep cut and prefab identity checks

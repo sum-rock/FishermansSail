@@ -3,7 +3,7 @@ using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
 
-namespace FishermansSail.Tests.AssemblyChecks.Shared;
+namespace MoreSailwindSails.Tests.AssemblyChecks.Shared;
 
 internal static class IlReader
 {

@@ -1,8 +1,8 @@
 using System;
-using FishermansSail.BoatRigs;
+using MoreSailwindSails.BoatRigs;
 using UnityEngine;
 
-namespace FishermansSail.Controls
+namespace MoreSailwindSails.Controls
 {
     internal static class WinchPlacementGeometry
     {

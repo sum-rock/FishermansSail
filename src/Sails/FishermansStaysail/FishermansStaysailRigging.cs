@@ -1,13 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using FishermansSail.BoatRigs;
-using FishermansSail.Controls;
-using FishermansSail.Stays.FishermansStay;
+using MoreSailwindSails.BoatRigs;
+using MoreSailwindSails.Controls;
+using MoreSailwindSails.Stays.FishermansStay;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
-namespace FishermansSail.Sails.FishermansStaysail
+namespace MoreSailwindSails.Sails.FishermansStaysail
 {
     // Save ownership stays on the registered stay; the physical pivot is the fore mast.
     internal sealed class FishermansStaysailRigging : MonoBehaviour

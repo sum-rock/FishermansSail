@@ -4,7 +4,7 @@ using System.Reflection;
 using System.Reflection.Emit;
 using HarmonyLib;
 
-namespace FishermansSail.Tests.AssemblyChecks.Shared;
+namespace MoreSailwindSails.Tests.AssemblyChecks.Shared;
 
 internal static class ControlRestorationChecks
 {

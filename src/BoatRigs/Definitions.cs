@@ -4,7 +4,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using UnityEngine;
 
-namespace FishermansSail.BoatRigs
+namespace MoreSailwindSails.BoatRigs
 {
     internal sealed class MastSupportDefinition
     {

@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace FishermansSail.Sails.FishermansStaysail.MkB
+namespace MoreSailwindSails.Sails.FishermansStaysail.MkB
 {
     internal static class FishermansStaysailMkB
     {

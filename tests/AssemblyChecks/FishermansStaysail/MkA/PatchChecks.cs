@@ -3,15 +3,15 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using HarmonyLib;
-using static FishermansSail.Tests.AssemblyChecks.Shared.IlReader;
+using static MoreSailwindSails.Tests.AssemblyChecks.Shared.IlReader;
 
-namespace FishermansSail.Tests.AssemblyChecks.FishermansStaysail.MkA;
+namespace MoreSailwindSails.Tests.AssemblyChecks.FishermansStaysail.MkA;
 
 internal static class PatchChecks
 {
     internal static void Run(Assembly assembly)
     {
-        const string family = "FishermansSail.Sails.FishermansStaysail.";
+        const string family = "MoreSailwindSails.Sails.FishermansStaysail.";
         const BindingFlags all =
             BindingFlags.Public
             | BindingFlags.NonPublic

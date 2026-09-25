@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace FishermansSail.Sails.FishermansStaysail
+namespace MoreSailwindSails.Sails.FishermansStaysail
 {
     internal static class FishermansStaysailOrderText
     {

@@ -1,7 +1,7 @@
-using FishermansSail.Sails.FishermansFlyingSail;
+using MoreSailwindSails.Sails.FishermansFlyingSail;
 using UnityEngine;
 
-namespace FishermansSail.Tests.GeometryChecks.FishermansFlyingSail;
+namespace MoreSailwindSails.Tests.GeometryChecks.FishermansFlyingSail;
 
 internal static class HoistPose
 {

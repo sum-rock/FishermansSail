@@ -1,12 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using FishermansSail.BoatRigs;
-using FishermansSail.Controls;
+using MoreSailwindSails.BoatRigs;
+using MoreSailwindSails.Controls;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
-namespace FishermansSail.Sails.FishermansFlyingSail
+namespace MoreSailwindSails.Sails.FishermansFlyingSail
 {
     // Runtime support belongs to the sail; no synthetic Mast or shipyard part is created.
     internal sealed class FishermansFlyingSailRigging : MonoBehaviour

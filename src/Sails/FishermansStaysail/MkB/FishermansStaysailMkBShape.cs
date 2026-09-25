@@ -1,4 +1,4 @@
-namespace FishermansSail.Sails.FishermansStaysail.MkB
+namespace MoreSailwindSails.Sails.FishermansStaysail.MkB
 {
     internal sealed class FishermansStaysailMkBShape : FishermansStaysailShape
     {

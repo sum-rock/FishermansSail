@@ -3,11 +3,11 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using FishermansSail.BoatRigs;
-using FishermansSail.Stays.FishermansStay;
+using MoreSailwindSails.BoatRigs;
+using MoreSailwindSails.Stays.FishermansStay;
 using UnityEngine;
 
-namespace FishermansSail.Tests.GeometryChecks.FishermansStay;
+namespace MoreSailwindSails.Tests.GeometryChecks.FishermansStay;
 
 internal static class StayChecks
 {

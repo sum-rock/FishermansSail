@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace FishermansSail.BoatRigs
+namespace MoreSailwindSails.BoatRigs
 {
     internal static class Junk
     {

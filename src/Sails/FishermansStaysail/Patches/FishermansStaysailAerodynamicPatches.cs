@@ -1,7 +1,7 @@
 using HarmonyLib;
 using UnityEngine;
 
-namespace FishermansSail.Sails.FishermansStaysail.Patches
+namespace MoreSailwindSails.Sails.FishermansStaysail.Patches
 {
     [HarmonyPatch(typeof(Sail), "UpdateWindForceOnSail")]
     internal static class FishermansStaysailWindFramePatch

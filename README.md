@@ -37,8 +37,7 @@ The current build produces `MoreSailwindSails.dll`.
 1. Close Sailwind.
 2. Place `MoreSailwindSails.dll` in
    `<Sailwind>/BepInEx/plugins/MoreSailwindSails/`, creating the folder if needed.
-3. When updating, replace the old DLL and remove any duplicate copies, including
-   `FishermansSail.dll` from earlier development builds.
+3. When updating, replace the old DLL and remove any duplicate copies.
 4. Launch the game and visit a shipyard.
 
 ## Fitting a staysail

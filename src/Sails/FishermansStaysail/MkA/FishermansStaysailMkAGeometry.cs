@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-namespace FishermansSail.Sails.FishermansStaysail.MkA
+namespace MoreSailwindSails.Sails.FishermansStaysail.MkA
 {
     internal static class FishermansStaysailMkAGeometry
     {

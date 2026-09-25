@@ -2,9 +2,9 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using static FishermansSail.Tests.AssemblyChecks.Shared.IlReader;
+using static MoreSailwindSails.Tests.AssemblyChecks.Shared.IlReader;
 
-namespace FishermansSail.Tests.AssemblyChecks.FishermansStaysail;
+namespace MoreSailwindSails.Tests.AssemblyChecks.FishermansStaysail;
 
 internal static class SailInfoChecks
 {
@@ -16,7 +16,7 @@ internal static class SailInfoChecks
             | BindingFlags.Public
             | BindingFlags.NonPublic;
         var patch = assembly.GetType(
-            "FishermansSail.Sails.FishermansStaysail.Patches.FishermansStaysailSailInfoPatch",
+            "MoreSailwindSails.Sails.FishermansStaysail.Patches.FishermansStaysailSailInfoPatch",
             true
         );
         var find = patch.GetMethod("FindTarget", all);

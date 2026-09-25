@@ -2,11 +2,11 @@ using System;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using FishermansSail.BoatRigs;
-using FishermansSail.Controls;
+using MoreSailwindSails.BoatRigs;
+using MoreSailwindSails.Controls;
 using UnityEngine;
 
-namespace FishermansSail.Tests.GeometryChecks.FishermansStay;
+namespace MoreSailwindSails.Tests.GeometryChecks.FishermansStay;
 
 internal static class WinchChecks
 {

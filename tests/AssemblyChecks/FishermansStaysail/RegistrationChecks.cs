@@ -2,15 +2,15 @@ using System;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
-using static FishermansSail.Tests.AssemblyChecks.Shared.IlReader;
+using static MoreSailwindSails.Tests.AssemblyChecks.Shared.IlReader;
 
-namespace FishermansSail.Tests.AssemblyChecks.FishermansStaysail;
+namespace MoreSailwindSails.Tests.AssemblyChecks.FishermansStaysail;
 
 internal static class RegistrationChecks
 {
     internal static void Run(Assembly assembly)
     {
-        const string family = "FishermansSail.Sails.FishermansStaysail.";
+        const string family = "MoreSailwindSails.Sails.FishermansStaysail.";
         const BindingFlags all =
             BindingFlags.Public
             | BindingFlags.NonPublic

@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace FishermansSail.Sails.FishermansStaysail
+namespace MoreSailwindSails.Sails.FishermansStaysail
 {
     internal static class FishermansStaysailEdgeFit
     {

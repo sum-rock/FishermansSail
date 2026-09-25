@@ -1,10 +1,10 @@
 using System;
-using FishermansSail.Sails.FishermansStaysail;
-using FishermansSail.Sails.FishermansStaysail.MkA;
-using FishermansSail.Sails.FishermansStaysail.MkB;
+using MoreSailwindSails.Sails.FishermansStaysail;
+using MoreSailwindSails.Sails.FishermansStaysail.MkA;
+using MoreSailwindSails.Sails.FishermansStaysail.MkB;
 using UnityEngine;
 
-namespace FishermansSail.Tests.GeometryChecks.FishermansStaysail.MkB;
+namespace MoreSailwindSails.Tests.GeometryChecks.FishermansStaysail.MkB;
 
 internal static class CutChecks
 {

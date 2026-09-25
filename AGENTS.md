@@ -12,7 +12,7 @@ editing. Check `git status --short` and preserve existing user changes.
   belong to this mod without being forced into either existing family's design.
 - The repository, `src/MoreSailwindSails.csproj` and output `MoreSailwindSails.dll`
   use the project name, as does the BepInEx display name `MoreSailwindSails`.
-  The C# namespace remains `FishermansSail`.
+  The C# namespace is `MoreSailwindSails`.
 - This is a C# Sailwind mod using BepInEx 5, HarmonyX and Shipyard Expansion.
   The plugin targets `netstandard2.0`; executable checks use .NET 8.
 - The mod is unreleased; **0.1.0** is the planned first release. Keep GUID
@@ -40,9 +40,9 @@ editing. Check `git status --short` and preserve existing user changes.
 | Winch controls | [src/Controls/](src/Controls/): boat-owned cloning/reservations and placement calculations |
 | Checks | [tests/GeometryChecks/](tests/GeometryChecks/), [tests/AssemblyChecks/](tests/AssemblyChecks/) |
 
-Feature namespaces follow their directories under `FishermansSail`; Harmony
+Feature namespaces follow their directories under `MoreSailwindSails`; Harmony
 patches live in each feature's `Patches/` directory. Boat definitions use
-`FishermansSail.BoatRigs`. See [DEVELOPMENT.md](docs/DEVELOPMENT.md) for detailed
+`MoreSailwindSails.BoatRigs`. See [DEVELOPMENT.md](docs/DEVELOPMENT.md) for detailed
 implementation notes, asset provenance and verification procedures.
 
 ## Runtime safeguards

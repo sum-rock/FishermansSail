@@ -2,7 +2,7 @@ using HarmonyLib;
 using ShipyardExpansion;
 using UnityEngine;
 
-namespace FishermansSail.Sails.FishermansStaysail.Patches
+namespace MoreSailwindSails.Sails.FishermansStaysail.Patches
 {
     [HarmonyPatch(typeof(ShipyardSailInstaller), "MastNotTallEnough")]
     internal static class FishermansStaysailFitPatch

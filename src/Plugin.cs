@@ -2,7 +2,7 @@ using BepInEx;
 using BepInEx.Logging;
 using HarmonyLib;
 
-namespace FishermansSail
+namespace MoreSailwindSails
 {
     [BepInPlugin(PluginGuid, PluginName, PluginVersion)]
     [BepInDependency("com.nandbrew.shipyardexpansion")]

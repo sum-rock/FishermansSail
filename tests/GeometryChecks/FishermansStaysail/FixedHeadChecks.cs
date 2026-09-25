@@ -1,8 +1,8 @@
 using System;
-using FishermansSail.Sails.FishermansStaysail;
+using MoreSailwindSails.Sails.FishermansStaysail;
 using UnityEngine;
 
-namespace FishermansSail.Tests.GeometryChecks.FishermansStaysail;
+namespace MoreSailwindSails.Tests.GeometryChecks.FishermansStaysail;
 
 internal static class FixedHeadChecks
 {
