@@ -67,6 +67,7 @@ namespace MoreSailwindSails.Sails.FishermansFlyingSail
             Mesh shadowMesh
         )
         {
+            float width = data.Corners[1].z - data.Corners[0].z;
             var cloth = sail.cloth;
             var renderer = cloth.GetComponent<SkinnedMeshRenderer>();
             var scaleRoot = cloth.transform.parent;
@@ -131,9 +132,9 @@ namespace MoreSailwindSails.Sails.FishermansFlyingSail
             renderer.localBounds = new Bounds(
                 mesh.bounds.center,
                 new Vector3(
-                    mesh.bounds.size.x + sail.installHeight * 0.25f,
+                    mesh.bounds.size.x + width * 0.25f,
                     mesh.bounds.size.x * 2.25f,
-                    sail.installHeight * 1.25f
+                    width * 1.25f
                 )
             );
             renderer.updateWhenOffscreen = true;
@@ -176,7 +177,7 @@ namespace MoreSailwindSails.Sails.FishermansFlyingSail
             sail.windcenter.SetParent(scaleRoot, false);
             sail.windcenter.localPosition = data.Center;
             connections.colChecker.transform.SetParent(scaleRoot, false);
-            ConfigureCollision(connections.colChecker, sail.installHeight);
+            ConfigureCollision(connections.colChecker, width);
             foreach (var visual in scaleRoot.GetComponentsInChildren<MeshRenderer>(true))
                 visual.enabled = false;
             var shadow = sail.GetComponentInChildren<SailShadowCol>(true);

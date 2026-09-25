@@ -70,6 +70,8 @@ shipyard changes.
 At a shipyard, select a **physical mast**, open **Other**, and choose
 **Fisherman's Flying Sail**. It needs a supported active mast behind it.
 
+New selections start at 100% of the smaller base model, whose width and height
+are one-third of the original Flying Sail's dimensions.
 Resize and position it using the normal shipyard controls. Its own hoist winch
 raises it from the deck, and its port and starboard sheets control the trim.
 Fully lowering it hides the sail.

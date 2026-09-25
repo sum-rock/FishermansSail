@@ -57,7 +57,8 @@ namespace MoreSailwindSails.Sails.FishermansFlyingSail
                     );
 
                 var sourceMesh = sourceRenderer.sharedMesh;
-                var geometry = FishermansFlyingSailGeometry.Create(sourceSail.installHeight);
+                // Bake the smaller size into the fabric so it is the new 100%.
+                var geometry = FishermansFlyingSailGeometry.Create(sourceSail.installHeight / 3f);
 
                 // An inactive parent prevents Awake/Start from running on our
                 // template. Installed copies retain activeSelf=true and initialize normally.
@@ -67,6 +68,7 @@ namespace MoreSailwindSails.Sails.FishermansFlyingSail
                 var clone = Object.Instantiate(source, container.transform, false);
                 clone.name = $"{PrefabIndex} SAIL {DisplayName}";
                 var sail = clone.GetComponent<Sail>();
+                sail.installHeight = geometry.Corners[0].x - geometry.Corners[2].x;
                 sail.prefabIndex = PrefabIndex;
                 sail.sailName = DisplayName;
                 sail.category = SailCategory.other;
@@ -152,6 +154,7 @@ namespace MoreSailwindSails.Sails.FishermansFlyingSail
                 string registrationMessage =
                     $"Registered {DisplayName}: source={SourceIndex}, index={PrefabIndex}, "
                     + $"vertices={mesh.vertexCount}, corners=4, luffWidthRatio=2, edgeSlope=20, mastTies=0.4572m, headCamber=0.12, "
+                    + $"baseWidth={-geometry.Corners[0].z:F2}m, baseLuff={sail.installHeight:F2}m, "
                     + $"area={sourceSail.GetSailArea():F2}->{sail.sailArea:F2}. Original brig jib preserved.";
 
                 if (directory.sails.Length <= PrefabIndex)

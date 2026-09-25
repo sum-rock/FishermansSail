@@ -87,6 +87,9 @@ implementation notes, asset provenance and verification procedures.
 - Retain the **85%** upper-corner sheeting response. The attempted 60% response
   caused creases in game and was reverted.
 - Hoists from the deck; fully striking hides the cloth and parks its ropes.
+- The base mesh width is **one-third of donor 110's install height**, with its
+  own installation height derived from the luff. New selections start at **100%**
+  through SE scaling after initialization. Keep the fixed 18-inch mast ties.
 - The base cut is an isosceles trapezoid with luff **2 × width**, head rising
   **20°** aft and foot falling **20°** aft. Derive edge budgets from its corners.
 - Two **18-inch (0.4572 m)** ties hold the luff corners aft of the mast surface.

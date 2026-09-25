@@ -212,9 +212,14 @@ remain unchanged.
   because the whole neutral panel clears the mast. Bounds remain separate
   from billow. Fit checks include the mast radius and tie gap in the required
   span and compare each head with its own active supporting guide.
-- Existing prefab-400 saves retain their scale, installation coordinate and
-  color, and use the new cut on load. No save rewrite or identity change is
-  required; older fits may need resizing/repositioning for the taller aft edge.
+- Registration generates the base mesh at one-third of the original width
+  (`sourceSail.installHeight / 3`); its luff and height shrink proportionally.
+  The clone's installation height comes from the new luff, while collision
+  strips and renderer bounds use the new fabric width. Shadow samples and sail
+  area are generated from that smaller mesh. The donor is unchanged.
+- New Flying Sail selections start at 100% through
+  `SailScaler.SetScaleAbs(1f, 1f)` after SE's shipyard initialization. The previous
+  33⅓% preset is removed; the mast ties remain 18 inches long at every scale.
 - Native palette entry 11 and Shipyard Expansion texture index 0 supply the
   white/plain defaults. Scoped patches limit textures and sheet travel only for
   this sail.
