@@ -51,6 +51,20 @@ if [[ -n "$remote_tag" ]]; then
     exit 1
 fi
 
+printf 'Release %s at commit %s will be tagged and pushed to origin, then the DLL will be rebuilt and a GitHub release published.\n' "$tag" "$remote_head"
+printf 'Are you sure? [y/N] ' >&2
+if ! IFS= read -r confirmation; then
+    printf '\nRelease cancelled.\n' >&2
+    exit 1
+fi
+case "$confirmation" in
+    [yY]|[yY][eE][sS]) ;;
+    *)
+        printf 'Release cancelled.\n' >&2
+        exit 1
+        ;;
+esac
+
 git tag -a "$tag" -m "Release $tag"
 if ! git push origin "refs/tags/$tag:refs/tags/$tag"; then
     git tag -d "$tag"
