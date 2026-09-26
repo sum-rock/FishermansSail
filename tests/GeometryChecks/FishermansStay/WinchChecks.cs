@@ -95,6 +95,27 @@ internal static class WinchChecks
                 == null,
             "Native controls were ignored."
         );
+        var rejected = new WinchReservations.Rejections();
+        Check(
+            allocator.Acquire(
+                donor,
+                new object(),
+                new[] { c.Position },
+                0.15f,
+                (p, r) => true,
+                rejected
+            ) == null
+                && rejected.Native == 1
+                && rejected.Reserved == 0,
+            "Native obstructions must take precedence when a reservation also blocks a candidate."
+        );
+        Check(
+            allocator.Acquire(donor, new object(), Array.Empty<Vector3>(), 0.15f, Clear, rejected)
+                == null
+                && rejected.Native == 0
+                && rejected.Reserved == 0,
+            "Empty support diagnostics must not retain an earlier rejection count."
+        );
 
         foreach (var boat in BoatRigCatalog.All)
         {
@@ -233,6 +254,7 @@ internal static class WinchChecks
         BrigWinchChecks.Run();
         SurfaceWinchChecks.Run();
         LargeDhowWinchChecks.Run();
+        JongWinchChecks.Run();
         Console.WriteLine(
             $"PASS: shared winch allocation, release, donor changes, bounded placement and {measured} installed donor datums across eight boats. Surface accessibility and Unity lifecycle require in-game validation."
         );

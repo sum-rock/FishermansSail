@@ -43,18 +43,23 @@ namespace MoreSailwindSails.Controls
 
         internal static GPButtonRopeWinch Source(BoatRefs boat, Mast mast, WinchRole role)
         {
-            var sources =
-                role == WinchRole.Reef ? mast.reefWinch
-                : role == WinchRole.Left ? mast.leftAngleWinch
-                : role == WinchRole.Right ? mast.rightAngleWinch
-                : mast.midAngleWinch;
+            var sources = Sources(mast, role);
             // Optional native roles (for example a stay's middle sheet) can have
             // no control and no mounting definition. Keep those probes harmless.
             var first = sources?.FirstOrDefault(Usable);
             if (!first)
                 return null;
-            int index =
-                BoatRigCatalog.Find(boat.name)?.WinchMount(mast.orderIndex, role).SourceIndex ?? -1;
+            var definition = BoatRigCatalog.Find(boat.name)?.WinchMount(mast.orderIndex, role);
+            if (definition != null && definition.SourceMast >= 0)
+            {
+                var sourceMast =
+                    boat.masts != null && definition.SourceMast < boat.masts.Length
+                        ? boat.masts[definition.SourceMast]
+                        : null;
+                sources = Sources(sourceMast, role);
+                first = sources?.FirstOrDefault(Usable);
+            }
+            int index = definition?.SourceIndex ?? -1;
             if (index < 0)
                 return first;
             // Do not silently switch back to a blocked row if an authored donor
@@ -62,6 +67,13 @@ namespace MoreSailwindSails.Controls
             var source = sources != null && index < sources.Length ? sources[index] : null;
             return Usable(source) ? source : null;
         }
+
+        private static GPButtonRopeWinch[] Sources(Mast mast, WinchRole role) =>
+            !mast ? null
+            : role == WinchRole.Reef ? mast.reefWinch
+            : role == WinchRole.Left ? mast.leftAngleWinch
+            : role == WinchRole.Right ? mast.rightAngleWinch
+            : mast.midAngleWinch;
 
         private static bool Usable(GPButtonRopeWinch winch) =>
             winch && winch.GetComponent<Renderer>() && winch.GetComponent<Collider>();
@@ -305,6 +317,8 @@ namespace MoreSailwindSails.Controls
                                         + definition.Support
                                         + " for "
                                         + mount.name
+                                        + "; "
+                                        + PlacementContext(origin)
                                 );
                             warned = true;
                             retryAfter = Time.unscaledTime + 1f;
@@ -321,12 +335,14 @@ namespace MoreSailwindSails.Controls
                         axisPoint
                     );
                     var positions = placements.Select(p => p.Position).ToArray();
+                    var rejections = warned ? null : new WinchReservations.Rejections();
                     reservation = manager.reservations.Acquire(
                         Source,
                         this,
                         positions,
                         radius,
-                        (p, r) => manager.Obstructed(p, r, Source)
+                        (p, r) => manager.Obstructed(p, r, Source),
+                        rejections
                     );
                     lastSourcePosition = origin;
                     if (reservation != null)
@@ -336,7 +352,11 @@ namespace MoreSailwindSails.Controls
                         Suspend();
                         if (!warned)
                             Plugin.Log.LogWarning(
-                                "No free authored winch position for " + mount.name
+                                "No free authored winch position for "
+                                    + mount.name
+                                    + "; "
+                                    + PlacementContext(origin)
+                                    + $", candidates={positions.Length}, nativeBlocked={rejections.Native}, reservationBlocked={rejections.Reserved}."
                             );
                         warned = true;
                         retryAfter = Time.unscaledTime + 1f;
@@ -350,6 +370,13 @@ namespace MoreSailwindSails.Controls
                     Winch.AttachToController(Winch.rope);
                 mount.gameObject.SetActive(true);
                 Winch.ShowWinch(true);
+            }
+
+            private string PlacementContext(Vector3 origin)
+            {
+                var mast = Owner.GetComponentInParent<Mast>();
+                int donor = definition.SourceMast >= 0 ? definition.SourceMast : definition.Mast;
+                return $"boat={manager.boat.name}#{manager.boat.GetInstanceID()}, owner={Owner.name}#{Owner.GetInstanceID()}, stay/mast={(mast ? mast.orderIndex : -1)}, requestedMast={definition.Mast}, donorMast={donor}, role={definition.Role}, source={Source.name}#{Source.GetInstanceID()}, origin={origin.ToString("F4")}, radius={radius:F4}";
             }
 
             private void Position(Vector3 position)

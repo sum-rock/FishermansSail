@@ -27,6 +27,10 @@
       Link="FishermansStay/WinchReservations.cs"
     />
     <None Update="FishermansStay/WinchMeasurements.txt" CopyToOutputDirectory="PreserveNewest" />
+    <None
+      Update="FishermansStay/JongNativeWinchMeasurements.txt"
+      CopyToOutputDirectory="PreserveNewest"
+    />
     <None Update="FishermansStay/BrigRailMeasurements.txt" CopyToOutputDirectory="PreserveNewest" />
     <None
       Update="FishermansStay/LargeDhowNativeWinchMeasurements.txt"
