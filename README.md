@@ -13,9 +13,9 @@ are developed. The mod currently includes two sail families:
 Version **0.2.0**.
 
 <p align="center">
-  <a href="references/example-0-2-0mkb_1.png"><img src="references/example-0-2-0mkb_1.png" width="32%" alt="Fisherman's Staysail Mk.B set between two masts in Sailwind"></a>
-  <a href="references/example-0-2-0-mkb_2.png"><img src="references/example-0-2-0-mkb_2.png" width="32%" alt="Another view of Fisherman's Staysail Mk.B under sail"></a>
-  <a href="references/example-0-2-1_1.png"><img src="references/example-0-2-1_1.png" width="32%" alt="Fisherman's sails viewed from alongside a boat at sunset"></a>
+  <a href="references/example-0-2-0A.png"><img src="references/example-0-2-0A.png" width="24%" alt="Fisherman's Staysail set between two masts, viewed from above"></a>
+  <a href="references/example-0-2-0C.png"><img src="references/example-0-2-0C.png" width="24%" alt="Fisherman's sails viewed from alongside a boat at sunset"></a>
+  <a href="references/example-0-2-0E.png"><img src="references/example-0-2-0E.png" width="24%" alt="Fisherman's Staysail on a three-masted boat near shore"></a>
 </p>
 
 Select a screenshot to view it at full size.
