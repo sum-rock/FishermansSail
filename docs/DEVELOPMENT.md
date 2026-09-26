@@ -87,14 +87,14 @@ The solution includes the plugin and both check projects. Feature namespaces
 follow their directories under `MoreSailwindSails`; Harmony patches live in each
 feature's `Patches/` directory and `.Patches` namespace.
 
-| Location | Responsibility |
-| --- | --- |
-| `src/Plugin.cs` | Identity, dependencies, Harmony discovery and optional SailInfo patch |
-| `src/Sails/FishermansFlyingSail/` | Mast-mounted sail registration, rig, geometry, tension, billow and aerodynamics |
-| `src/Sails/FishermansStaysail/` | Family prefab builder, rig, fixed head, edge fitting and reefing; `MkA/`, `MkB/`, `MkC/` supply cuts and identities |
-| `src/Stays/FishermansStay/` | Independent mounts, registration, previews, controls and save compatibility |
-| `src/BoatRigs/` | One class per boat owns supports, stays, mast ancestry and winch mounts; `Definitions.cs` owns shared types, validation and catalog |
-| `src/Controls/` | Shared reservations/cloning and `WinchPlacementGeometry.cs` placement math |
+| Location                          | Responsibility                                                                                                                      |
+| --------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `src/Plugin.cs`                   | Identity, dependencies, Harmony discovery and optional SailInfo patch                                                               |
+| `src/Sails/FishermansFlyingSail/` | Mast-mounted sail registration, rig, geometry, tension, billow and aerodynamics                                                     |
+| `src/Sails/FishermansStaysail/`   | Family prefab builder, rig, fixed head, edge fitting and reefing; `MkA/`, `MkB/`, `MkC/` supply cuts and identities                 |
+| `src/Stays/FishermansStay/`       | Independent mounts, registration, previews, controls and save compatibility                                                         |
+| `src/BoatRigs/`                   | One class per boat owns supports, stays, mast ancestry and winch mounts; `Definitions.cs` owns shared types, validation and catalog |
+| `src/Controls/`                   | Shared reservations/cloning and `WinchPlacementGeometry.cs` placement math                                                          |
 
 Add future sail families under their own `src/Sails/<Family>/` directory.
 Keep existing families independently editable; [shared-helper extraction is
@@ -210,10 +210,10 @@ separate geometry/prefix arguments. The family builder owns donor **110** and
 template slope **20°**; first binding creates the owned mesh for the actual stay
 slope before enabling Cloth. Mesh and bind poses then stay fixed.
 
-| Cut | Geometry in the forward-mast frame |
-| --- | --- |
-| Mk.A | Original 110° foot cut, sloping downward aft |
-| Mk.B | Same head/width, 90° foot cut; deck-parallel on upright masts |
+| Cut  | Geometry in the forward-mast frame                                                   |
+| ---- | ------------------------------------------------------------------------------------ |
+| Mk.A | Original 110° foot cut, sloping downward aft                                         |
+| Mk.B | Same head/width, 90° foot cut; deck-parallel on upright masts                        |
 | Mk.C | Same head/width, 50% longer luff (`1.5 × width`), foot rising `width × tan(40°)` aft |
 
 The deployed luff stays on the forward mast and neutral head aligns with the
@@ -264,16 +264,16 @@ Profiles author physical mast IDs, endpoints, active guides, prerequisites,
 exclusions, ancestry and permanent mount IDs. Each boat's `Definition` owns its
 data; resolve `Sections`, `Base` and `WinchMount` through that profile.
 
-| Boat | Part groups | Stay variants | Forward-masthead fallbacks |
-| --- | ---: | ---: | ---: |
-| Brig | 2 | 24 | 4 |
-| Junk | 2 | 9 | 2 |
-| Jong | 5 | 9 | 0 |
-| Sanbuq | 2 | 26 | 5 |
-| Cog | 1 | 3 | 0 |
-| Leopard | 2 | 18 | 4 |
-| Shroud | 2 | 8 | 2 |
-| Large dhow (Sailwind 0.39) | 2 | 14 | 8 |
+| Boat                       | Part groups | Stay variants | Forward-masthead fallbacks |
+| -------------------------- | ----------: | ------------: | -------------------------: |
+| Brig                       |           2 |            24 |                          4 |
+| Junk                       |           2 |             9 |                          2 |
+| Jong                       |           5 |             9 |                          0 |
+| Sanbuq                     |           2 |            26 |                          5 |
+| Cog                        |           1 |             3 |                          0 |
+| Leopard                    |           2 |            18 |                          4 |
+| Shroud                     |           2 |             8 |                          2 |
+| Large dhow (Sailwind 0.39) |           2 |            14 |                          8 |
 
 The **111** variants prefer **70°** between the aft spar's downward axis and stay.
 If that intersects above the connected forward spar, use its physical masthead
@@ -348,16 +348,16 @@ boat model; compare transformed coordinates in that common frame. Confirm import
 parents/dependencies against installed assemblies. Fixtures contain numeric
 measurements only, never meshes, textures or assemblies.
 
-| Boat | Permanent surface references |
-| --- | --- |
-| Brig | `medi medium new/structure_container/trim_006` rail caps; omit bevels/bends and stair opening |
-| Sanbuq | `structure/Cube_013` forward/raised aft caps; exclude lower trim |
-| Junk | `structure/trim_001` caps, `Cube_035` handrails, `Cube_032` transverse reef beam |
-| Jong | `structure/trim_010` forward/middle/aft caps |
-| Cog | `structure/trim_001` aft caps |
-| Leopard | `structure_container/decking trim`, `mainfife back`, `mizzenfife`; exclude raised end posts |
-| Shroud | `Clipper_Upper_Trim`, `Halyard_Points/Cube.004` and `Cube.005`; exclude rounded ends |
-| Large dhow | `Cube_001` and `Cube_008` lower/sloped/raised caps and inner aft rail faces |
+| Boat       | Permanent surface references                                                                  |
+| ---------- | --------------------------------------------------------------------------------------------- |
+| Brig       | `medi medium new/structure_container/trim_006` rail caps; omit bevels/bends and stair opening |
+| Sanbuq     | `structure/Cube_013` forward/raised aft caps; exclude lower trim                              |
+| Junk       | `structure/trim_001` caps, `Cube_035` handrails, `Cube_032` transverse reef beam              |
+| Jong       | `structure/trim_010` forward/middle/aft caps                                                  |
+| Cog        | `structure/trim_001` aft caps                                                                 |
+| Leopard    | `structure_container/decking trim`, `mainfife back`, `mizzenfife`; exclude raised end posts   |
+| Shroud     | `Clipper_Upper_Trim`, `Halyard_Points/Cube.004` and `Cube.005`; exclude rounded ends          |
+| Large dhow | `Cube_001` and `Cube_008` lower/sloped/raised caps and inner aft rail faces                   |
 
 Fixtures in `tests/GeometryChecks/FishermansStay/` are `StayMeasurements.txt`
 (mast transforms, spar extents and guides), `WinchMeasurements.txt` (donor frames,
@@ -371,78 +371,6 @@ ancestry/cycle rejection, reservations, strip ends, obstructions and exhaustion.
 Surface comparisons allow **2 cm** for slight face warp. Brig/Sanbuq/Junk
 screenshots confirmed unsupported tangent-based placement; measured strips
 replace it. Keep numeric details in profiles/fixtures instead of duplicating tables.
-
-## Runtime validation
-
-### Current evidence and gaps
-
-The **0.2.0 large-dhow corrections** passed the Release build (zero warnings/errors),
-CSharpier, GeometryChecks, AssemblyChecks and diff/link checks. That build
-matched the installed DLL by SHA-256 at the start of the 2026-09-25 appearance investigation;
-visual validation of the corrections remains pending.
-Rerun automated checks for subsequent plugin-affecting changes.
-
-| Area | Observed evidence | Remaining validation |
-| --- | --- | --- |
-| Flying Sail | Earlier mast/guide placement, collision and travel approved; rounded billow received positive feedback | Revised trapezoid, offset luff/ties, flexible cloth, direct ropes and corner knots |
-| Staysails | Fixed 14° head received favorable initial feedback; Sanbuq asymmetry was not reproduced by geometry checks | All-mark fitting/save reload, Mk.C rising foot/collision, reefing/bundle, appearance and SailInfo |
-| Winches | User reported improved placement; later Brig/Sanbuq/Junk screenshots exposed unsupported surfaces, now corrected in authored data | Seating/accessibility on all eight boats, mixed-sail capacity and save/reload |
-| Audio | Follow-up 0.39 logs contained six custom-sail `SailFlapAudio.Awake` errors; hierarchy corrected | Load and listen to existing/new examples of all four sail types without exceptions |
-| Large dhow | User reported a floating fore stay and missing mainmast halyard; logs confirmed exhausted placement on both main positions. Mesh mastheads and upper-row donors now pass expanded geometry checks | Confirm masthead contact and accessible halyard on upright/raked foremast and both main positions; Cloth, crowded capacity and save/reload |
-| Sail appearance | The 2026-09-25 screenshot and trace identified swapped plain/painted SE texture indices. The user confirmed the catalog initialization fix restored the expected appearance in-game; temporary diagnostics were removed | Broader coverage of painted options, new/saved vanilla and custom sails, recoloring and save/reload remains pending |
-
-SE 0.11.1 discovers textures in prefab traversal order, but its saved selections
-and hard-coded option lists expect plain at **0**, medi-small paint at **1**, dhow
-paint at **2**, and junk paint at **3**. The captured catalog had the first two
-swapped. `src/Compatibility/` seeds the empty catalog from donor 110's native
-plain bundle before `SailTextureChanger.Setup` assigns indices. Native discovery
-then appends paint normally; no donor materials or save files are rewritten.
-Both custom families verify that index zero is plain before configuring templates.
-Saved index **0** regains its intended plain appearance. Selections explicitly
-changed to index **1** while the ordering was broken may need reselection; the
-numeric save alone cannot distinguish that intent from an older painted choice.
-The user confirmed the corrected build worked in-game. Regression checks retain
-the captured texture order and verify SE's installed discovery/option contract.
-Temporary material tracing, its configuration option and tracing-only checks
-were removed after confirmation; the compatibility fix and regression checks remain.
-
-The user confirmed that updating **ShipShape 1.3.0 → 1.3.1** resolved the 0.39
-movement-triggered freeze; follow-up logs lacked missing-camera/ocean warnings.
-That finding is separate from this mod's audio correction. A Brig
-`No free authored winch position` warning lacked enough preview/ownership context
-to identify a specific conflict; verify capacity without allowing unsupported overflow.
-
-### Acceptance checklist
-
-Start on **Brig**, then **Sanbuq** for tack/Cloth changes and other affected boats.
-Record observed scenarios separately from automated results; do not mark pending
-coverage complete based on geometry or IL inspection.
-
-1. **Fitting/saves:** exercise both families/all marks, native staysails on custom
-   stays, multiple/mixed sails, default/saved sizes, recoloring and plain textures.
-   Check vertical overlap, shrouds/panels, matching mast/topmast variants, occupied
-   support removal, valid/invalid previews and repeated cancellation. Save/reload
-   with/without custom stays; preserve native sails, controls and save slots.
-2. **Sailing/cloth:** test both tacks, eased/tight sheets, weak/strong wind, partial
-   and full reef/hoist, pauses/reversals and redeployment. Inspect corners/ropes,
-   smooth camber reversal, folds/detachment and useful propulsion. Confirm ±40°
-   travel or tighter collision limits without jumps.
-3. **Family details:** Flying Sail must keep fixed ties, inward luff clearance,
-   knots and direct ropes with both rope settings; striking hides cloth/parks
-   ropes. Staysail head must hold 14°/7°/0° independently of sheets/wind strength,
-   retain tack in weak wind and reef upward through the 4% bundle threshold.
-   Check aft halyard routing, luff/head alignment, Mk.C clearance and SailInfo's
-   mast-relative angle under heel or on a steep stay.
-4. **Controls/audio:** inspect winch seating on both sides, mouse/VR handles,
-   outlines and clearance after boat movement; include crowded/mixed sails,
-   cancellation and save/reload. Load old sails and fit new examples of each type;
-   check both logs for audio errors and listen for flapping/snapping when applicable.
-5. **Boat variants:** cover shorter-foremast fallbacks and offset topmasts, Cog's
-   fore/aft direction, Leopard's three-section masts and Shroud's short/tall options.
-   On large dhow, check both main positions, raked alternatives, topmast
-   addition/removal, visible masthead contact and upper-row donor controls after
-   the Brig regression. Check shared-mast exhaustion, mouse/VR reach and existing
-   Mk.C save/reload as well as new installations.
 
 ## Local investigation
 

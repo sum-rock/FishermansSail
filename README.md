@@ -39,12 +39,10 @@ Select a screenshot to view it at full size.
 | **Fisherman's Staysail Mk.C** | The same head and controls, with a 50% longer luff and a lower edge rising 40° from the forward luff toward the aft leech on upright masts. |
 | **Fisherman's Flying Sail**   | A separate sail fitted directly to a mast through the **Other** category.                                                                   |
 
-Supported boats: **Brig, Junk, Jong, Sanbuq, Cog, Leopard, Shroud and the large
-Al’Ankh dhow introduced in Sailwind 0.39**.
-Leopard and Shroud require their corresponding boat mods. Available stay
-variants depend on the boat and its fitted masts. The new large dhow profile
-awaits in-game validation; its larger mast winches have limited room for
-additional controls when multiple custom sails share a mast.
+Supported boats: **Brig, Junk, Jong, Sanbuq, Cog, Leopard, Shroud and the Bigbuqu
+introduced in 0.39**. Leopard and Shroud require their corresponding boat mods. These
+modded ships were only lightly tested. Let me know if there are issues. Available stay
+variants depend on the boat and its fitted masts.
 
 ## Requirements and installation
 
