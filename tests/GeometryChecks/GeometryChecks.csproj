@@ -7,6 +7,10 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile
+      Include="../../src/Compatibility/TextureCatalogOrder.cs"
+      Link="Compatibility/TextureCatalogOrder.cs"
+    />
+    <Compile
       Include="../../src/Sails/FishermansFlyingSail/FishermansFlyingSailKnotGeometry.cs"
       Link="FishermansFlyingSail/FishermansFlyingSailKnotGeometry.cs"
     />
@@ -24,6 +28,10 @@
     />
     <None Update="FishermansStay/WinchMeasurements.txt" CopyToOutputDirectory="PreserveNewest" />
     <None Update="FishermansStay/BrigRailMeasurements.txt" CopyToOutputDirectory="PreserveNewest" />
+    <None
+      Update="FishermansStay/LargeDhowNativeWinchMeasurements.txt"
+      CopyToOutputDirectory="PreserveNewest"
+    />
     <None
       Update="FishermansStay/WinchSurfaceMeasurements.txt"
       CopyToOutputDirectory="PreserveNewest"

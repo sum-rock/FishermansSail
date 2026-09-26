@@ -10,19 +10,34 @@ are developed. The mod currently includes two sail families:
 
 **Fisherman's Stays** provide the rigging mounts for the staysail family.
 
-Version **0.1.0**.
+Version **0.2.0**.
 
-![Fisherman's Staysail Mk.B set between two masts in Sailwind](references/example-0-2-0mkb_1.png)
+<p align="center">
+  <a href="references/example-0-2-0A.png"><img src="references/example-0-2-0A.png" width="24%" alt="Fisherman's Staysail set between two masts, viewed from above"></a>
+  <a href="references/example-0-2-0C.png"><img src="references/example-0-2-0C.png" width="24%" alt="Fisherman's sails viewed from alongside a boat at sunset"></a>
+  <a href="references/example-0-2-0E.png"><img src="references/example-0-2-0E.png" width="24%" alt="Fisherman's Staysail on a three-masted boat near shore"></a>
+</p>
+
+Select a screenshot to view it at full size.
+
+## New in 0.2.0
+
+- **Staysail Mk.C**, with a longer luff and a foot rising toward the aft mast.
+- A smaller **Flying Sail** with a trapezoid cut, fixed mast ties, rounded billow,
+  revised control ropes and corner knots.
+- Corrected sheet-winch placement along measured rails and other solid supports.
+- Support for Sailwind 0.39's **large Al’Ankh dhow** and a fix for custom sail
+  sound initialization.
 
 ## What's included
 
-| Sail or rigging               | What it adds                                                                                                                   |
-| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| **Fisherman's Stay**          | A high stay between two masts, with variants for supported mast and topmast combinations.                                      |
-| **Fisherman's Staysail Mk.A** | A four-corner sail with a sloping head and a lower edge that slopes downward toward the aft mast.                              |
-| **Fisherman's Staysail Mk.B** | The same head and controls as Mk.A, with a straight lower edge perpendicular to the mast—level with the deck on upright masts. |
+| Sail or rigging               | What it adds                                                                                                                                |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Fisherman's Stay**          | A high stay between two masts, with variants for supported mast and topmast combinations.                                                   |
+| **Fisherman's Staysail Mk.A** | A four-corner sail with a sloping head and a lower edge that slopes downward toward the aft mast.                                           |
+| **Fisherman's Staysail Mk.B** | The same head and controls as Mk.A, with a straight lower edge perpendicular to the mast—level with the deck on upright masts.              |
 | **Fisherman's Staysail Mk.C** | The same head and controls, with a 50% longer luff and a lower edge rising 40° from the forward luff toward the aft leech on upright masts. |
-| **Fisherman's Flying Sail**   | A separate sail fitted directly to a mast through the **Other** category.                                                      |
+| **Fisherman's Flying Sail**   | A separate sail fitted directly to a mast through the **Other** category.                                                                   |
 
 Supported boats: **Brig, Junk, Jong, Sanbuq, Cog, Leopard, Shroud and the large
 Al’Ankh dhow introduced in Sailwind 0.39**.
@@ -33,8 +48,11 @@ additional controls when multiple custom sails share a mast.
 
 ## Requirements and installation
 
-The current build produces `MoreSailwindSails.dll`.
+**Use at your own risk.** This mod is provided as-is, without warranty. I am not
+responsible for damage, data loss, or other issues affecting your computer, game,
+or save files from using this mod. Back up your saves before installing.
 
+- Built against **Sailwind 0.39**
 - **BepInEx 5**
 - **Shipyard Expansion** (developed against version 0.11.1)
 
@@ -73,23 +91,13 @@ shipyard changes.
 At a shipyard, select a **physical mast**, open **Other**, and choose
 **Fisherman's Flying Sail**. It needs a supported active mast behind it.
 
-New selections start at 100% of the smaller base model, whose width and height
-are one-third of the original Flying Sail's dimensions.
-Resize and position it using the normal shipyard controls. Its own hoist winch
-raises it from the deck, and its port and starboard sheets control the trim.
-Fully lowering it hides the sail.
+Its own hoist winch raises it from the deck, and its port and starboard sheets
+control the trim. Fully lowering it hides the sail.
 
-The base cut is an isosceles trapezoid: the mast-side edge is twice the
-fore-to-aft fabric span, with a head rising 20° and a foot falling 20° toward
-the aft mast. Two short ropes hold its luff corners 18 inches from the mast;
-that gap stays constant while resizing or trimming. The luff arches inward
-toward the mast while the sail billows. Smooth head and foot ropes continue
-through those ties to the fore mast, while the fabric arches away in a fuller,
-rounded billow. Native-style knots mark all four corners, and the external
-control lines hang directly between attachments with slight sag. The upper
-sheets still pass through the aft masthead guide,
-and the lower sheets run directly to their winches. Leave room for the higher
-aft head below its supporting pulley when positioning the sail.
+Two fixed 18-inch ties hold the luff corners away from the mast while the luff
+arches inward. The trapezoid cut has a rising head and falling foot; leave room
+for the higher aft head below its supporting pulley. For geometry and rigging
+details, see the [Flying Sail reference](docs/DEVELOPMENT.md#flying-sail).
 
 ## Removing the mod
 

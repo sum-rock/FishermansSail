@@ -10,13 +10,13 @@ namespace MoreSailwindSails.Sails.FishermansStaysail
         // Existing PrefabsDirectory palette swatch, not a new RGB color.
         internal const int WhiteColorIndex = 11;
 
-        // SE registers the unpainted stock square sail's texture first.
+        // The SE compatibility patch seeds the native plain texture before discovery.
         internal const int PlainTextureIndex = 0;
 
         internal static void Configure(Sail sail)
         {
             var changer = sail.GetComponent<SailTextureChanger>();
-            if (!changer || SailTextureChanger.sailTextures.Count <= PlainTextureIndex)
+            if (!changer || !Compatibility.ShipyardExpansionTextureCatalog.HasPlainFirst)
                 throw new InvalidOperationException(
                     "Shipyard Expansion's plain sail texture is unavailable."
                 );

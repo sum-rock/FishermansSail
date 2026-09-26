@@ -157,6 +157,20 @@ internal static class StayChecks
             }
         }
         Check(fallback == 25, "Shorter-foremast fallback coverage changed.");
+        // The large dhow's foremast capsules extend 6.7 cm beyond the rendered
+        // end rings. Both upright and raked options must use the visible spar.
+        var dhowSpars = measurements[LargeDhow.Definition.BoatName];
+        foreach (int id in new[] { 0, 1 })
+            Check(
+                !OnSegment(dhowSpars[id].Point(new Vector3(-0.006836f, 0f, 2.29f)), dhowSpars[id]),
+                "Large dhow capsule tip incorrectly accepted as a visible masthead."
+            );
+        Check(
+            LargeDhow
+                .Definition.Stays.SelectMany(g => g.Variants)
+                .Count(s => s.Fore == 0 || s.Fore == 1) == 8,
+            "Missing large dhow foremast endpoint coverage."
+        );
         // Actual Brig coordinates straddle the boundary: the same authored aft
         // anchor meets a bare foremast head, or the preferred line on its topmast.
         var brig = BoatRigCatalog.All[0].Stays[0].Variants;

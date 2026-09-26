@@ -52,8 +52,21 @@ internal static class ProfileChecks
         Reject<InvalidOperationException>(() => leopard.WinchMount(127, WinchRole.Reef));
         foreach (var boat in BoatRigCatalog.All)
         foreach (var winch in boat.WinchMounts)
+        {
             if (!ReferenceEquals(boat.WinchMount(winch.Mast, winch.Role), winch))
                 throw new Exception("Winch lookup escaped its containing boat profile.");
+            bool upperDhowRow =
+                ReferenceEquals(boat, largeDhow)
+                && winch.Role == WinchRole.Reef
+                && new[] { 0, 1, 2, 4 }.Contains(winch.Mast);
+            if (winch.SourceIndex != (upperDhowRow ? 2 : -1))
+                throw new Exception(
+                    "Authored winch source selection changed outside large-dhow stacked rows."
+                );
+        }
+        Reject<ArgumentOutOfRangeException>(() =>
+            new WinchMountDefinition(0, WinchRole.Reef, UnityEngine.Vector3.up, true, 0, -2)
+        );
 
         BoatRigDefinition Profile(
             IReadOnlyDictionary<int, int> parents,

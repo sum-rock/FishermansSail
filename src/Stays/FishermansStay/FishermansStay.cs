@@ -216,7 +216,7 @@ namespace MoreSailwindSails.Stays.FishermansStay
 
         private GPButtonRopeWinch[] CloneWinches(Mast donor, WinchRole role, string label)
         {
-            var sourceWinch = FishermanWinchControls.Source(donor, role);
+            var sourceWinch = FishermanWinchControls.Source(boat, donor, role);
             if (!sourceWinch)
                 return new GPButtonRopeWinch[0];
             var control = FishermanWinchControls.Create(

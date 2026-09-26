@@ -17,6 +17,35 @@ internal static class WinchChecks
         var manager = assembly.GetType("MoreSailwindSails.Controls.FishermanWinchControls", true);
         var owned = manager.GetNestedType("OwnedWinch", BindingFlags.NonPublic);
         var constructor = owned.GetConstructors(all).Single();
+        var source = manager.GetMethod("Source", all);
+        var sourceInstructions = Instructions(source).ToArray();
+        if (!sourceInstructions.Any(i => i.Operand is FieldInfo f && f.Name == "SourceIndex"))
+            throw new Exception("Runtime winch selection ignores the authored donor row.");
+        int firstControl = Array.FindIndex(
+            sourceInstructions,
+            i => i.Operand is MethodBase m && m.Name == "FirstOrDefault"
+        );
+        int profileLookup = Array.FindIndex(
+            sourceInstructions,
+            i =>
+                i.Operand is MethodBase m
+                && m.Name == "Find"
+                && m.DeclaringType.Name == "BoatRigCatalog"
+        );
+        if (
+            firstControl < 0
+            || profileLookup <= firstControl
+            || !sourceInstructions
+                .Skip(firstControl + 1)
+                .Take(profileLookup - firstControl - 1)
+                .Any(i => i.Code == System.Reflection.Emit.OpCodes.Ret)
+        )
+            throw new Exception(
+                "Absent optional native controls must return before requiring a mounting profile."
+            );
+        foreach (string method in new[] { "Create", "Reconcile" })
+            if (!CalledMethods(manager.GetMethod(method, all)).Contains(source))
+                throw new Exception(method + " bypasses common authored winch selection.");
         var cloneCalls = CalledMethods(constructor).ToArray();
         if (
             !cloneCalls.Any(m => m.Name == "ResetClonedOutline")
