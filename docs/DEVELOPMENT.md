@@ -72,7 +72,11 @@ Builds/checks do not install the plugin, change saves or publish a release.
 - After merging release changes to `master`, `./scripts/tag-release.sh` requires
   a clean checkout, switches to `master`, fetches/fast-forwards and requires it
   to match `origin/master`. It checks matching versions and tag availability,
-  creates/pushes annotated `v<version>`, rebuilds the Release DLL, then creates
+  shows the tag and commit, then asks `Are you sure? [y/N]` before tagging.
+  Only `y` or `yes` (case-insensitive) continues; empty input, other responses
+  or EOF cancel with exit status 1. Confirmation happens after the branch
+  switch and fetch/fast-forward. Once confirmed, it creates/pushes annotated
+  `v<version>`, rebuilds the Release DLL, then creates
   a GitHub release with that DLL and generated notes. It requires Nix and an
   authenticated `gh`. A later build/publish failure can leave the pushed tag.
 
