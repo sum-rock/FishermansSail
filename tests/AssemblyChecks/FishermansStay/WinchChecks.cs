@@ -21,6 +21,16 @@ internal static class WinchChecks
         var sourceInstructions = Instructions(source).ToArray();
         if (!sourceInstructions.Any(i => i.Operand is FieldInfo f && f.Name == "SourceIndex"))
             throw new Exception("Runtime winch selection ignores the authored donor row.");
+        if (
+            !sourceInstructions.Any(i => i.Operand is FieldInfo f && f.Name == "SourceMast")
+            || !sourceInstructions.Any(i => i.Operand is FieldInfo f && f.Name == "masts")
+            || CalledMethods(source).Count(m => m.Name == "Sources") != 2
+            || CalledMethods(source).Count(m => m.Name == "FirstOrDefault") != 2
+            || CalledMethods(source).Contains(source)
+        )
+            throw new Exception(
+                "Authored mast overrides must directly reselect their native role array."
+            );
         int firstControl = Array.FindIndex(
             sourceInstructions,
             i => i.Operand is MethodBase m && m.Name == "FirstOrDefault"
@@ -70,6 +80,16 @@ internal static class WinchChecks
         var suspend = CalledMethods(owned.GetMethod("Suspend", all)).ToArray();
         if (!suspend.Any(m => m.Name == "Release") || !suspend.Any(m => m.Name == "SetActive"))
             throw new Exception("Unused controls must be inactive and release allocation.");
+        var refresh = owned.GetMethod("Refresh", all);
+        if (
+            !CalledMethods(refresh).Any(m => m.Name == "PlacementContext")
+            || !CalledMethods(refresh)
+                .Any(m => m.Name == "Acquire" && m.GetParameters().Length == 6)
+            || !CalledMethods(refresh).Any(m => m.Name == "Suspend")
+        )
+            throw new Exception(
+                "Exhaustion must collect rejection counts and context while suspending safely."
+            );
         foreach (string family in new[] { "FishermansFlyingSail", "FishermansStaysail" })
         {
             var type = assembly.GetType($"MoreSailwindSails.Sails.{family}.{family}Rigging", true);

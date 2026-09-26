@@ -57,7 +57,7 @@ physics or the live shipyard. Passing checks do not establish in-game behavior.
 
 ## Release and manual installation
 
-For **0.2.0**, keep `Plugin.PluginVersion`, the project `<Version>`, README and
+For **0.2.1**, keep `Plugin.PluginVersion`, the project `<Version>`, README and
 startup example consistent. Preserve GUID `com.august.moresailwindsails`, assembly
 `MoreSailwindSails.dll`, display name/namespace `MoreSailwindSails` and prefab
 IDs **400** (Flying Sail), **401/402/403** (Mk.A/B/C). Distribute only the plugin DLL.
@@ -80,7 +80,7 @@ Builds/checks do not install the plugin, change saves or publish a release.
   a GitHub release with that DLL and generated notes. It requires Nix and an
   authenticated `gh`. A later build/publish failure can leave the pushed tag.
 
-After manual installation, confirm `MoreSailwindSails 0.2.0 loaded!` in
+After manual installation, confirm `MoreSailwindSails 0.2.1 loaded!` in
 `BepInEx/LogOutput.log`. Flying Sail registration uses donor **110**, prefab
 **400** and **825** vertices; staysails register **401/402/403**. Check the
 installed DLL separately from build output when diagnosing.
@@ -339,10 +339,41 @@ physical spar ends. Deck-facing coils use measured supporting surfaces.
   strip ends inset by interaction radius. Native fittings and reserved controls
   exclude candidates. Never restore unsupported surface-tangent offsets.
 - Exhaustion hides the control, logs once and retries while retaining its
-  controller. Do not expand bounds. With large-dhow mesh interaction colliders,
+  controller. The warning identifies boat/owner instances, stay or mast,
+  requested and resolved donor mast, role, source instance, boat-local origin,
+  radius, candidate count and native/reservation rejection counts. Counts are
+  mutually exclusive: native obstructions take precedence. Repeated one-second
+  retries remain silent; no support candidates produces zero rejection counts.
+  Do not expand bounds. With large-dhow mesh interaction colliders,
   checks establish at least **one** extra reef control per donor; multiple custom
   sails can exhaust space. Older isolated mast checks require three, bounded
   surface checks at least two. These counts do not establish mixed-sail capacity.
+
+### Jong foremast sheets (#16 and #21)
+
+The reported persistent missing port winch in **0.2.1** is reproduced by including
+Shipyard Expansion's additional forward sheet fittings in the obstruction model.
+The old mast **10** donor and three-strip profile leave no port candidate, while
+starboard retains a position. A suspended mount leaves its controller/line alive,
+consistent with the user's screenshot of the port line ending at the rail.
+This establishes the measured Jong case of [#21](https://github.com/sum-rock/MoreSailwindSails/issues/21)'s
+exhaustion mechanism alongside [#16](https://github.com/sum-rock/MoreSailwindSails/issues/16);
+older unlabelled warnings from both sides cannot all be attributed to that case.
+
+Both mast **10** sheet mappings now use `WinchMountDefinition.SourceMast = 7`,
+the native `front_stay_lower` controls, and only the measured lower longitudinal
+`trim_010` caps. The clear slots are approximately `(±3.114, 4.145, 2.527)` in boat
+coordinates. They are within **1.401 m** of mast 7's donors but outside that band
+around the former donors. Changing rail endpoints alone would not admit them.
+Stay geometry still comes from mast **10**, and mount **128** and its save slot
+are unchanged. `SourceMast = -1` preserves every other mapping; missing explicit
+donors yield no usable source rather than reverting to the blocked donor.
+
+The complete conservative native/SE obstruction fixture establishes **one**
+extra sheet per side, including the logged neighboring Flying Sail between masts
+**2–3**, which shares reef donor **2** with the foremast staysail. More custom
+sails sharing the foremast sheet space can still exhaust it; hidden controls
+retain their controllers and retry when reservations are released.
 
 ### Asset provenance and measurement fixtures
 
@@ -370,11 +401,34 @@ roles and radii), `BrigRailMeasurements.txt` and `WinchSurfaceMeasurements.txt`
 all **85** native fittings, not just the first entry in each donor array. It
 reproduces both blocked lower-mainmast cases and checks the corrected donors
 against every native row, including mutually exclusive variants.
+`JongNativeWinchMeasurements.txt` contains **151** fittings: **60** from native
+`level24` and **91** from SE's `SE_parts_jong` prefab. Positions include the
+outer boat-model import transform used by installed `JongPatches.Patch`; the
+fixture records default activation but checks conservatively include all rows.
+The Jong checks reconstruct the original three-strip profile from independent
+face measurements, reproduce port-only exhaustion, and cover corrected symmetry,
+donor travel, mixed-sail fitting order, release/retry and diagnostic counts.
 Checks cover attachment/angles, fixed IDs,
 ancestry/cycle rejection, reservations, strip ends, obstructions and exhaustion.
 Surface comparisons allow **2 cm** for slight face warp. Brig/Sanbuq/Junk
 screenshots confirmed unsupported tangent-based placement; measured strips
 replace it. Keep numeric details in profiles/fixtures instead of duplicating tables.
+
+## Runtime validation
+
+For the Jong correction in **0.2.1**, the user's pre-fix observation and screenshot
+confirm a persistently missing port control with a visible starboard control.
+The corrected placement is validated by geometry/assembly checks only; **post-fix
+game validation is pending**. Neither suite executes Unity rendering, interaction
+or control lifecycle recovery.
+
+After manual installation, start on **Brig** to check existing sheet/reef controls.
+Then test **Jong** with a foremast staysail alone and with a Flying Sail between
+masts **2–3**. Confirm both lower-rail sheet winches are visible, reachable and
+independently usable; repeat after save/load, shipyard cancellation, and fitting
+or removing neighboring sails. Genuine exhaustion must preserve controllers,
+emit one contextual warning per control instance, and recover after space frees.
+Do not mark the broader #21 capacity cases resolved without their own evidence.
 
 ## Local investigation
 
