@@ -1,0 +1,87 @@
+# Installed Sailwind 0.39 large dhow: all 85 GPButtonRopeWinch components, including every native array entry.
+# boat-relative path|position|conservative interaction radius; all variants included as obstructions.
+dhow large/anchor_winch|0.00000339,2.12548918,8.96439502|1.30297556
+dhow large/reef_winch (bowsprit|-0.84499454,3.53800005,14.89300071|0.44088201
+dhow large/rope_winch_angle_main|0.98858999,4.07713264,-2.58517863|0.28622004
+dhow large/rope_winch_bowsprit_left|-1.55699523,3.38000005,13.16300134|0.24675998
+dhow large/rope_winch_bowsprit_right|1.57800492,3.38000005,13.16600044|0.24675998
+dhow large/rope_winch_foremast_center|2.63800308,3.00200003,7.90799941|0.24675999
+dhow large/rope_winch_foremast_center (1)|2.70100285,2.85899991,7.37399944|0.24675999
+dhow large/rope_winch_foremast_center (2)|-2.62599712,3.00200003,7.90800136|0.24675999
+dhow large/rope_winch_foremast_center (3)|-2.67599751,2.85899991,7.37200158|0.24675999
+dhow large/rope_winch_foremast_left|-2.52999692,3.15099996,8.55300182|0.24675999
+dhow large/rope_winch_foremast_right|2.57700321,3.15099996,8.54799981|0.24675999
+dhow large/rope_winch_forestay_left|-1.81699559,3.31500000,12.21500144|0.24675997
+dhow large/rope_winch_forestay_right|1.82350467,3.31500000,12.21559995|0.24675996
+dhow large/rope_winch_mainmast_center|0.98699943,4.06500000,-1.63400039|0.24675999
+dhow large/rope_winch_mainmast_center (1)|1.00399919,4.06299990,-2.18100048|0.24675999
+dhow large/rope_winch_mainmast_center (2)|-1.02780063,4.06479996,-1.64139968|0.24675999
+dhow large/rope_winch_mainmast_center (3)|-1.02500084,4.06199998,-2.19699976|0.24675999
+dhow large/rope_winch_mainmast_center (topmast|-1.02400110,4.05999988,-2.69099974|0.24675999
+dhow large/rope_winch_mainmast_left|-2.93700088,3.61000007,-1.87499900|0.24675998
+dhow large/rope_winch_mainmast_right|2.95299952,3.61000007,-1.87500119|0.24675999
+dhow large/rope_winch_middlestay_left 0|-2.89299866,2.42300004,3.69000132|0.24675997
+dhow large/rope_winch_middlestay_left 0 (1)|-2.92899887,2.43599993,3.16800123|0.24675998
+dhow large/rope_winch_middlestay_left 0 (2)|-2.93699920,2.41000003,2.65200117|0.24675998
+dhow large/rope_winch_middlestay_left 1|-2.73799756,2.66000003,6.70600120|0.24675995
+dhow large/rope_winch_middlestay_left 1 (1)|-2.78699777,2.50999993,6.23400155|0.24675994
+dhow large/rope_winch_middlestay_left 1 (2)|-2.79499809,2.40599996,5.72700156|0.24675994
+dhow large/rope_winch_middlestay_right 0|2.87700161,2.42300004,3.68999917|0.24676000
+dhow large/rope_winch_middlestay_right 0 (1)|2.89200127,2.40799993,3.13899902|0.24675999
+dhow large/rope_winch_middlestay_right 0 (2)|2.88500111,2.40000004,2.61799909|0.24675999
+dhow large/rope_winch_middlestay_right 1|2.74100256,2.66000003,6.70399931|0.24675997
+dhow large/rope_winch_middlestay_right 1 (1)|2.80400235,2.52599996,6.20899938|0.24675996
+dhow large/rope_winch_middlestay_right 1 (2)|2.80300223,2.42300004,5.69799920|0.24675996
+dhow large/rope_winch_mizzen_center|2.28399515,3.63880008,-13.16310175|0.30452449
+dhow large/rope_winch_mizzen_center (1)|-2.28600502,3.65300006,-13.15999966|0.30452448
+dhow large/rope_winch_mizzen_left|-3.08800356,3.44600004,-9.02199962|0.44906043
+dhow large/rope_winch_mizzen_right|3.09999672,3.43399996,-8.99200123|0.44906046
+dhow large/rope_winch_mizzenstay_left|-2.94000149,3.60000008,-3.44999913|0.24675995
+dhow large/rope_winch_mizzenstay_left (back)|-3.15700271,3.39600009,-6.70099938|0.44906043
+dhow large/rope_winch_mizzenstay_right|2.94999891,3.60000008,-3.45000132|0.24675999
+dhow large/rope_winch_mizzenstay_right (back)|3.15899760,3.39899987,-6.67500170|0.44906051
+dhow large/rope_winch_reef|0.00451409,2.63237935,2.53980148|0.37037507
+dhow large/rope_winch_reef_001|0.00451021,3.56413692,-7.88384668|0.33433791
+dhow large/rope_winch_reef_002|0.00022704,2.63280195,3.51633519|0.33433760
+dhow large/rope_winch_topmast_left|-2.93800100,3.60700005,-2.40099905|0.24675997
+dhow large/rope_winch_topmast_right|2.95199916,3.60700005,-2.40100124|0.24675999
+dhow large/structure/mast_fore_0/reef_winch|-0.23607032,3.29331837,13.19309977|0.44088107
+dhow large/structure/mast_fore_0/reef_winch (1)|0.23000471,3.29332211,13.17963848|0.44088114
+dhow large/structure/mast_fore_0/reef_winch (2)|-0.23607046,3.99341841,13.19309977|0.44088107
+dhow large/structure/mast_fore_0/reef_winch (3)|0.23000457,3.99341738,13.17963849|0.44088114
+dhow large/structure/mast_fore_0/reef_winch (stay lower)|-0.24057529,3.44331799,13.62427026|0.44088131
+dhow large/structure/mast_fore_0/reef_winch (stay upper)|0.23187219,3.44331410,13.62064326|0.44088121
+dhow large/structure/mast_fore_1__raked_/reef_winch|-0.21671338,3.39471855,13.03915739|0.44088114
+dhow large/structure/mast_fore_1__raked_/reef_winch (1)|0.22872127,3.39578719,13.02976257|0.44088146
+dhow large/structure/mast_fore_1__raked_/reef_winch (2)|-0.21599521,4.05349509,13.15525393|0.44088114
+dhow large/structure/mast_fore_1__raked_/reef_winch (3)|0.22900487,4.05424628,13.14523201|0.44088146
+dhow large/structure/mast_fore_1__raked_/reef_winch (stay lower)|-0.22316104,3.24027766,13.45296647|0.44088162
+dhow large/structure/mast_fore_1__raked_/reef_winch (stay upper)|0.23751047,3.24277601,13.43835212|0.44088153
+dhow large/structure/mast_main_0/reef_winch (mast0|-0.29874706,2.31293054,2.73518920|0.48396927
+dhow large/structure/mast_main_0/reef_winch (mast1|0.31125343,2.31293046,2.73551325|0.48396955
+dhow large/structure/mast_main_0/reef_winch (mast2|-0.29874696,3.01893001,2.73518920|0.48396927
+dhow large/structure/mast_main_0/reef_winch (mast3|0.31125352,3.01892993,2.73551325|0.48396955
+dhow large/structure/mast_main_0/reef_winch (stay lower|-0.26762676,2.32593103,3.34343054|0.48396970
+dhow large/structure/mast_main_0/reef_winch (stay upper|0.31863936,2.32593095,3.33586172|0.48396968
+dhow large/structure/mast_main_0/reef_winch (stay upper upper|0.31900129,3.05893085,3.33630762|0.48396968
+dhow large/structure/mast_main_0/reef_winch (topmast)|-0.26799883,3.04692989,3.34330770|0.48396970
+dhow large/structure/mast_main_1/reef_winch (mast0 (1)|-0.31099790,2.31293054,5.68491944|0.48396964
+dhow large/structure/mast_main_1/reef_winch (mast1 (1)|0.29900220,2.31293046,5.68491936|0.48396974
+dhow large/structure/mast_main_1/reef_winch (mast2 (1)|-0.31099780,3.01893001,5.68491944|0.48396964
+dhow large/structure/mast_main_1/reef_winch (mast3 (1)|0.29900229,3.01892993,5.68491936|0.48396974
+dhow large/structure/mast_main_1/reef_winch (stay lower (1)|-0.27999782,2.32593103,6.29291945|0.48397009
+dhow large/structure/mast_main_1/reef_winch (stay upper (1)|0.30600228,2.32593095,6.28491939|0.48397024
+dhow large/structure/mast_main_1/reef_winch (stay upper upper|0.30600237,2.98193118,6.28491939|0.48397024
+dhow large/structure/mast_main_1/reef_winch (topmast|-0.27999773,3.01893001,6.29291945|0.48397009
+dhow large/structure/mast_mizzen_0/reef_winch (0)|-0.23307915,3.84981314,-7.92983325|0.44088113
+dhow large/structure/mast_mizzen_0/reef_winch (1)|0.22643984,3.84981308,-7.93904496|0.44088136
+dhow large/structure/mast_mizzen_0/reef_winch (stay lower|-0.22677997,3.76981321,-7.49635535|0.44088156
+dhow large/structure/mast_mizzen_0/reef_winch (stay upper)|0.23273854,3.76981314,-7.50556754|0.44088152
+dhow large/structure/mast_mizzen_1__raked/reef_winch (0|-0.22000187,3.74632515,-8.27982255|0.44088176
+dhow large/structure/mast_mizzen_1__raked/reef_winch (1|0.21099820,3.73925835,-8.28006909|0.44088166
+dhow large/structure/mast_mizzen_1__raked/reef_winch (stay lower|-0.20900175,3.83005455,-7.82818287|0.44088156
+dhow large/structure/mast_mizzen_1__raked/reef_winch (stay upper|0.21899833,3.83634117,-7.82584120|0.44088189
+dhow large/structure/mast_mizzen_2/reef_winch (0|-0.23780148,3.82780329,-4.64041915|0.44088137
+dhow large/structure/mast_mizzen_2/reef_winch (1|0.24660603,3.82780418,-4.64714131|0.44088168
+dhow large/structure/mast_mizzen_2/reef_winch (stay lower|-0.22743606,3.82980314,-4.18630231|0.44088173
+dhow large/structure/mast_mizzen_2/reef_winch (stay upper|0.23651442,3.82980308,-4.20304138|0.44088176

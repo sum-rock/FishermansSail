@@ -296,6 +296,18 @@ halyard guides on the overlapping section. Main/mizzen stays attach to the lower
 mainmast whether its topmast is fitted or absent. Twenty sheet and nine reef
 mappings include raked spars, with topmast controls mounted on their bases.
 
+Fore/main stays meet the **rendered** foremast end ring at local z **2.223295**.
+The capsule tip at z **2.29** is 6.7 cm higher and produced the reported floating
+attachment. All eight fore/main variants use the corrected, slightly steeper
+slope; aft guide heights and save IDs stay unchanged.
+
+Foremast/mainmast reef donors **0/1/2/4** use the upper port control at native
+array index **2**. Lower-row donors exhaust their mounting space against the
+complete native rig. This explicit `WinchMountDefinition.SourceIndex` changes
+the donor datum without enlarging travel or reducing clearance radii. Other
+profiles retain first-usable selection (`-1`); missing optional control roles
+return empty before looking up a mounting definition.
+
 ## Winch placement
 
 `FishermanWinchControls` clones inactive controls with owned external handles and
@@ -347,7 +359,11 @@ measurements only, never meshes, textures or assemblies.
 Fixtures in `tests/GeometryChecks/FishermansStay/` are `StayMeasurements.txt`
 (mast transforms, spar extents and guides), `WinchMeasurements.txt` (donor frames,
 roles and radii), `BrigRailMeasurements.txt` and `WinchSurfaceMeasurements.txt`
-(independent solid face bounds). Checks cover attachment/angles, fixed IDs,
+(independent solid face bounds). `LargeDhowNativeWinchMeasurements.txt` includes
+all **85** native fittings, not just the first entry in each donor array. It
+reproduces both blocked lower-mainmast cases and checks the corrected donors
+against every native row, including mutually exclusive variants.
+Checks cover attachment/angles, fixed IDs,
 ancestry/cycle rejection, reservations, strip ends, obstructions and exhaustion.
 Surface comparisons allow **2 cm** for slight face warp. Brig/Sanbuq/Junk
 screenshots confirmed unsupported tangent-based placement; measured strips
@@ -357,9 +373,9 @@ replace it. Keep numeric details in profiles/fixtures instead of duplicating tab
 
 ### Current evidence and gaps
 
-The **0.2.0 release preparation** passed the Release build (zero warnings/errors),
-CSharpier, GeometryChecks, AssemblyChecks and diff/link checks. No in-game
-validation or installation was performed for this metadata/documentation update.
+The **0.2.0 large-dhow corrections** passed the Release build (zero warnings/errors),
+CSharpier, GeometryChecks, AssemblyChecks and diff/link checks. The new build
+has not been installed or validated in-game.
 Rerun automated checks for subsequent plugin-affecting changes.
 
 | Area | Observed evidence | Remaining validation |
@@ -368,7 +384,7 @@ Rerun automated checks for subsequent plugin-affecting changes.
 | Staysails | Fixed 14° head received favorable initial feedback; Sanbuq asymmetry was not reproduced by geometry checks | All-mark fitting/save reload, Mk.C rising foot/collision, reefing/bundle, appearance and SailInfo |
 | Winches | User reported improved placement; later Brig/Sanbuq/Junk screenshots exposed unsupported surfaces, now corrected in authored data | Seating/accessibility on all eight boats, mixed-sail capacity and save/reload |
 | Audio | Follow-up 0.39 logs contained six custom-sail `SailFlapAudio.Awake` errors; hierarchy corrected | Load and listen to existing/new examples of all four sail types without exceptions |
-| Large dhow | Automated coverage includes all 24 native mast combinations and measured guides/supports | Native configuration, Cloth, accessible controls, crowded capacity and save/reload |
+| Large dhow | User reported a floating fore stay and missing mainmast halyard; logs confirmed exhausted placement on both main positions. Mesh mastheads and upper-row donors now pass expanded geometry checks | Confirm masthead contact and accessible halyard on upright/raked foremast and both main positions; Cloth, crowded capacity and save/reload |
 
 The user confirmed that updating **ShipShape 1.3.0 → 1.3.1** resolved the 0.39
 movement-triggered freeze; follow-up logs lacked missing-camera/ocean warnings.
@@ -404,7 +420,9 @@ coverage complete based on geometry or IL inspection.
 5. **Boat variants:** cover shorter-foremast fallbacks and offset topmasts, Cog's
    fore/aft direction, Leopard's three-section masts and Shroud's short/tall options.
    On large dhow, check both main positions, raked alternatives, topmast
-   addition/removal and shared-mast control exhaustion after the Brig regression.
+   addition/removal, visible masthead contact and upper-row donor controls after
+   the Brig regression. Check shared-mast exhaustion, mouse/VR reach and existing
+   Mk.C save/reload as well as new installations.
 
 ## Local investigation
 

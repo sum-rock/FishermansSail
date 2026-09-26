@@ -44,6 +44,8 @@ namespace MoreSailwindSails.BoatRigs
             };
 
         // Measured in installed 0.39 level24, in boat-local space.
+        // Four-control masts use the upper port fitting (reefWinch[2]): all
+        // bounded positions around the lower fitting are blocked by native rows.
         private static WinchMountDefinition[] WinchMounts() =>
             new[]
             {
@@ -52,20 +54,23 @@ namespace MoreSailwindSails.BoatRigs
                     WinchRole.Reef,
                     new Vector3(0.000000f, 1.000000f, 0.000000f),
                     true,
-                    0
+                    0,
+                    2
                 ),
                 new WinchMountDefinition(
                     1,
                     WinchRole.Reef,
                     new Vector3(0.000000f, 0.984808f, 0.173648f),
                     true,
-                    1
+                    1,
+                    2
                 ),
                 new WinchMountDefinition(
                     2,
                     WinchRole.Reef,
                     new Vector3(0.000000f, 1.000000f, 0.000000f),
                     true,
+                    2,
                     2
                 ),
                 new WinchMountDefinition(
@@ -80,7 +85,8 @@ namespace MoreSailwindSails.BoatRigs
                     WinchRole.Reef,
                     new Vector3(0.000000f, 1.000000f, 0.000000f),
                     true,
-                    4
+                    4,
+                    2
                 ),
                 new WinchMountDefinition(
                     5,
@@ -353,6 +359,7 @@ namespace MoreSailwindSails.BoatRigs
                 };
 
         // Endpoints are authored in each physical mast section's local frame.
+        // Foremast mesh ends at z=2.223295; its capsule extends 6.7 cm higher.
         // Native topmast halyards use the lower mainmast guide; retain that height.
         private static FishermansStayGroupDefinition[] Stays() =>
             new[]
@@ -361,13 +368,13 @@ namespace MoreSailwindSails.BoatRigs
                     "Foremast / mainmast",
                     new[]
                     {
-                        // 64.94 degrees at aft mast; forward masthead fallback.
+                        // 64.63 degrees at aft mast; visible foremast head fallback.
                         new FishermansStayVariantDefinition(
                             128,
                             20,
                             "foremast 1 / main mast 1",
                             0,
-                            new Vector3(-0.006836f, 0.000000f, 2.290000f),
+                            new Vector3(-0.006836f, 0.000000f, 2.223290f),
                             2,
                             new Vector3(-0.006836f, 0.000000f, 2.083000f),
                             false,
@@ -375,13 +382,13 @@ namespace MoreSailwindSails.BoatRigs
                             new[] { 0, 2 },
                             new[] { 3 }
                         ),
-                        // 64.17 degrees at aft mast; forward masthead fallback.
+                        // 63.86 degrees at aft mast; visible foremast head fallback.
                         new FishermansStayVariantDefinition(
                             129,
                             20,
                             "foremast 1 / main topmast 1",
                             0,
-                            new Vector3(-0.006836f, 0.000000f, 2.290000f),
+                            new Vector3(-0.006836f, 0.000000f, 2.223290f),
                             3,
                             new Vector3(-0.006836f, 0.000000f, -4.563908f),
                             false,
@@ -389,13 +396,13 @@ namespace MoreSailwindSails.BoatRigs
                             new[] { 0, 2, 3 },
                             new int[0]
                         ),
-                        // 67.98 degrees at aft mast; forward masthead fallback.
+                        // 67.70 degrees at aft mast; visible foremast head fallback.
                         new FishermansStayVariantDefinition(
                             130,
                             23,
                             "foremast 2 / main mast 1",
                             1,
-                            new Vector3(-0.006836f, 0.000000f, 2.290000f),
+                            new Vector3(-0.006836f, 0.000000f, 2.223290f),
                             2,
                             new Vector3(-0.006836f, 0.000000f, 2.083000f),
                             false,
@@ -403,13 +410,13 @@ namespace MoreSailwindSails.BoatRigs
                             new[] { 1, 2 },
                             new[] { 3 }
                         ),
-                        // 67.40 degrees at aft mast; forward masthead fallback.
+                        // 67.12 degrees at aft mast; visible foremast head fallback.
                         new FishermansStayVariantDefinition(
                             131,
                             23,
                             "foremast 2 / main topmast 1",
                             1,
-                            new Vector3(-0.006836f, 0.000000f, 2.290000f),
+                            new Vector3(-0.006836f, 0.000000f, 2.223290f),
                             3,
                             new Vector3(-0.006836f, 0.000000f, -4.563908f),
                             false,
@@ -417,13 +424,13 @@ namespace MoreSailwindSails.BoatRigs
                             new[] { 1, 2, 3 },
                             new int[0]
                         ),
-                        // 56.68 degrees at aft mast; forward masthead fallback.
+                        // 56.32 degrees at aft mast; visible foremast head fallback.
                         new FishermansStayVariantDefinition(
                             132,
                             26,
                             "foremast 1 / main mast 2",
                             0,
-                            new Vector3(-0.006836f, 0.000000f, 2.290000f),
+                            new Vector3(-0.006836f, 0.000000f, 2.223290f),
                             4,
                             new Vector3(-0.006836f, 0.000000f, 2.101000f),
                             false,
@@ -431,13 +438,13 @@ namespace MoreSailwindSails.BoatRigs
                             new[] { 0, 4 },
                             new[] { 5 }
                         ),
-                        // 55.37 degrees at aft mast; forward masthead fallback.
+                        // 55.00 degrees at aft mast; visible foremast head fallback.
                         new FishermansStayVariantDefinition(
                             133,
                             26,
                             "foremast 1 / main topmast 2",
                             0,
-                            new Vector3(-0.006836f, 0.000000f, 2.290000f),
+                            new Vector3(-0.006836f, 0.000000f, 2.223290f),
                             5,
                             new Vector3(-0.006836f, 0.000000f, -4.561601f),
                             false,
@@ -445,13 +452,13 @@ namespace MoreSailwindSails.BoatRigs
                             new[] { 0, 4, 5 },
                             new int[0]
                         ),
-                        // 61.97 degrees at aft mast; forward masthead fallback.
+                        // 61.63 degrees at aft mast; visible foremast head fallback.
                         new FishermansStayVariantDefinition(
                             134,
                             29,
                             "foremast 2 / main mast 2",
                             1,
-                            new Vector3(-0.006836f, 0.000000f, 2.290000f),
+                            new Vector3(-0.006836f, 0.000000f, 2.223290f),
                             4,
                             new Vector3(-0.006836f, 0.000000f, 2.101000f),
                             false,
@@ -459,13 +466,13 @@ namespace MoreSailwindSails.BoatRigs
                             new[] { 1, 4 },
                             new[] { 5 }
                         ),
-                        // 61.05 degrees at aft mast; forward masthead fallback.
+                        // 60.71 degrees at aft mast; visible foremast head fallback.
                         new FishermansStayVariantDefinition(
                             135,
                             29,
                             "foremast 2 / main topmast 2",
                             1,
-                            new Vector3(-0.006836f, 0.000000f, 2.290000f),
+                            new Vector3(-0.006836f, 0.000000f, 2.223290f),
                             5,
                             new Vector3(-0.006836f, 0.000000f, -4.561601f),
                             false,

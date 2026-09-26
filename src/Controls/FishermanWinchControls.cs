@@ -28,7 +28,7 @@ namespace MoreSailwindSails.Controls
                 boat.GetComponent<FishermanWinchControls>()
                 ?? boat.gameObject.AddComponent<FishermanWinchControls>();
             manager.boat = boat;
-            var source = Source(donorMast, role);
+            var source = Source(boat, donorMast, role);
             if (!source)
                 throw new InvalidOperationException("No usable source winch: " + label);
             var definition =
@@ -41,17 +41,30 @@ namespace MoreSailwindSails.Controls
             return control;
         }
 
-        internal static GPButtonRopeWinch Source(Mast mast, WinchRole role)
+        internal static GPButtonRopeWinch Source(BoatRefs boat, Mast mast, WinchRole role)
         {
             var sources =
                 role == WinchRole.Reef ? mast.reefWinch
                 : role == WinchRole.Left ? mast.leftAngleWinch
                 : role == WinchRole.Right ? mast.rightAngleWinch
                 : mast.midAngleWinch;
-            return sources?.FirstOrDefault(w =>
-                w && w.GetComponent<Renderer>() && w.GetComponent<Collider>()
-            );
+            // Optional native roles (for example a stay's middle sheet) can have
+            // no control and no mounting definition. Keep those probes harmless.
+            var first = sources?.FirstOrDefault(Usable);
+            if (!first)
+                return null;
+            int index =
+                BoatRigCatalog.Find(boat.name)?.WinchMount(mast.orderIndex, role).SourceIndex ?? -1;
+            if (index < 0)
+                return first;
+            // Do not silently switch back to a blocked row if an authored donor
+            // is missing. Creation reports the unusable source and can be retried.
+            var source = sources != null && index < sources.Length ? sources[index] : null;
+            return Usable(source) ? source : null;
         }
+
+        private static bool Usable(GPButtonRopeWinch winch) =>
+            winch && winch.GetComponent<Renderer>() && winch.GetComponent<Collider>();
 
         internal static void Reconcile(
             ref OwnedWinch[] current,
@@ -71,7 +84,7 @@ namespace MoreSailwindSails.Controls
                         current != null
                         && !current[i].IsDisposed
                         && current[i].Winch
-                        && current[i].Source == Source(donors[i], roles[i])
+                        && current[i].Source == Source(boat, donors[i], roles[i])
                             ? current[i]
                             : Create(boat, owner, parent, donors[i], roles[i], labels[i]);
             }

@@ -136,6 +136,10 @@ namespace MoreSailwindSails.BoatRigs
         internal readonly Vector3 Direction;
         internal readonly bool OnMast;
         internal readonly int Support;
+
+        // -1 retains the first usable native control. An authored index selects
+        // an exact fitting when another row provides the measured mounting space.
+        internal readonly int SourceIndex;
         internal readonly WinchSurfaceSegment[] SurfaceSegments;
         internal readonly Vector3 SourceNormal;
         internal readonly float BaseOffset;
@@ -145,14 +149,18 @@ namespace MoreSailwindSails.BoatRigs
             WinchRole role,
             Vector3 direction,
             bool onMast,
-            int support
+            int support,
+            int sourceIndex = -1
         )
         {
+            if (sourceIndex < -1)
+                throw new ArgumentOutOfRangeException(nameof(sourceIndex));
             Mast = mast;
             Role = role;
             Direction = direction.normalized;
             OnMast = onMast;
             Support = support;
+            SourceIndex = sourceIndex;
         }
 
         internal WinchMountDefinition(
