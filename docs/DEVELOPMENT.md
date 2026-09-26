@@ -138,6 +138,9 @@ type names: update both when moving or renaming code.
 - New sails use native white palette **11** and SE plain texture **0**. Preserve
   saved colors, recoloring and the hidden color-reference renderer; scope plain
   texture/selector/material guards to custom sails. Never change donor/shared assets.
+  The SE compatibility patch seeds the native plain texture before catalog discovery:
+  numeric saved selections and SE's fixed option lists require plain at zero.
+  Never reorder a catalog after texture indices have been assigned.
 
 ### Sailwind 0.39 audio
 
@@ -374,8 +377,9 @@ replace it. Keep numeric details in profiles/fixtures instead of duplicating tab
 ### Current evidence and gaps
 
 The **0.2.0 large-dhow corrections** passed the Release build (zero warnings/errors),
-CSharpier, GeometryChecks, AssemblyChecks and diff/link checks. The new build
-has not been installed or validated in-game.
+CSharpier, GeometryChecks, AssemblyChecks and diff/link checks. That build
+matched the installed DLL by SHA-256 at the start of the 2026-09-25 appearance investigation;
+visual validation of the corrections remains pending.
 Rerun automated checks for subsequent plugin-affecting changes.
 
 | Area | Observed evidence | Remaining validation |
@@ -385,6 +389,22 @@ Rerun automated checks for subsequent plugin-affecting changes.
 | Winches | User reported improved placement; later Brig/Sanbuq/Junk screenshots exposed unsupported surfaces, now corrected in authored data | Seating/accessibility on all eight boats, mixed-sail capacity and save/reload |
 | Audio | Follow-up 0.39 logs contained six custom-sail `SailFlapAudio.Awake` errors; hierarchy corrected | Load and listen to existing/new examples of all four sail types without exceptions |
 | Large dhow | User reported a floating fore stay and missing mainmast halyard; logs confirmed exhausted placement on both main positions. Mesh mastheads and upper-row donors now pass expanded geometry checks | Confirm masthead contact and accessible halyard on upright/raked foremast and both main positions; Cloth, crowded capacity and save/reload |
+| Sail appearance | The 2026-09-25 screenshot and trace identified swapped plain/painted SE texture indices. The user confirmed the catalog initialization fix restored the expected appearance in-game; temporary diagnostics were removed | Broader coverage of painted options, new/saved vanilla and custom sails, recoloring and save/reload remains pending |
+
+SE 0.11.1 discovers textures in prefab traversal order, but its saved selections
+and hard-coded option lists expect plain at **0**, medi-small paint at **1**, dhow
+paint at **2**, and junk paint at **3**. The captured catalog had the first two
+swapped. `src/Compatibility/` seeds the empty catalog from donor 110's native
+plain bundle before `SailTextureChanger.Setup` assigns indices. Native discovery
+then appends paint normally; no donor materials or save files are rewritten.
+Both custom families verify that index zero is plain before configuring templates.
+Saved index **0** regains its intended plain appearance. Selections explicitly
+changed to index **1** while the ordering was broken may need reselection; the
+numeric save alone cannot distinguish that intent from an older painted choice.
+The user confirmed the corrected build worked in-game. Regression checks retain
+the captured texture order and verify SE's installed discovery/option contract.
+Temporary material tracing, its configuration option and tracing-only checks
+were removed after confirmation; the compatibility fix and regression checks remain.
 
 The user confirmed that updating **ShipShape 1.3.0 → 1.3.1** resolved the 0.39
 movement-triggered freeze; follow-up logs lacked missing-camera/ocean warnings.

@@ -7,6 +7,10 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile
+      Include="../../src/Compatibility/TextureCatalogOrder.cs"
+      Link="Compatibility/TextureCatalogOrder.cs"
+    />
+    <Compile
       Include="../../src/Sails/FishermansFlyingSail/FishermansFlyingSailKnotGeometry.cs"
       Link="FishermansFlyingSail/FishermansFlyingSailKnotGeometry.cs"
     />

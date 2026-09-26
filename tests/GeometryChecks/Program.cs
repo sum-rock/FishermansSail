@@ -7,6 +7,7 @@ internal static class Program
 {
     private static void Main()
     {
+        Compatibility.TextureCatalogChecks.Run();
         RigChecks.Run();
         ProfileChecks.Run();
         StayChecks.Run();
