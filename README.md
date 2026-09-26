@@ -48,6 +48,10 @@ additional controls when multiple custom sails share a mast.
 
 ## Requirements and installation
 
+**Use at your own risk.** This mod is provided as-is, without warranty. I am not
+responsible for damage, data loss, or other issues affecting your computer, game,
+or save files from using this mod. Back up your saves before installing.
+
 - Built against **Sailwind 0.39**
 - **BepInEx 5**
 - **Shipyard Expansion** (developed against version 0.11.1)
