@@ -6,6 +6,9 @@ instructions take precedence over historical design choices.
 
 ## Scope and workflow
 
+- Update `README.md` only when the user explicitly requests a README change.
+  Feature, bug-fix, release and general documentation work do not imply permission
+  to edit it; put technical and validation updates in `docs/DEVELOPMENT.md`.
 - MoreSailwindSails is an expandable collection of sail families. Keep Flying
   Sail and staysail mechanics independently editable; future families need not
   follow either design. Shared-helper extraction remains
